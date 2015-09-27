@@ -4,6 +4,10 @@ import ve3.os.OpInfo;
 import ve3.os.OpInfo.Type;
 
 public class Dump {
+	private static final String[] regs = {
+			"r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8",
+			"r9", "r10", "r11", "ap", "fp", "sp", "pc"
+	};
 	
 	private static String createOperand(Type type, byte operand, int arg) {
 		switch(type) {
@@ -11,71 +15,16 @@ public class Dump {
 			return String.format("$0x%x", operand);
 		}
 		case Register: { // 5
-			switch(operand) {
-			case 12: 
-				return "ap";			
-			case 13:
-				return "fp";				
-			case 14:
-				return "sp";
-			case 15: {
-				return "pc";				
-			}
-			default: {
-				return "r" + operand;
-			}
-			}
+			return regs[operand];
 		}
 		case RegDefer: { // 6
-			switch(operand) {
-			case 12: 
-				return "(ap)";			
-			case 13:
-				return "(fp)";				
-			case 14:
-				return "(sp)";
-			case 15: {
-				return "(pc)";				
-			}
-			default: {
-				return String.format("(r%x)", operand);
-			}
-			}								
+			return "(" + regs[operand] + ")";
 		}
 		case AutoInc: { // 8
-			switch(operand) {
-			case 12: 
-				return "(ap)+";
-			case 13:
-				return "(fp)+";				
-			case 14:
-				return "(sp)+";
-			case 15: {
-				return "(pc)+";				
-			}
-			default: {
-				return String.format("(r%x)+", operand);
-			}
-			}						
+			return "(" + regs[operand] + ")+";
 		}		
 		case ByteDisp: { // 0xa
-			switch(operand) {
-			case 12: {
-				return String.format("0x%x(ap)", arg);
-			}
-			case 13: {
-				return String.format("0x%x(fp)", arg);
-			}
-			case 14: {
-				return String.format("0x%x(sp)", arg);
-			}
-			case 15: {
-				return String.format("0x%x(pc)", arg);
-			}
-			default: {
-				return String.format("0x%x(r%x)", arg, operand);
-			}
-			}			
+			return String.format("0x%x(%s)", arg, regs[operand]);	
 		}
 		default: {
 			System.out.println("unrecognized type in Dump");
@@ -84,6 +33,10 @@ public class Dump {
 		}
 		}		
 		return "";
+	}
+	
+	public static String dump0Ops(OpInfo opinfo, String opname) {
+		return opname;
 	}
 	
 	public static String dump2Ops(OpInfo opinfo, String opname) {

@@ -1,10 +1,7 @@
 package ve3.os;
 
 public class OpInfo {
-	
-	public static enum AddressMode {
-		Branch, General, PC
-	}
+		
 	
 	public static enum Type {
 		Literal, Index, Register, RegDefer, AutoDec, AutoInc,
@@ -18,9 +15,11 @@ public class OpInfo {
 	private Type type1;
 	private byte ope1;
 	private int arg1;
+	
 	private Type type2;
 	private byte ope2;
 	private int arg2;
+	
 	private Type type3;
 	private byte ope3;
 	private int arg3;
@@ -106,7 +105,6 @@ public class OpInfo {
 	public class OpInfoSub {
 		public Type type;
 		public byte operand;
-		public AddressMode admode;
 		public int arg;
 		
 		public OpInfoSub() {

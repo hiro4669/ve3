@@ -3,6 +3,7 @@ package ve3.disassm;
 import ve3.hdw.ConcrateMemory;
 import ve3.hdw.Memory;
 import ve3.os.OpInfo;
+import ve3.os.MetaInfo;
 import ve3.os.OpInfo.OpInfoSub;
 
 public class V32Disassm {
@@ -10,6 +11,38 @@ public class V32Disassm {
 	private Memory memory;
 	private OpInfo opinfo;
 
+	public static enum AdMode {
+		Branch, General, PC
+	}
+	
+	public static enum OT {
+		b, w, l, Brb, Brw 
+	}
+	
+	enum Ope {
+
+		HALT(0x00, new MetaInfo()), SUBL2(0xc2, new MetaInfo(OT.l, OT.l));
+		
+//		MOVAB(0x9e, 2), SUBL2(0xc2, 2), MOVL(0xd0, 2), TSTL(0xd5, 1);
+		
+		public final int mne;		
+		public final String opname;
+		public final MetaInfo minfo;
+		public static Ope[] table = new Ope[0xffff];
+		
+		static {
+			for (Ope ope : Ope.values()) {
+				table[ope.mne] = ope;
+			}
+		}		
+		
+		Ope(int mne, MetaInfo minfo) {
+			this.mne = mne;
+			this.minfo = minfo;
+			this.opname = toString().toLowerCase();
+		}
+	}
+	
 	public V32Disassm() {
 		memory = new ConcrateMemory(0xfffff);
 		opinfo = new OpInfo();
@@ -23,22 +56,21 @@ public class V32Disassm {
 		//memory.dump();
 	}
 	
+		
 	private int readInt(byte[] rawdata, int offset) {
 		return rawdata[offset] & 0xff | (rawdata[offset+1] & 0xff) << 8
 				| (rawdata[offset+2] & 0xff) << 16 | (rawdata[offset+3] & 0xff) << 24;
 	}
 	
-	
-	
-	private OpInfoSub resolveDisp() {
+	private OpInfoSub resolveDisp(OT optype) {
 		byte arg = memory.fetch();
 		byte type = (byte)((arg >> 4) & 0xf);
 		byte value = (byte)(arg & 0xf);
 		
 		if (value == 0xf) { // program counter address mode
-			opinfo.opsub.admode = OpInfo.AddressMode.PC;			
+			//opinfo.opsub.admode = OpInfo.AddressMode.PC;			
 		} else { // normal address mode
-			opinfo.opsub.admode = OpInfo.AddressMode.General;
+			//opinfo.opsub.admode = OpInfo.AddressMode.General;
 			switch (type) {
 			case 0:
 			case 1:
@@ -75,7 +107,6 @@ public class V32Disassm {
 				System.exit(1);				
 				break;
 			}
-		
 			
 			}			
 		}
@@ -83,15 +114,15 @@ public class V32Disassm {
 		return null;
 	}
 	
-	private void setArg1() {
-		OpInfoSub opsub = resolveDisp();
+	private void setArg1(MetaInfo minfo) {
+		OpInfoSub opsub = resolveDisp(minfo.arg1);
 		opinfo.setType1(opsub.type);
 		opinfo.setOpe1(opsub.operand);
 		opinfo.setArg1(opsub.arg);
 	}
-	private void setArg2() {		
-		setArg1();
-		OpInfoSub opsub = resolveDisp();
+	private void setArg2(MetaInfo minfo) {
+		setArg1(minfo);
+		OpInfoSub opsub = resolveDisp(minfo.arg2);
 		opinfo.setType2(opsub.type);
 		opinfo.setOpe2(opsub.operand);
 		opinfo.setArg2(opsub.arg);
@@ -107,39 +138,37 @@ public class V32Disassm {
 			run();
 		}
 	}
+	
 	private void run() {
-		int b1;
 		int index = memory.getCurrentPc();
-		switch (b1 = (opinfo.setOpCode(memory.fetch())) & 0xff) {		
-		case 0x00: {
-			System.out.println(format(index, memory.rawdump(), "halt"));
+		int b1 = (opinfo.setOpCode(memory.fetch())) & 0xff;
+		Ope ope = Ope.table[b1];
+		
+		if (ope == null) {
+			System.out.printf("0x%x unrecognised mnemonic in run1\n", b1);
+			System.exit(1);
+		}
+		/*
+		switch (ope.argnum) {
+		case 0: {
+			System.out.println(format(index, memory.rawdump(), Dump.dump0Ops(opinfo, ope.opname)));
 			break;
 		}
-		case 0x9e: { // movab
-			setArg2();
-			System.out.println(format(index, memory.rawdump(), Dump.dumpmovab(opinfo)));
-			break;
-		}
-		case 0xc2: { // subl2			
-			setArg2();			
-			System.out.println(format(index, memory.rawdump(), Dump.dumpsubl2(opinfo)));
-			break;			
-		}		
-		case 0xd0: { // movl
-			setArg2();
-			System.out.println(format(index, memory.rawdump(), Dump.dumpmovl(opinfo)));
-			break;
-		}
-		case 0xd5: { // tstl
+		case 1: {
 			setArg1();
-			System.out.println(format(index, memory.rawdump(), Dump.dumptstl(opinfo)));			
+			System.out.println(format(index, memory.rawdump(), Dump.dump1Ops(opinfo, ope.opname)));
+			break;
+		}
+		case 2: {
+			setArg2();
+			System.out.println(format(index, memory.rawdump(), Dump.dump2Ops(opinfo, ope.opname)));
+			break;
 		}
 		default: {
-			System.out.printf("unsuuported opecode 0x%x in run()\n", b1);
-			System.exit(1);
-
 			break;
 		}
-		}		
+		}
+		*/
 	}
+		
 }
