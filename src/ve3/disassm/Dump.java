@@ -14,6 +14,9 @@ public class Dump {
 		case Literal: { // 0~3
 			return String.format("$0x%x", operand);
 		}
+		case Index: {
+			return "[" + regs[operand] + "]";
+		}
 		case Register: { // 5
 			return regs[operand];
 		}
@@ -32,9 +35,20 @@ public class Dump {
 		case ByteDispDefer: { // 0x0b
 			return String.format("*0x%x(%s)", arg, regs[operand]);	
 		}
-		case LongRel: { // 0xe : program conter mode
+		case WordDisp: { // 0x0c
+			return String.format("0x%x(%s)", arg, regs[operand]);
+		}
+		case WordDispDefer: { // 0x0d
+			return String.format("*0x%x(%s)", arg, regs[operand]);	
+		}
+		case Immed: {
+			return String.format("$0x%x", arg);
+		}
+		case WordRel: {
 			return String.format("0x%x", arg);
-			
+		}
+		case LongRel: { // 0xe : program conter mode
+			return String.format("0x%x", arg);			
 		}
 		case Branch1: { // branch disp byte
 			return String.format("0x%x", arg);
@@ -63,7 +77,11 @@ public class Dump {
 		case 2: {
 			return opname + " " + dump2(opinfo);
 		}
+		case 3: {
+			return opname + " " + dump3(opinfo);
+		}
 		default: {
+			System.out.println("unrecognized size in dump: " + opinfo.getMetaInfo().size);
 			System.exit(1);
 			return "";
 			
@@ -79,40 +97,7 @@ public class Dump {
 		return dump1(opinfo) + "," + createOperand(opinfo.getType2(), opinfo.getOpe2(), opinfo.getArg2());
 	}
 	
-	public static String dump0Ops(OpInfo opinfo, String opname) {
-		return opname;
+	private static String dump3(OpInfo opinfo) {
+		return dump2(opinfo) + "," + createOperand(opinfo.getType3(), opinfo.getOpe3(), opinfo.getArg3());
 	}
-	
-	public static String dump2Ops(OpInfo opinfo, String opname) {
-		String s = opname + " " + createOperand(opinfo.getType1(), opinfo.getOpe1(), opinfo.getArg1());
-		s += "," + createOperand(opinfo.getType2(), opinfo.getOpe2(), opinfo.getArg2());
-		return s;	
-	}
-	
-	public static String dump1Ops(OpInfo opinfo, String opname) {
-		String s = opname + " " + createOperand(opinfo.getType1(), opinfo.getOpe1(), opinfo.getArg1());
-		return s;
-	}
-	
-	public static String dumpsubl2(OpInfo opinfo) {
-		String s = "subl2 " + createOperand(opinfo.getType1(), opinfo.getOpe1(), opinfo.getArg1());
-		s += "," + createOperand(opinfo.getType2(), opinfo.getOpe2(), opinfo.getArg2());
-		return s;
-	}
-	
-	public static String dumpmovl(OpInfo opinfo) {
-		String s = "movl " + createOperand(opinfo.getType1(), opinfo.getOpe1(), opinfo.getArg1());
-		s += "," + createOperand(opinfo.getType2(), opinfo.getOpe2(), opinfo.getArg2());
-		return s;
-	}
-	
-	public static String dumpmovab(OpInfo opinfo) {
-		return dump2Ops(opinfo, "movab");
-	}
-	
-	public static String dumptstl(OpInfo opinfo) {
-		return dump1Ops(opinfo, "tstl");
-	}
-	
-
 }

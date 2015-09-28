@@ -27,7 +27,12 @@ public class V32Disassm {
 		TSTL(0xd5, new MetaInfo(OT.l)), BNEQ(0x12, new MetaInfo(OT.Brb)),
 		CMPL(0xd1, new MetaInfo(OT.l, OT.l)), BLSS(0x19, new MetaInfo(OT.Brb)),
 		CALLS(0xfb, new MetaInfo(OT.l, OT.b)), PUSHL(0xdd, new MetaInfo(OT.l)),
-		CHMK(0xbc, new MetaInfo(OT.w));
+		CHMK(0xbc, new MetaInfo(OT.w)), PROBER(0x0c, new MetaInfo(OT.b, OT.w, OT.b)),
+		NOP(0x01, new MetaInfo()), BLEQ(0x15, new MetaInfo(OT.Brb)),
+		CMPB(0x91, new MetaInfo(OT.b, OT.b)), INCL(0xd6, new MetaInfo(OT.l)),
+		DECL(0xd7, new MetaInfo(OT.l)), ADDL2(0xc0, new MetaInfo(OT.l, OT.l)),
+		BRB(0x11, new MetaInfo(OT.Brb)), PUSHAL(0xdf, new MetaInfo(OT.l));
+		
 
 		
 		public final int mne;		
@@ -79,7 +84,7 @@ public class V32Disassm {
 		case w: {
 			return memory.fetch2();
 		}
-		case b: {
+		case b: {			
 			return memory.fetch();
 		}
 		default: {
@@ -104,12 +109,23 @@ public class V32Disassm {
 		
 		if (value == 0xf) { // program counter address mode
 			switch(type) {
+			case 0x8: {
+				opinfo.opsub.type = Type.Immed;
+				opinfo.opsub.arg = fetch(optype);
+				return opinfo.opsub;
+			}
+			case 0xc: { // word relative
+				opinfo.opsub.type = Type.WordRel;
+				opinfo.opsub.arg = memory.fetch2() + memory.getCurrentPc();
+				return opinfo.opsub;
+			}
 			case 0xe: {
 				opinfo.opsub.type = Type.LongRel;
 				opinfo.opsub.arg = memory.fetch4() + memory.getCurrentPc();
 				return opinfo.opsub;
 			}
 			default: {
+				System.out.println("unsupported byte in program couter address mode");
 				System.exit(1);
 			}
 			
@@ -125,6 +141,11 @@ public class V32Disassm {
 				opinfo.opsub.type = Type.Literal;
 				opinfo.opsub.operand = (byte)(arg & 0x3f);
 				return opinfo.opsub;				
+			}
+			case 4: { // index
+				opinfo.opsub.type = Type.Index;
+				opinfo.opsub.operand = (byte)(arg & 0x3f);
+				return opinfo.opsub;
 			}
 			case 5: { // Register
 				opinfo.opsub.type = Type.Register;
@@ -158,6 +179,18 @@ public class V32Disassm {
 				opinfo.opsub.arg = memory.fetch();
 				return opinfo.opsub;
 			}
+			case 0x0c: { // Word Displacement
+				opinfo.opsub.type = Type.WordDisp;
+				opinfo.opsub.operand = (byte)(arg & 0xf);
+				opinfo.opsub.arg = memory.fetch2();
+				return opinfo.opsub;
+			}
+			case 0x0d: { // Word Displacement Deferred
+				opinfo.opsub.type = Type.WordDispDefer;
+				opinfo.opsub.operand = (byte)(arg & 0xf);
+				opinfo.opsub.arg = memory.fetch2();
+				return opinfo.opsub;
+			}
 			default: { // index
 				System.out.printf("%x is not implemented yet in resolveDisp\n", type);
 				System.exit(1);				
@@ -182,6 +215,14 @@ public class V32Disassm {
 		opinfo.setType2(opsub.type);
 		opinfo.setOpe2(opsub.operand);
 		opinfo.setArg2(opsub.arg);
+	}
+	
+	private void setArg3(MetaInfo minfo) {
+		setArg2(minfo);
+		OpInfoSub opsub = resolveDisp(minfo.arg3);
+		opinfo.setType3(opsub.type);
+		opinfo.setOpe3(opsub.operand);
+		opinfo.setArg3(opsub.arg);
 	}
 	
 	private String format(int index, byte[] rawdata, String s) {
@@ -227,8 +268,14 @@ public class V32Disassm {
 			showlog(format(index, memory.rawdump(), Dump.dump(opinfo, ope.opname)));
 			break;
 		}
-		case 2: {
+		case 2: {			
 			setArg2(ope.minfo);
+			showlog(format(index, memory.rawdump(), Dump.dump(opinfo, ope.opname)));
+			
+			break;
+		}
+		case 3: {
+			setArg3(ope.minfo);
 			showlog(format(index, memory.rawdump(), Dump.dump(opinfo, ope.opname)));
 			break;
 		}
