@@ -90,7 +90,11 @@ public class Dump {
 	}
 	
 	private static String dump1(OpInfo opinfo) {
-		return createOperand(opinfo.getType1(), opinfo.getOpe1(), opinfo.getArg1());
+		String s = createOperand(opinfo.getType1(), opinfo.getOpe1(), opinfo.getArg1());
+		if (opinfo.getIdx1() != -1) {
+			s += createOperand(Type.Index, opinfo.getIdx1(), 0);
+		}
+		return s;
 	}
 	
 	private static String dump2(OpInfo opinfo) {

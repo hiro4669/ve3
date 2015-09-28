@@ -205,6 +205,10 @@ public class V32Disassm {
 	
 	private void setArg1(MetaInfo minfo) {
 		OpInfoSub opsub = resolveDisp(minfo.arg1);
+		if (opsub.type == Type.Index) {
+			opinfo.setIdx1(opsub.operand);
+			opsub = resolveDisp(minfo.arg1);
+		}
 		opinfo.setType1(opsub.type);
 		opinfo.setOpe1(opsub.operand);
 		opinfo.setArg1(opsub.arg);
@@ -212,6 +216,10 @@ public class V32Disassm {
 	private void setArg2(MetaInfo minfo) {
 		setArg1(minfo);
 		OpInfoSub opsub = resolveDisp(minfo.arg2);
+		if (opsub.type == Type.Index) {
+			opinfo.setIdx2(opsub.operand);
+			opsub = resolveDisp(minfo.arg2);
+		}
 		opinfo.setType2(opsub.type);
 		opinfo.setOpe2(opsub.operand);
 		opinfo.setArg2(opsub.arg);
@@ -220,6 +228,10 @@ public class V32Disassm {
 	private void setArg3(MetaInfo minfo) {
 		setArg2(minfo);
 		OpInfoSub opsub = resolveDisp(minfo.arg3);
+		if (opsub.type == Type.Index) {
+			opinfo.setIdx3(opsub.operand);
+			opsub = resolveDisp(minfo.arg3);
+		}
 		opinfo.setType3(opsub.type);
 		opinfo.setOpe3(opsub.operand);
 		opinfo.setArg3(opsub.arg);
