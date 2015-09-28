@@ -33,16 +33,15 @@ public class ConcrateMemory implements Memory {
 	
 	public short fetch2() {
 		byte b1 = (byte)(memory[pc++] & 0xff);
-		return (short)((memory[pc++] & 0xff) << 8 | b1);
+		return (short)((memory[pc++] & 0xff) << 8 | b1 & 0xff);
 	}
 	
 	public int fetch4() {
-		byte b1 = (byte)(memory[pc++] & 0xff);
-		byte b2 = (byte)(memory[pc++] & 0xff);
-		byte b3 = (byte)(memory[pc++] & 0xff);
-		byte b4 = (byte)(memory[pc++] & 0xff);
-		
-		return b4 << 24 | b3 << 16 | b2 << 8 | b1;
+		byte b1 = (byte)(memory[pc++]);
+		byte b2 = (byte)(memory[pc++]);
+		byte b3 = (byte)(memory[pc++]);
+		byte b4 = (byte)(memory[pc++]);			
+		return (int)((b4 & 0xff) << 24 | (b3 & 0xff) << 16 | (b2 & 0xff) << 8 | b1 & 0xff);
 	}
 	
 	public int savePc() {
@@ -62,9 +61,19 @@ public class ConcrateMemory implements Memory {
 	
 	public byte[] rawdump() {
 		int count = 0;
-		for (int i = prevPc; i < pc; ++i, ++count) {
+		int ti;
+		for (int i = ti = prevPc; i < pc; ++i, ++count, ++ti) {
 			rawout.printf("%02x ", memory[i]);
 		}
+		/*
+		if (ti == pc) {
+			System.out.println("end");
+		} else {
+
+			System.out.println("continue");
+		}
+		*/		
+		
 		for (int i = 0; i < 4-count; ++i) {
 			rawout.printf("   ");
 		}		

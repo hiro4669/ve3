@@ -24,8 +24,9 @@ public class V32Disassm {
 	enum Ope {
 		HALT(0x00, new MetaInfo()), SUBL2(0xc2, new MetaInfo(OT.l, OT.l)),
 		MOVL(0xd0, new MetaInfo(OT.l, OT.l)), MOVAB(0x9e, new MetaInfo(OT.b, OT.l)),
-		TSTL(0xd5, new MetaInfo(OT.l)), BNEQ(0x12, new MetaInfo(OT.Brb));
-//		MOVAB(0x9e, 2), SUBL2(0xc2, 2), MOVL(0xd0, 2), TSTL(0xd5, 1);
+		TSTL(0xd5, new MetaInfo(OT.l)), BNEQ(0x12, new MetaInfo(OT.Brb)),
+		CMPL(0xd1, new MetaInfo(OT.l, OT.l)), BLSS(0x19, new MetaInfo(OT.Brb));
+
 		
 		public final int mne;		
 		public final String opname;
@@ -64,6 +65,30 @@ public class V32Disassm {
 				| (rawdata[offset+2] & 0xff) << 16 | (rawdata[offset+3] & 0xff) << 24;
 	}
 	
+	private int fetch(OT optype) {
+		switch(optype) {
+		case l: {
+			//int i = memory.fetch4();
+			//System.out.printf("i = %x\n", i);
+			//return i;		
+			return memory.fetch4();
+			
+		}
+		case w: {
+			return memory.fetch2();
+		}
+		case b: {
+			return memory.fetch();
+		}
+		default: {
+			System.exit(1);
+		}
+		}
+		
+		return 0;
+		
+	}
+	
 	private OpInfoSub resolveDisp(OT optype) {
 		if (optype == OT.Brb) {
 			opinfo.opsub.type = Type.Branch1;
@@ -78,7 +103,18 @@ public class V32Disassm {
 		byte value = (byte)(arg & 0xf);
 		
 		if (value == 0xf) { // program counter address mode
-			//opinfo.opsub.admode = OpInfo.AddressMode.PC;			
+			switch(type) {
+			case 0xe: {
+				opinfo.opsub.type = Type.LongRel;
+				opinfo.opsub.arg = fetch(optype) + memory.getCurrentPc();
+				return opinfo.opsub;
+			}
+			default: {
+				System.exit(1);
+			}
+			
+			}
+
 		} else { // normal address mode
 			//opinfo.opsub.admode = OpInfo.AddressMode.General;
 			switch (type) {
@@ -100,6 +136,11 @@ public class V32Disassm {
 				opinfo.opsub.operand = (byte)(arg & 0xf);
 				return opinfo.opsub;
 			}
+			case 7: { // Auto Decrement
+				opinfo.opsub.type = Type.AutoDec;
+				opinfo.opsub.operand = (byte)(arg & 0xf);
+				return opinfo.opsub;		
+			}
 			case 8: { // Auto Increment
 				opinfo.opsub.type = Type.AutoInc;
 				opinfo.opsub.operand = (byte)(arg & 0xf);
@@ -110,6 +151,12 @@ public class V32Disassm {
 				opinfo.opsub.operand = (byte)(arg & 0xf);
 				opinfo.opsub.arg = memory.fetch();
 				return opinfo.opsub;				
+			}
+			case 0xb: { // Byte Displacement Deferred
+				opinfo.opsub.type = Type.ByteDispDefer;
+				opinfo.opsub.operand = (byte)(arg & 0xf);
+				opinfo.opsub.arg = memory.fetch();
+				return opinfo.opsub;
 			}
 			default: { // index
 				System.out.printf("%x is not implemented yet in resolveDisp\n", type);

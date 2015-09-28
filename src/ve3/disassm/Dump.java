@@ -20,11 +20,21 @@ public class Dump {
 		case RegDefer: { // 6
 			return "(" + regs[operand] + ")";
 		}
+		case AutoDec: { // 7
+			return "-(" + regs[operand] + ")";
+		}
 		case AutoInc: { // 8
 			return "(" + regs[operand] + ")+";
 		}		
 		case ByteDisp: { // 0xa
 			return String.format("0x%x(%s)", arg, regs[operand]);	
+		}
+		case ByteDispDefer: { // 0x0b
+			return String.format("*0x%x(%s)", arg, regs[operand]);	
+		}
+		case LongRel: { // 0xe : program conter mode
+			return String.format("0x%x", arg);
+			
 		}
 		case Branch1: { // branch disp byte
 			return String.format("0x%x", arg);
