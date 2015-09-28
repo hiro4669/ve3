@@ -9,5 +9,6 @@ public interface Memory {
 	public short fetch2();
 	public int fetch4();
 	public int getCurrentPc();
+	public int savePc();
 
 }

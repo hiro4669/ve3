@@ -26,6 +26,10 @@ public class Dump {
 		case ByteDisp: { // 0xa
 			return String.format("0x%x(%s)", arg, regs[operand]);	
 		}
+		case Branch1: { // branch disp byte
+			return String.format("0x%x", arg);
+			
+		}
 		default: {
 			System.out.println("unrecognized type in Dump");
 			System.exit(1);
@@ -33,6 +37,36 @@ public class Dump {
 		}
 		}		
 		return "";
+	}
+	
+	
+	
+	public static String dump(OpInfo opinfo, String opname) {
+		
+		switch(opinfo.getMetaInfo().size) {
+		case 0: {
+			return opname;	
+		}
+		case 1: {
+			return opname + " " + dump1(opinfo);
+		}
+		case 2: {
+			return opname + " " + dump2(opinfo);
+		}
+		default: {
+			System.exit(1);
+			return "";
+			
+		}
+		}		
+	}
+	
+	private static String dump1(OpInfo opinfo) {
+		return createOperand(opinfo.getType1(), opinfo.getOpe1(), opinfo.getArg1());
+	}
+	
+	private static String dump2(OpInfo opinfo) {
+		return dump1(opinfo) + "," + createOperand(opinfo.getType2(), opinfo.getOpe2(), opinfo.getArg2());
 	}
 	
 	public static String dump0Ops(OpInfo opinfo, String opname) {

@@ -5,6 +5,7 @@ import ve3.hdw.Memory;
 import ve3.os.OpInfo;
 import ve3.os.MetaInfo;
 import ve3.os.OpInfo.OpInfoSub;
+import ve3.os.OpInfo.Type;
 
 public class V32Disassm {
 	
@@ -15,14 +16,15 @@ public class V32Disassm {
 		Branch, General, PC
 	}
 	
+	/* b:byte, w:word, l:long, Brb:Branch byte, Brw:Branch word */
 	public static enum OT {
 		b, w, l, Brb, Brw 
 	}
 	
 	enum Ope {
-
-		HALT(0x00, new MetaInfo()), SUBL2(0xc2, new MetaInfo(OT.l, OT.l));
-		
+		HALT(0x00, new MetaInfo()), SUBL2(0xc2, new MetaInfo(OT.l, OT.l)),
+		MOVL(0xd0, new MetaInfo(OT.l, OT.l)), MOVAB(0x9e, new MetaInfo(OT.b, OT.l)),
+		TSTL(0xd5, new MetaInfo(OT.l)), BNEQ(0x12, new MetaInfo(OT.Brb));
 //		MOVAB(0x9e, 2), SUBL2(0xc2, 2), MOVL(0xd0, 2), TSTL(0xd5, 1);
 		
 		public final int mne;		
@@ -63,6 +65,14 @@ public class V32Disassm {
 	}
 	
 	private OpInfoSub resolveDisp(OT optype) {
+		if (optype == OT.Brb) {
+			opinfo.opsub.type = Type.Branch1;
+			opinfo.opsub.arg = memory.fetch() + memory.getCurrentPc();
+			//System.out.printf("disp = 0x%x\n", opinfo.opsub.arg);
+			return opinfo.opsub;
+		} 
+		
+		
 		byte arg = memory.fetch();
 		byte type = (byte)((arg >> 4) & 0xf);
 		byte value = (byte)(arg & 0xf);
@@ -76,28 +86,27 @@ public class V32Disassm {
 			case 1:
 			case 2:
 			case 3: { // immediate data
-				opinfo.opsub.type = OpInfo.Type.Literal;
+				opinfo.opsub.type = Type.Literal;
 				opinfo.opsub.operand = (byte)(arg & 0x3f);
 				return opinfo.opsub;				
 			}
 			case 5: { // Register
-				opinfo.opsub.type = OpInfo.Type.Register;
+				opinfo.opsub.type = Type.Register;
 				opinfo.opsub.operand = (byte)(arg & 0xf);
-				return opinfo.opsub;
-				
+				return opinfo.opsub;				
 			}
 			case 6: { // Register Defered 
-				opinfo.opsub.type = OpInfo.Type.RegDefer;
+				opinfo.opsub.type = Type.RegDefer;
 				opinfo.opsub.operand = (byte)(arg & 0xf);
 				return opinfo.opsub;
 			}
 			case 8: { // Auto Increment
-				opinfo.opsub.type = OpInfo.Type.AutoInc;
+				opinfo.opsub.type = Type.AutoInc;
 				opinfo.opsub.operand = (byte)(arg & 0xf);
 				return opinfo.opsub;				
 			}
 			case 0xa: { // Byte Displacement
-				opinfo.opsub.type = OpInfo.Type.ByteDisp;
+				opinfo.opsub.type = Type.ByteDisp;
 				opinfo.opsub.operand = (byte)(arg & 0xf);
 				opinfo.opsub.arg = memory.fetch();
 				return opinfo.opsub;				
@@ -140,35 +149,36 @@ public class V32Disassm {
 	}
 	
 	private void run() {
-		int index = memory.getCurrentPc();
+		int index = memory.savePc();
 		int b1 = (opinfo.setOpCode(memory.fetch())) & 0xff;
 		Ope ope = Ope.table[b1];
-		
+
 		if (ope == null) {
 			System.out.printf("0x%x unrecognised mnemonic in run1\n", b1);
 			System.exit(1);
 		}
-		/*
-		switch (ope.argnum) {
+		
+		opinfo.setMetaInfo(ope.minfo);
+		switch(ope.minfo.size) {
 		case 0: {
-			System.out.println(format(index, memory.rawdump(), Dump.dump0Ops(opinfo, ope.opname)));
+			System.out.println(format(index, memory.rawdump(), Dump.dump(opinfo, ope.opname)));
 			break;
 		}
 		case 1: {
-			setArg1();
-			System.out.println(format(index, memory.rawdump(), Dump.dump1Ops(opinfo, ope.opname)));
+			setArg1(ope.minfo);
+			System.out.println(format(index, memory.rawdump(), Dump.dump(opinfo, ope.opname)));
 			break;
 		}
 		case 2: {
-			setArg2();
-			System.out.println(format(index, memory.rawdump(), Dump.dump2Ops(opinfo, ope.opname)));
+			setArg2(ope.minfo);
+			System.out.println(format(index, memory.rawdump(), Dump.dump(opinfo, ope.opname)));
 			break;
 		}
 		default: {
-			break;
+			System.out.printf("0x%x unrecognised size in run\n", ope.minfo.size);
+			System.exit(1);
 		}
-		}
-		*/
+		}		
 	}
 		
 }

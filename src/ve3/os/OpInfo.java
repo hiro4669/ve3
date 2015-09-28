@@ -8,7 +8,9 @@ public class OpInfo {
 		AutoIncDefer, ByteDisp, ByteDispDefer, WordDisp, WordDispDefer,
 		LongDisp, LongDispDefer,
 		Immed, Abs, ByteRel, ByteRelDefer, WordRel, WordRelDefer,
-		LongRel, LongRelDefer, NoType
+		LongRel, LongRelDefer,
+		Branch1, Branch2,
+		NoType
 	}
 	
 	private byte opcode;
@@ -24,6 +26,8 @@ public class OpInfo {
 	private byte ope3;
 	private int arg3;
 	
+	private MetaInfo minfo;
+		
 	public OpInfoSub opsub;
 		
 	public OpInfo() {
@@ -33,6 +37,7 @@ public class OpInfo {
 	
 	public void clear() {
 		opcode = -1;
+		minfo = null;
 		type1 = type2 = type3 = Type.NoType;
 		ope1 = ope2 = ope3 = 0;
 	}
@@ -42,6 +47,13 @@ public class OpInfo {
 	}
 	public byte getOpCode() {
 		return opcode;		
+	}
+	
+	public void setMetaInfo(MetaInfo minfo) {
+		this.minfo = minfo;
+	}
+	public MetaInfo getMetaInfo() {
+		return minfo;
 	}
 	
 	public void setType1(Type type1) {

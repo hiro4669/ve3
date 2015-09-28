@@ -45,8 +45,12 @@ public class ConcrateMemory implements Memory {
 		return b4 << 24 | b3 << 16 | b2 << 8 | b1;
 	}
 	
-	public int getCurrentPc() {
+	public int savePc() {
 		return prevPc = pc;
+	}
+	
+	public int getCurrentPc() {
+		return pc;
 	}
 	
 	public void dump() {
