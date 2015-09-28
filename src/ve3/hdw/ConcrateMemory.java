@@ -13,8 +13,11 @@ public class ConcrateMemory implements Memory {
 	private ByteArrayOutputStream buf;
 	private PrintStream rawout;
 	
+	private boolean remain;
+	
 	
 	public ConcrateMemory(int maxSize) {
+		remain = false;
 		memory = new byte[maxSize];
 		this.maxSize = maxSize;		
 		buf = new ByteArrayOutputStream(30);		
@@ -45,11 +48,16 @@ public class ConcrateMemory implements Memory {
 	}
 	
 	public int savePc() {
+		remain = false;
 		return prevPc = pc;
 	}
 	
 	public int getCurrentPc() {
 		return pc;
+	}
+	
+	public int getPrevPc() {
+		return prevPc;
 	}
 	
 	public void dump() {
@@ -61,18 +69,16 @@ public class ConcrateMemory implements Memory {
 	
 	public byte[] rawdump() {
 		int count = 0;
-		int ti;
-		for (int i = ti = prevPc; i < pc; ++i, ++count, ++ti) {
-			rawout.printf("%02x ", memory[i]);
+		int limit = (pc - prevPc) <= 4 ? pc : prevPc+4;
+		
+		//for (int i = ti = prevPc; i < limit; ++i, ++count, ++ti) {
+//			rawout.printf("%02x ", memory[i]);
+		//}
+		
+		for(; prevPc < limit; ++prevPc, ++count) {
+			rawout.printf("%02x ", memory[prevPc]);
 		}
-		/*
-		if (ti == pc) {
-			System.out.println("end");
-		} else {
-
-			System.out.println("continue");
-		}
-		*/		
+		remain = (prevPc != pc);
 		
 		for (int i = 0; i < 4-count; ++i) {
 			rawout.printf("   ");
@@ -81,6 +87,22 @@ public class ConcrateMemory implements Memory {
 		byte[] rawdata = buf.toByteArray();
 		buf.reset();
 		return rawdata;		
+	}
+	
+	public boolean remaining() {
+		return remain;
+	}
+	
+	public byte[] rawdump_rem() {
+		int limit = (pc - prevPc) <= 4 ? pc : prevPc+4;
+		
+		for(; prevPc < limit; ++prevPc) {
+			rawout.printf("%02x ", memory[prevPc]);
+		}		
+		remain = (prevPc != pc);		
+		byte[] rawdata = buf.toByteArray();
+		buf.reset();
+		return rawdata;	
 	}
 
 }

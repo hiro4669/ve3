@@ -25,7 +25,9 @@ public class V32Disassm {
 		HALT(0x00, new MetaInfo()), SUBL2(0xc2, new MetaInfo(OT.l, OT.l)),
 		MOVL(0xd0, new MetaInfo(OT.l, OT.l)), MOVAB(0x9e, new MetaInfo(OT.b, OT.l)),
 		TSTL(0xd5, new MetaInfo(OT.l)), BNEQ(0x12, new MetaInfo(OT.Brb)),
-		CMPL(0xd1, new MetaInfo(OT.l, OT.l)), BLSS(0x19, new MetaInfo(OT.Brb));
+		CMPL(0xd1, new MetaInfo(OT.l, OT.l)), BLSS(0x19, new MetaInfo(OT.Brb)),
+		CALLS(0xfb, new MetaInfo(OT.l, OT.b)), PUSHL(0xdd, new MetaInfo(OT.l)),
+		CHMK(0xbc, new MetaInfo(OT.w));
 
 		
 		public final int mne;		
@@ -96,8 +98,6 @@ public class V32Disassm {
 			//System.out.printf("disp = 0x%x\n", opinfo.opsub.arg);
 			return opinfo.opsub;
 		} 
-		
-		
 		byte arg = memory.fetch();
 		byte type = (byte)((arg >> 4) & 0xf);
 		byte value = (byte)(arg & 0xf);
@@ -106,7 +106,7 @@ public class V32Disassm {
 			switch(type) {
 			case 0xe: {
 				opinfo.opsub.type = Type.LongRel;
-				opinfo.opsub.arg = fetch(optype) + memory.getCurrentPc();
+				opinfo.opsub.arg = memory.fetch4() + memory.getCurrentPc();
 				return opinfo.opsub;
 			}
 			default: {
@@ -187,6 +187,17 @@ public class V32Disassm {
 	private String format(int index, byte[] rawdata, String s) {
 		return String.format("%4x:   %s    %s", index, new String(rawdata), s);
 	}
+	private String format(int index, byte[] rawdata) {
+		return String.format("%4x:   %s", index, new String(rawdata));	
+	}
+	
+	
+	private void showlog(String s) {
+		System.out.println(s);
+		while(memory.remaining()) {
+			System.out.println(format(memory.getPrevPc(), memory.rawdump_rem()));
+		}
+	}
 	
 	public void disassm() {
 		while (true) {
@@ -208,17 +219,17 @@ public class V32Disassm {
 		opinfo.setMetaInfo(ope.minfo);
 		switch(ope.minfo.size) {
 		case 0: {
-			System.out.println(format(index, memory.rawdump(), Dump.dump(opinfo, ope.opname)));
+			showlog(format(index, memory.rawdump(), Dump.dump(opinfo, ope.opname)));
 			break;
 		}
 		case 1: {
 			setArg1(ope.minfo);
-			System.out.println(format(index, memory.rawdump(), Dump.dump(opinfo, ope.opname)));
+			showlog(format(index, memory.rawdump(), Dump.dump(opinfo, ope.opname)));
 			break;
 		}
 		case 2: {
 			setArg2(ope.minfo);
-			System.out.println(format(index, memory.rawdump(), Dump.dump(opinfo, ope.opname)));
+			showlog(format(index, memory.rawdump(), Dump.dump(opinfo, ope.opname)));
 			break;
 		}
 		default: {
