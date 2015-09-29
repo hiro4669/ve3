@@ -1,5 +1,6 @@
 package ve3.disassm;
 
+import ve3.disassm.V32Disassm.OT;
 import ve3.os.OpInfo;
 import ve3.os.OpInfo.Type;
 
@@ -9,7 +10,7 @@ public class Dump {
 			"r9", "r10", "r11", "ap", "fp", "sp", "pc"
 	};
 	
-	private static String createOperand(Type type, byte operand, int arg) {
+	private static String createOperand(Type type, byte operand, int arg, OT ot) {
 		switch(type) {
 		case Literal: { // 0~3
 			return String.format("$0x%x", operand);
@@ -42,7 +43,24 @@ public class Dump {
 			return String.format("*0x%x(%s)", arg, regs[operand]);	
 		}
 		case Immed: {
-			return String.format("$0x%x", arg);
+			String fmt = "$0x%x";
+			switch(ot) {
+			case b:
+				fmt = "$0x%02x";
+				break;
+			case w: 
+				fmt = "$0x%04x";
+				break;
+			case l: {
+				fmt = "$0x%08x";
+				break;
+			}
+			case f: {
+				fmt = "$0x%08x [f-floot]";
+				break;
+			}
+			}
+			return String.format(fmt, arg);
 		}
 		case WordRel: {
 			return String.format("0x%x", arg);
@@ -90,18 +108,18 @@ public class Dump {
 	}
 	
 	private static String dump1(OpInfo opinfo) {
-		String s = createOperand(opinfo.getType1(), opinfo.getOpe1(), opinfo.getArg1());
+		String s = createOperand(opinfo.getType1(), opinfo.getOpe1(), opinfo.getArg1(), opinfo.getMetaInfo().arg1);
 		if (opinfo.getIdx1() != -1) {
-			s += createOperand(Type.Index, opinfo.getIdx1(), 0);
+			s += createOperand(Type.Index, opinfo.getIdx1(), 0, null);
 		}
 		return s;
 	}
 	
 	private static String dump2(OpInfo opinfo) {
-		return dump1(opinfo) + "," + createOperand(opinfo.getType2(), opinfo.getOpe2(), opinfo.getArg2());
+		return dump1(opinfo) + "," + createOperand(opinfo.getType2(), opinfo.getOpe2(), opinfo.getArg2(), opinfo.getMetaInfo().arg2);
 	}
 	
 	private static String dump3(OpInfo opinfo) {
-		return dump2(opinfo) + "," + createOperand(opinfo.getType3(), opinfo.getOpe3(), opinfo.getArg3());
+		return dump2(opinfo) + "," + createOperand(opinfo.getType3(), opinfo.getOpe3(), opinfo.getArg3(), opinfo.getMetaInfo().arg3);
 	}
 }

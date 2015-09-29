@@ -18,10 +18,12 @@ public class V32Disassm {
 	
 	/* b:byte, w:word, l:long, Brb:Branch byte, Brw:Branch word */
 	public static enum OT {
-		b, w, l, Brb, Brw 
+		b, w, l, f, Brb, Brw 
 	}
 	
 	enum Ope {
+
+		DUMMY1(0x5bd0, new MetaInfo()), DUMMY2(0x5be0, new MetaInfo()),
 		HALT(0x00, new MetaInfo()), SUBL2(0xc2, new MetaInfo(OT.l, OT.l)),
 		MOVL(0xd0, new MetaInfo(OT.l, OT.l)), MOVAB(0x9e, new MetaInfo(OT.b, OT.l)),
 		TSTL(0xd5, new MetaInfo(OT.l)), BNEQ(0x12, new MetaInfo(OT.Brb)),
@@ -31,7 +33,16 @@ public class V32Disassm {
 		NOP(0x01, new MetaInfo()), BLEQ(0x15, new MetaInfo(OT.Brb)),
 		CMPB(0x91, new MetaInfo(OT.b, OT.b)), INCL(0xd6, new MetaInfo(OT.l)),
 		DECL(0xd7, new MetaInfo(OT.l)), ADDL2(0xc0, new MetaInfo(OT.l, OT.l)),
-		BRB(0x11, new MetaInfo(OT.Brb)), PUSHAL(0xdf, new MetaInfo(OT.l));
+		BRB(0x11, new MetaInfo(OT.Brb)), PUSHAL(0xdf, new MetaInfo(OT.l)),
+		SUBL3(0xc3, new MetaInfo(OT.l, OT.l, OT.l)), BGEQ(0x18, new MetaInfo(OT.Brb)),
+		CVTLB(0xf6, new MetaInfo(OT.l, OT.b)), CVTBL(0x98, new MetaInfo(OT.b, OT.l)),
+		RET(0x4, new MetaInfo()), REMQUE(0x0f, new MetaInfo(OT.b, OT.l)),
+		XORW2(0xac, new MetaInfo(OT.w, OT.w)), BICW3(0xab, new MetaInfo(OT.w, OT.w, OT.w)),
+		BEQL(0x13, new MetaInfo(OT.Brb)), BISB2(0x88, new MetaInfo(OT.b, OT.b)),
+		BBC(0xe1, new MetaInfo(OT.l, OT.b, OT.Brb)), CLRF(0xd4, new MetaInfo(OT.f)),
+		MOVAL(0xde, new MetaInfo(OT.l, OT.l)), CVTWL(0x32, new MetaInfo(OT.w, OT.l)),
+		BCC(0x1e, new MetaInfo(OT.Brb)), JMP(0x17, new MetaInfo(OT.b)),
+		ADDL3(0xc1, new MetaInfo(OT.l, OT.l, OT.l)), MNEGL(0xce, new MetaInfo(OT.l, OT.l));
 		
 
 		
@@ -74,12 +85,9 @@ public class V32Disassm {
 	
 	private int fetch(OT optype) {
 		switch(optype) {
+		case f:
 		case l: {
-			//int i = memory.fetch4();
-			//System.out.printf("i = %x\n", i);
-			//return i;		
-			return memory.fetch4();
-			
+			return memory.fetch4();			
 		}
 		case w: {
 			return memory.fetch2();
@@ -88,6 +96,7 @@ public class V32Disassm {
 			return memory.fetch();
 		}
 		default: {
+			System.out.println("unrecognised optype(OT) in fetch");
 			System.exit(1);
 		}
 		}
@@ -261,14 +270,24 @@ public class V32Disassm {
 	
 	private void run() {
 		int index = memory.savePc();
-		int b1 = (opinfo.setOpCode(memory.fetch())) & 0xff;
+		//int b1 = (opinfo.setOpCode(memory.fetch())) & 0xff;
+		int b1 = opinfo.setOpCode(memory.fetch() & 0xff);
 		Ope ope = Ope.table[b1];
 
 		if (ope == null) {
-			System.out.printf("0x%x unrecognised mnemonic in run1\n", b1);
-			System.exit(1);
+			b1 = opinfo.setOpCode(b1 << 8 | memory.fetch() & 0xff);			
+			ope = Ope.table[b1];
+			if (ope == null) {
+				System.out.printf("0x%x unrecognised mnemonic in run1\n", b1);
+				System.exit(1);
+			} else {
+				// temporary
+				showlog(format(index, memory.rawdump(), ".word " + String.format("0x%x", b1)));
+				return;
+			}
 		}
-		
+
+
 		opinfo.setMetaInfo(ope.minfo);
 		switch(ope.minfo.size) {
 		case 0: {

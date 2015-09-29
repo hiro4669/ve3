@@ -13,7 +13,8 @@ public class OpInfo {
 		NoType
 	}
 	
-	private byte opcode;
+	private int opcode;
+	
 	private Type type1;
 	private byte ope1;
 	private int arg1;
@@ -46,10 +47,10 @@ public class OpInfo {
 		ope1 = ope2 = ope3 = 0;
 	}
 	
-	public byte setOpCode(byte opcode) {
+	public int setOpCode(int opcode) {
 		return (this.opcode = opcode);
 	}
-	public byte getOpCode() {
+	public int getOpCode() {
 		return opcode;		
 	}
 	
