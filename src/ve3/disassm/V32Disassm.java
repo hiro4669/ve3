@@ -60,7 +60,9 @@ public class V32Disassm {
 		MOVC3(0x28, new MetaInfo(OT.w, OT.b, OT.b)), CVTBD(0x6c, new MetaInfo(OT.b, OT.df)),
 		BBS(0xe0, new MetaInfo(OT.l, OT.b, OT.Brb)), LOCC(0x3a, new MetaInfo(OT.b, OT.w, OT.b)),
 		EXTZV(0xef, new MetaInfo(OT.l, OT.b, OT.b, OT.l)), ACBL(0xf1, new MetaInfo(OT.l, OT.l, OT.l, OT.Brw)),
-		SKPC(0x3b, new MetaInfo(OT.b, OT.w, OT.b)), BISW3(0xa9, new MetaInfo(OT.w, OT.w, OT.w));
+		SKPC(0x3b, new MetaInfo(OT.b, OT.w, OT.b)), BISW3(0xa9, new MetaInfo(OT.w, OT.w, OT.w)),
+		CVTLP(0xf9, new MetaInfo(OT.l, OT.w, OT.b)), EDITPC(0x38, new MetaInfo(OT.w, OT.b, OT.b, OT.b)),
+		BVC(0x1c, new MetaInfo(OT.Brb)), BLSSU(0x1f, new MetaInfo(OT.Brb));
 		
 		
 
