@@ -7,6 +7,7 @@ public interface Memory {
 	public byte fetch();
 	public short fetch2();
 	public int fetch4();
+	public long fetch8();
 	public int getCurrentPc();
 	public int savePc();
 	

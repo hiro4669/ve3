@@ -17,17 +17,17 @@ public class OpInfo {
 	
 	private Type type1;
 	private byte ope1;
-	private int arg1;
+	private long arg1;
 	private byte idx1;
 	
 	private Type type2;
 	private byte ope2;
-	private int arg2;
+	private long arg2;
 	private byte idx2;
 	
 	private Type type3;
 	private byte ope3;
-	private int arg3;
+	private long arg3;
 	private byte idx3;
 	
 	private MetaInfo minfo;
@@ -73,10 +73,10 @@ public class OpInfo {
 	public byte getOpe1() {
 		return ope1;
 	}	
-	public void setArg1(int arg1) {
+	public void setArg1(long arg1) {
 		this.arg1 = arg1;
 	}
-	public int getArg1() {
+	public long getArg1() {
 		return arg1;
 	}
 	public void setIdx1(byte idx1) {
@@ -98,10 +98,10 @@ public class OpInfo {
 	public byte getOpe2() {
 		return ope2;
 	}
-	public void setArg2(int arg2) {
+	public void setArg2(long arg2) {
 		this.arg2 = arg2;
 	}
-	public int getArg2() {
+	public long getArg2() {
 		return arg2;
 	}
 	public void setIdx2(byte idx2) {
@@ -123,10 +123,10 @@ public class OpInfo {
 	public byte getOpe3() {
 		return ope3;
 	}
-	public void setArg3(int arg3) {
+	public void setArg3(long arg3) {
 		this.arg3 = arg3;
 	}
-	public int getArg3() {
+	public long getArg3() {
 		return arg3;
 	}
 	public void setIdx3(byte idx3) {
@@ -140,7 +140,7 @@ public class OpInfo {
 	public class OpInfoSub {
 		public Type type;
 		public byte operand;
-		public int arg;
+		public long arg;
 		
 		public OpInfoSub() {
 			type = Type.NoType;

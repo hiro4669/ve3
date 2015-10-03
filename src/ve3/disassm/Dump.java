@@ -10,10 +10,46 @@ public class Dump {
 			"r9", "r10", "r11", "ap", "fp", "sp", "pc"
 	};
 	
-	private static String createOperand(Type type, byte operand, int arg, OT ot) {
+	private static String getArgStr(OT ot, long arg) {
+		
+		switch(ot) {
+		case b:
+			return String.format("0x%x", (byte)arg);
+		case w: 
+			return String.format("0x%x", (short)arg);
+		case l: 
+		case f:{
+			return String.format("0x%x", (int)arg);
+		}
+		case q:
+		case df: {
+			return String.format("0x%x", (long)arg);
+		}
+		default: {
+			System.out.println("unrecognised optype(OT) in getARgStr");
+			System.exit(1);
+		}
+		}
+		return "";
+		
+	}
+	
+	private static String createOperand(Type type, byte operand, long arg, OT ot) {
+		
 		switch(type) {
 		case Literal: { // 0~3
-			return String.format("$0x%x", operand);
+			String fmt = "$0x%x";
+			switch(ot) {			
+			case df: {
+				fmt += " [d-floot]";
+				break;
+			}
+			case f: {
+				fmt += "$0x%x [f-floot]";
+				break;
+			}
+			}
+			return String.format(fmt, operand);
 		}
 		case Index: {
 			return "[" + regs[operand] + "]";
@@ -31,16 +67,22 @@ public class Dump {
 			return "(" + regs[operand] + ")+";
 		}		
 		case ByteDisp: { // 0xa
-			return String.format("0x%x(%s)", arg, regs[operand]);	
+			//return String.format("0x%x(%s)", arg, regs[operand]);
+			return getArgStr(ot, arg) + String.format("(%s)", regs[operand]);
 		}
 		case ByteDispDefer: { // 0x0b
-			return String.format("*0x%x(%s)", arg, regs[operand]);	
+			return "*" + getArgStr(ot, arg) + String.format("(%s)", regs[operand]);
+			//return "*" + String.format("0x%x", arg) + String.format("(%s)", regs[operand]);
 		}
 		case WordDisp: { // 0x0c
-			return String.format("0x%x(%s)", arg, regs[operand]);
+			//return String.format("0x%x(%s)", arg, regs[operand]);
+			return getArgStr(ot, arg) + String.format("(%s)", regs[operand]);
+			//return String.format("0x%x", arg) + String.format("(%s)", regs[operand]);
 		}
 		case WordDispDefer: { // 0x0d
-			return String.format("*0x%x(%s)", arg, regs[operand]);	
+			//return String.format("*0x%x(%s)", arg, regs[operand]);
+			return "*" + getArgStr(ot, arg) + String.format("(%s)", regs[operand]);
+			//return "*" + String.format("0x%x", arg) + String.format("(%s)", regs[operand]);
 		}
 		case Immed: {
 			String fmt = "$0x%x";
@@ -59,6 +101,10 @@ public class Dump {
 				fmt = "$0x%016x";
 				break;
 			}
+			case df: {
+				fmt = "$0x%016x [d-floot]";
+				break;
+			}
 			case f: {
 				fmt = "$0x%08x [f-floot]";
 				break;
@@ -66,15 +112,14 @@ public class Dump {
 			}
 			return String.format(fmt, arg);
 		}
-		case WordRel: {
+		case WordRel: { // program counter mode
 			return String.format("0x%x", arg);
 		}
 		case LongRel: { // 0xe : program conter mode
-			return String.format("0x%x", arg);			
+			return String.format("0x%x", arg);
 		}
 		case Branch1: { // branch disp byte
 			return String.format("0x%x", arg);
-			
 		}
 		default: {
 			System.out.println("unrecognized type in Dump");

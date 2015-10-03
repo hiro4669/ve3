@@ -18,7 +18,7 @@ public class V32Disassm {
 	
 	/* b:byte, w:word, l:long, Brb:Branch byte, Brw:Branch word */
 	public static enum OT {
-		b, w, l, f, q, Brb, Brw 
+		b, w, l, f, q, df, Brb, Brw 
 	}
 	
 	enum Ope {
@@ -45,7 +45,8 @@ public class V32Disassm {
 		ADDL3(0xc1, new MetaInfo(OT.l, OT.l, OT.l)), MNEGL(0xce, new MetaInfo(OT.l, OT.l)),
 		REMQHI(0x5e, new MetaInfo(OT.q, OT.l)), BICL2(0xca, new MetaInfo(OT.l, OT.l)),
 		MOVB(0x90, new MetaInfo(OT.b, OT.b)), BISL2(0xc8, new MetaInfo(OT.l, OT.l)),
-		BLBC(0xe9, new MetaInfo(OT.l, OT.Brb)), BLBS(0xe8, new MetaInfo(OT.l, OT.Brb));
+		BLBC(0xe9, new MetaInfo(OT.l, OT.Brb)), BLBS(0xe8, new MetaInfo(OT.l, OT.Brb)),
+		SUBD3(0x63, new MetaInfo(OT.df, OT.df, OT.df)), DIVD3(0x67, new MetaInfo(OT.df, OT.df, OT.df));
 		
 		
 
@@ -87,8 +88,12 @@ public class V32Disassm {
 				| (rawdata[offset+2] & 0xff) << 16 | (rawdata[offset+3] & 0xff) << 24;
 	}
 	
-	private int fetch(OT optype) {
+	private long fetch(OT optype) {
 		switch(optype) {
+		case df:
+		case q: {
+			return memory.fetch8();
+		}
 		case f:
 		case l: {
 			return memory.fetch4();			

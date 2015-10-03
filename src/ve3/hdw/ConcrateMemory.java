@@ -47,6 +47,20 @@ public class ConcrateMemory implements Memory {
 		return (int)((b4 & 0xff) << 24 | (b3 & 0xff) << 16 | (b2 & 0xff) << 8 | b1 & 0xff);
 	}
 	
+	public long fetch8() {
+		byte b1 = (byte)(memory[pc++]);
+		byte b2 = (byte)(memory[pc++]);
+		byte b3 = (byte)(memory[pc++]);
+		byte b4 = (byte)(memory[pc++]);		
+		byte b5 = (byte)(memory[pc++]);
+		byte b6 = (byte)(memory[pc++]);
+		byte b7 = (byte)(memory[pc++]);
+		byte b8 = (byte)(memory[pc++]);
+		return (long)((b8 & 0xff) << 56 | (b7 & 0xff) << 48 | (b6 & 0xff) << 40 | (b5 & 0xff) << 32 |
+				(long)((b4 & 0xff) << 24 | (b3 & 0xff) << 16 | (b2 & 0xff) << 8 | b1 & 0xff));
+		
+	}
+	
 	public int savePc() {
 		remain = false;
 		return prevPc = pc;
