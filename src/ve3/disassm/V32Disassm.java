@@ -18,7 +18,7 @@ public class V32Disassm {
 	
 	/* b:byte, w:word, l:long, Brb:Branch byte, Brw:Branch word */
 	public static enum OT {
-		b, w, l, f, Brb, Brw 
+		b, w, l, f, q, Brb, Brw 
 	}
 	
 	enum Ope {
@@ -42,7 +42,11 @@ public class V32Disassm {
 		BBC(0xe1, new MetaInfo(OT.l, OT.b, OT.Brb)), CLRF(0xd4, new MetaInfo(OT.f)),
 		MOVAL(0xde, new MetaInfo(OT.l, OT.l)), CVTWL(0x32, new MetaInfo(OT.w, OT.l)),
 		BCC(0x1e, new MetaInfo(OT.Brb)), JMP(0x17, new MetaInfo(OT.b)),
-		ADDL3(0xc1, new MetaInfo(OT.l, OT.l, OT.l)), MNEGL(0xce, new MetaInfo(OT.l, OT.l));
+		ADDL3(0xc1, new MetaInfo(OT.l, OT.l, OT.l)), MNEGL(0xce, new MetaInfo(OT.l, OT.l)),
+		REMQHI(0x5e, new MetaInfo(OT.q, OT.l)), BICL2(0xca, new MetaInfo(OT.l, OT.l)),
+		MOVB(0x90, new MetaInfo(OT.b, OT.b)), BISL2(0xc8, new MetaInfo(OT.l, OT.l)),
+		BLBC(0xe9, new MetaInfo(OT.l, OT.Brb)), BLBS(0xe8, new MetaInfo(OT.l, OT.Brb));
+		
 		
 
 		

@@ -55,6 +55,10 @@ public class Dump {
 				fmt = "$0x%08x";
 				break;
 			}
+			case q: {
+				fmt = "$0x%016x";
+				break;
+			}
 			case f: {
 				fmt = "$0x%08x [f-floot]";
 				break;
