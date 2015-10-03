@@ -105,6 +105,31 @@ public class V32Disassm {
 		
 	}
 	
+	private OpInfoSub resolveDispPc(OT optype, byte type) {
+		switch(type) {
+		case 0x8: { // Immediate
+			opinfo.opsub.type = Type.Immed;
+			opinfo.opsub.arg = fetch(optype);
+			return opinfo.opsub;
+		}
+		case 0xc: { // word relative
+			opinfo.opsub.type = Type.WordRel;
+			opinfo.opsub.arg = memory.fetch2() + memory.getCurrentPc();
+			return opinfo.opsub;
+		}
+		case 0xe: { // long relative
+			opinfo.opsub.type = Type.LongRel;
+			opinfo.opsub.arg = memory.fetch4() + memory.getCurrentPc();
+			return opinfo.opsub;
+		}
+		default: {
+			System.out.println("unsupported byte in program couter address mode in resolveDispPc");
+			System.exit(1);
+		}
+		}		
+		return null;		
+	}
+	
 	private OpInfoSub resolveDisp(OT optype) {
 		if (optype == OT.Brb) {
 			opinfo.opsub.type = Type.Branch1;
@@ -116,98 +141,82 @@ public class V32Disassm {
 		byte type = (byte)((arg >> 4) & 0xf);
 		byte value = (byte)(arg & 0xf);
 		
-		if (value == 0xf) { // program counter address mode
-			switch(type) {
-			case 0x8: {
-				opinfo.opsub.type = Type.Immed;
-				opinfo.opsub.arg = fetch(optype);
-				return opinfo.opsub;
-			}
-			case 0xc: { // word relative
-				opinfo.opsub.type = Type.WordRel;
-				opinfo.opsub.arg = memory.fetch2() + memory.getCurrentPc();
-				return opinfo.opsub;
-			}
-			case 0xe: {
-				opinfo.opsub.type = Type.LongRel;
-				opinfo.opsub.arg = memory.fetch4() + memory.getCurrentPc();
-				return opinfo.opsub;
-			}
-			default: {
-				System.out.println("unsupported byte in program couter address mode");
-				System.exit(1);
-			}
-			
-			}
-
-		} else { // normal address mode
-			//opinfo.opsub.admode = OpInfo.AddressMode.General;
-			switch (type) {
-			case 0:
-			case 1:
-			case 2:
-			case 3: { // immediate data
-				opinfo.opsub.type = Type.Literal;
-				opinfo.opsub.operand = (byte)(arg & 0x3f);
-				return opinfo.opsub;				
-			}
-			case 4: { // index
-				opinfo.opsub.type = Type.Index;
-				opinfo.opsub.operand = (byte)(arg & 0x3f);
-				return opinfo.opsub;
-			}
-			case 5: { // Register
-				opinfo.opsub.type = Type.Register;
-				opinfo.opsub.operand = (byte)(arg & 0xf);
-				return opinfo.opsub;				
-			}
-			case 6: { // Register Defered 
-				opinfo.opsub.type = Type.RegDefer;
-				opinfo.opsub.operand = (byte)(arg & 0xf);
-				return opinfo.opsub;
-			}
-			case 7: { // Auto Decrement
-				opinfo.opsub.type = Type.AutoDec;
-				opinfo.opsub.operand = (byte)(arg & 0xf);
-				return opinfo.opsub;		
-			}
-			case 8: { // Auto Increment
-				opinfo.opsub.type = Type.AutoInc;
-				opinfo.opsub.operand = (byte)(arg & 0xf);
-				return opinfo.opsub;				
-			}
-			case 0xa: { // Byte Displacement
-				opinfo.opsub.type = Type.ByteDisp;
-				opinfo.opsub.operand = (byte)(arg & 0xf);
-				opinfo.opsub.arg = memory.fetch();
-				return opinfo.opsub;				
-			}
-			case 0xb: { // Byte Displacement Deferred
-				opinfo.opsub.type = Type.ByteDispDefer;
-				opinfo.opsub.operand = (byte)(arg & 0xf);
-				opinfo.opsub.arg = memory.fetch();
-				return opinfo.opsub;
-			}
-			case 0x0c: { // Word Displacement
-				opinfo.opsub.type = Type.WordDisp;
-				opinfo.opsub.operand = (byte)(arg & 0xf);
-				opinfo.opsub.arg = memory.fetch2();
-				return opinfo.opsub;
-			}
-			case 0x0d: { // Word Displacement Deferred
-				opinfo.opsub.type = Type.WordDispDefer;
-				opinfo.opsub.operand = (byte)(arg & 0xf);
-				opinfo.opsub.arg = memory.fetch2();
-				return opinfo.opsub;
-			}
-			default: { // index
-				System.out.printf("%x is not implemented yet in resolveDisp\n", type);
-				System.exit(1);				
-				break;
-			}
-			
-			}			
+		//opinfo.opsub.admode = OpInfo.AddressMode.General;
+		switch (type) {
+		case 0:
+		case 1:
+		case 2:
+		case 3: { // immediate data
+			opinfo.opsub.type = Type.Literal;
+			opinfo.opsub.operand = (byte)(arg & 0x3f);
+			return opinfo.opsub;				
 		}
+		case 4: { // index
+			opinfo.opsub.type = Type.Index;
+			opinfo.opsub.operand = (byte)(arg & 0x3f);
+			return opinfo.opsub;
+		}
+		case 5: { // Register
+			opinfo.opsub.type = Type.Register;
+			opinfo.opsub.operand = (byte)(arg & 0xf);
+			return opinfo.opsub;				
+		}
+		case 6: { // Register Defered 
+			opinfo.opsub.type = Type.RegDefer;
+			opinfo.opsub.operand = (byte)(arg & 0xf);	
+			return opinfo.opsub;
+		}
+		case 7: { // Auto Decrement
+			opinfo.opsub.type = Type.AutoDec;
+			opinfo.opsub.operand = (byte)(arg & 0xf);
+			return opinfo.opsub;		
+		}
+		case 8: { // Auto Increment
+			if (value == 0xf) return resolveDispPc(optype, type);
+			opinfo.opsub.type = Type.AutoInc;
+			opinfo.opsub.operand = (byte)(arg & 0xf);
+			return opinfo.opsub;				
+		}
+		case 0xa: { // Byte Displacement
+			if (value == 0xf) return resolveDispPc(optype, type);
+			opinfo.opsub.type = Type.ByteDisp;
+			opinfo.opsub.operand = (byte)(arg & 0xf);
+			opinfo.opsub.arg = memory.fetch();
+			return opinfo.opsub;				
+		}
+		case 0xb: { // Byte Displacement Deferred
+			if (value == 0xf) return resolveDispPc(optype, type);
+			opinfo.opsub.type = Type.ByteDispDefer;
+			opinfo.opsub.operand = (byte)(arg & 0xf);
+			opinfo.opsub.arg = memory.fetch();
+			return opinfo.opsub;
+		}
+		case 0x0c: { // Word Displacement
+			if (value == 0xf) return resolveDispPc(optype, type);
+			opinfo.opsub.type = Type.WordDisp;
+			opinfo.opsub.operand = (byte)(arg & 0xf);
+			opinfo.opsub.arg = memory.fetch2();
+			return opinfo.opsub;
+		}
+		case 0x0d: { // Word Displacement Deferred
+			if (value == 0xf) return resolveDispPc(optype, type);
+			opinfo.opsub.type = Type.WordDispDefer;
+			opinfo.opsub.operand = (byte)(arg & 0xf);
+			opinfo.opsub.arg = memory.fetch2();
+			return opinfo.opsub;
+		}
+		case 0x0e: { // Long Displacement
+			if (value == 0xf) return resolveDispPc(optype, type);
+			System.out.printf("%x is not implemented yet in resolveDisp\n", type);
+			System.exit(1);
+		}
+		default: { // index
+			System.out.printf("%x is not implemented yet in resolveDisp\n", type);
+			System.exit(1);				
+			break;
+		}
+		
+		}			
 		
 		return null;
 	}
