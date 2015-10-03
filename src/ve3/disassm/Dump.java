@@ -15,6 +15,9 @@ public class Dump {
 		switch(ot) {
 		case b:
 			return String.format("0x%x", (byte)arg);
+		case ebl: {
+			return String.format("0x%x", (int)arg);
+		}
 		case w: 
 			return String.format("0x%x", (short)arg);
 		case l: 
@@ -45,7 +48,7 @@ public class Dump {
 				break;
 			}
 			case f: {
-				fmt += "$0x%x [f-floot]";
+				fmt += " [f-floot]";
 				break;
 			}
 			}
@@ -66,6 +69,9 @@ public class Dump {
 		case AutoInc: { // 8
 			return "(" + regs[operand] + ")+";
 		}		
+		case AutoIncDefer: {
+			return "@(" + regs[operand] + ")+";
+		}
 		case ByteDisp: { // 0xa
 			//return String.format("0x%x(%s)", arg, regs[operand]);
 			return getArgStr(ot, arg) + String.format("(%s)", regs[operand]);
@@ -84,7 +90,23 @@ public class Dump {
 			return "*" + getArgStr(ot, arg) + String.format("(%s)", regs[operand]);
 			//return "*" + String.format("0x%x", arg) + String.format("(%s)", regs[operand]);
 		}
+		case LongDisp: { // 0x0e
+			return getArgStr(ot, arg) + String.format("(%s)", regs[operand]);
+		}
 		case Immed: {
+			switch(ot) {
+			case f: {
+				return "$" + getArgStr(ot, arg) + " [f-float]";
+			}
+			case df: {
+				return "$" + getArgStr(ot, arg) + " [d-float]";
+			}
+			default: {
+				return "$" + getArgStr(ot, arg);
+			}
+			}
+			
+			/*
 			String fmt = "$0x%x";
 			switch(ot) {
 			case b:
@@ -111,6 +133,7 @@ public class Dump {
 			}
 			}
 			return String.format(fmt, arg);
+			*/
 		}
 		case WordRel: { // program counter mode
 			return String.format("0x%x", arg);
@@ -119,6 +142,9 @@ public class Dump {
 			return String.format("0x%x", arg);
 		}
 		case Branch1: { // branch disp byte
+			return String.format("0x%x", arg);
+		}
+		case Branch2: {
 			return String.format("0x%x", arg);
 		}
 		default: {
@@ -147,6 +173,15 @@ public class Dump {
 		case 3: {
 			return opname + " " + dump3(opinfo);
 		}
+		case 4: {
+			return opname + " " + dump4(opinfo);
+		}
+		case 5: {
+			return opname + " " + dump5(opinfo);
+		}
+		case 6: {
+			return opname + " " + dump6(opinfo);
+		}
 		default: {
 			System.out.println("unrecognized size in dump: " + opinfo.getMetaInfo().size);
 			System.exit(1);
@@ -170,5 +205,17 @@ public class Dump {
 	
 	private static String dump3(OpInfo opinfo) {
 		return dump2(opinfo) + "," + createOperand(opinfo.getType3(), opinfo.getOpe3(), opinfo.getArg3(), opinfo.getMetaInfo().arg3);
+	}
+	
+	private static String dump4(OpInfo opinfo) {
+		return dump3(opinfo) + "," + createOperand(opinfo.getType4(), opinfo.getOpe4(), opinfo.getArg4(), opinfo.getMetaInfo().arg4);
+	}
+	
+	private static String dump5(OpInfo opinfo) {
+		return dump4(opinfo) + "," + createOperand(opinfo.getType5(), opinfo.getOpe5(), opinfo.getArg5(), opinfo.getMetaInfo().arg5);
+	}
+	
+	private static String dump6(OpInfo opinfo) {
+		return dump5(opinfo) + "," + createOperand(opinfo.getType6(), opinfo.getOpe6(), opinfo.getArg6(), opinfo.getMetaInfo().arg6);
 	}
 }

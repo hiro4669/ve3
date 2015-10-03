@@ -30,6 +30,24 @@ public class OpInfo {
 	private long arg3;
 	private byte idx3;
 	
+	private Type type4;
+	private byte ope4;
+	private long arg4;
+	private byte idx4;
+	
+	private Type type5;
+	private byte ope5;
+	private long arg5;
+	private byte idx5;
+	
+	private Type type6;
+	private byte ope6;
+	private long arg6;
+	private byte idx6;
+	
+	
+	
+	
 	private MetaInfo minfo;
 		
 	public OpInfoSub opsub;
@@ -41,10 +59,10 @@ public class OpInfo {
 	
 	public void clear() {
 		opcode = -1;
-		idx1 = idx2 = idx3 = -1;
+		idx1 = idx2 = idx3 = idx4 = idx5 = idx6 = -1;
 		minfo = null;
-		type1 = type2 = type3 = Type.NoType;
-		ope1 = ope2 = ope3 = 0;
+		type1 = type2 = type3 = type4 = type5 = type6 =Type.NoType;
+		ope1 = ope2 = ope3 = ope4 = ope5 = ope6 = 0;
 	}
 	
 	public int setOpCode(int opcode) {
@@ -135,6 +153,82 @@ public class OpInfo {
 	public byte getIdx3() {
 		return idx3;
 	}
+	
+	public void setType4(Type type4) {
+		this.type4 = type4;
+	}
+	public Type getType4() {
+		return type4;
+	}
+	public void setOpe4(byte ope4) {
+		this.ope4 = ope4;
+	}
+	public byte getOpe4() {
+		return ope4;
+	}
+	public void setArg4(long arg4) {
+		this.arg4 = arg4;
+	}
+	public long getArg4() {
+		return arg4;
+	}
+	public void setIdx4(byte idx4) {
+		this.idx4 = idx4;
+	}
+	public byte getIdx4() {
+		return idx4;
+	}
+	
+	public void setType5(Type type5) {
+		this.type5 = type5;
+	}
+	public Type getType5() {
+		return type5;
+	}
+	public void setOpe5(byte ope5) {
+		this.ope5 = ope5;
+	}
+	public byte getOpe5() {
+		return ope5;
+	}
+	public void setArg5(long arg5) {
+		this.arg5 = arg5;
+	}
+	public long getArg5() {
+		return arg5;
+	}
+	public void setIdx5(byte idx5) {
+		this.idx4 = idx5;
+	}
+	public byte getIdx5() {
+		return idx5;
+	}
+	
+	public void setType6(Type type6) {
+		this.type6 = type6;
+	}
+	public Type getType6() {
+		return type6;
+	}
+	public void setOpe6(byte ope6) {
+		this.ope6 = ope6;
+	}
+	public byte getOpe6() {
+		return ope6;
+	}
+	public void setArg6(long arg6) {
+		this.arg6 = arg6;
+	}
+	public long getArg6() {
+		return arg6;
+	}
+	public void setIdx6(byte idx6) {
+		this.idx6 = idx6;
+	}
+	public byte getIdx6() {
+		return idx6;
+	}
+	
 	
 	
 	public class OpInfoSub {
