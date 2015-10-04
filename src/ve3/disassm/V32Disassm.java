@@ -11,6 +11,7 @@ public class V32Disassm {
 	
 	private Memory memory;
 	private OpInfo opinfo;
+	private int tsize;
 
 	public static enum AdMode {
 		Branch, General, PC
@@ -24,7 +25,9 @@ public class V32Disassm {
 	enum Ope {
 
 		DUMMY1(0x5bd0, new MetaInfo()), DUMMY2(0x5be0, new MetaInfo()),
-		DUMMY3(0x599a, new MetaInfo()),		
+		DUMMY3(0x599a, new MetaInfo()), DUMMY4(0x5b98, new MetaInfo()),
+		DUMMY5(0xffff, new MetaInfo()), DUMMY6(0xff50, new MetaInfo()),
+		DUMMY7(0x5b11, new MetaInfo()),
 		HALT(0x00, new MetaInfo()), SUBL2(0xc2, new MetaInfo(OT.l, OT.l)),
 		MOVL(0xd0, new MetaInfo(OT.l, OT.l)), MOVAB(0x9e, new MetaInfo(OT.b, OT.l)),
 		TSTL(0xd5, new MetaInfo(OT.l)), BNEQ(0x12, new MetaInfo(OT.Brb)),
@@ -62,7 +65,14 @@ public class V32Disassm {
 		EXTZV(0xef, new MetaInfo(OT.l, OT.b, OT.b, OT.l)), ACBL(0xf1, new MetaInfo(OT.l, OT.l, OT.l, OT.Brw)),
 		SKPC(0x3b, new MetaInfo(OT.b, OT.w, OT.b)), BISW3(0xa9, new MetaInfo(OT.w, OT.w, OT.w)),
 		CVTLP(0xf9, new MetaInfo(OT.l, OT.w, OT.b)), EDITPC(0x38, new MetaInfo(OT.w, OT.b, OT.b, OT.b)),
-		BVC(0x1c, new MetaInfo(OT.Brb)), BLSSU(0x1f, new MetaInfo(OT.Brb));
+		BVC(0x1c, new MetaInfo(OT.Brb)), BLSSU(0x1f, new MetaInfo(OT.Brb)),
+		CVTLD(0x6e, new MetaInfo(OT.l, OT.df)), INDEX(0xa, new MetaInfo(OT.l, OT.l, OT.l, OT.l, OT.l, OT.l)),
+		DIVF3(0x47, new MetaInfo(OT.f, OT.f, OT.f)), INSQUE(0x0e, new MetaInfo(OT.b, OT.b)),
+		DVTPS(0x8, new MetaInfo(OT.w, OT.b, OT.w, OT.b)), BITB(0x93, new MetaInfo(OT.b, OT.b)),
+		BICB2(0x8a, new MetaInfo(OT.b, OT.b)), BISL3(0xc9, new MetaInfo(OT.l, OT.l, OT.l)),
+		DIVL3(0xc7, new MetaInfo(OT.l, OT.l, OT.l)), ASHL(0x78, new MetaInfo(OT.b, OT.l, OT.l)),
+		BICL3(0xcb, new MetaInfo(OT.l, OT.l, OT.l)), BGTR(0x14, new MetaInfo(OT.Brb)),
+		DIVL2(0xc6, new MetaInfo(OT.l, OT.l));
 		
 		
 
@@ -70,7 +80,7 @@ public class V32Disassm {
 		public final int mne;		
 		public final String opname;
 		public final MetaInfo minfo;
-		public static Ope[] table = new Ope[0xffff];
+		public static Ope[] table = new Ope[0xfffff];
 		
 		static {
 			for (Ope ope : Ope.values()) {
@@ -92,7 +102,7 @@ public class V32Disassm {
 	
 	public V32Disassm(byte[] rawdata) {
 		this();
-		int tsize = readInt(rawdata, 4);
+		tsize = readInt(rawdata, 4);
 		System.out.printf("textsize = 0x%x\n", tsize);
 		memory.load(rawdata, 0x20, tsize);
 		//memory.dump();
@@ -144,6 +154,11 @@ public class V32Disassm {
 		}
 		case 0xe: { // long relative
 			opinfo.opsub.type = Type.LongRel;
+			opinfo.opsub.arg = memory.fetch4() + memory.getCurrentPc();
+			return opinfo.opsub;
+		}
+		case 0xf: { // long relative deferred
+			opinfo.opsub.type = Type.LongRelDefer;
 			opinfo.opsub.arg = memory.fetch4() + memory.getCurrentPc();
 			return opinfo.opsub;
 		}
@@ -244,6 +259,13 @@ public class V32Disassm {
 		case 0x0e: { // Long Displacement
 			if (value == 0xf) return resolveDispPc(optype, type);
 			opinfo.opsub.type = Type.LongDisp;
+			opinfo.opsub.operand = (byte)(arg & 0xf);
+			opinfo.opsub.arg = memory.fetch4();
+			return opinfo.opsub;
+		}
+		case 0x0f: { // Long Displacement Deferred
+			if (value == 0xf) return resolveDispPc(optype, type);
+			opinfo.opsub.type = Type.LongDispDefer;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
 			opinfo.opsub.arg = memory.fetch4();
 			return opinfo.opsub;
@@ -350,6 +372,8 @@ public class V32Disassm {
 		while (true) {
 			opinfo.clear();
 			run();
+			if (memory.getCurrentPc() > tsize) break;
+			
 		}
 	}
 	

@@ -12,6 +12,8 @@ public class Dump {
 	
 	private static String getArgStr(OT ot, long arg) {
 		
+		if (arg < 0) return String.format("0x%x", (int)arg); // correct?
+		
 		switch(ot) {
 		case b:
 			return String.format("0x%x", (byte)arg);
@@ -21,7 +23,7 @@ public class Dump {
 		case w: 
 			return String.format("0x%x", (short)arg);
 		case l: 
-		case f:{
+		case f:{			
 			return String.format("0x%x", (int)arg);
 		}
 		case q:
@@ -74,26 +76,31 @@ public class Dump {
 		}
 		case ByteDisp: { // 0xa
 			//return String.format("0x%x(%s)", arg, regs[operand]);
-			return getArgStr(ot, arg) + String.format("(%s)", regs[operand]);
+			String ds = (ot == OT.ebl) ? getArgStr(ot, arg) : getArgStr(OT.b, arg);
+			return ds + String.format("(%s)", regs[operand]);
 		}
 		case ByteDispDefer: { // 0x0b
-			return "*" + getArgStr(ot, arg) + String.format("(%s)", regs[operand]);
+			return "*" + getArgStr(OT.b, arg) + String.format("(%s)", regs[operand]);
 			//return "*" + String.format("0x%x", arg) + String.format("(%s)", regs[operand]);
 		}
 		case WordDisp: { // 0x0c
 			//return String.format("0x%x(%s)", arg, regs[operand]);
-			return getArgStr(ot, arg) + String.format("(%s)", regs[operand]);
+			return getArgStr(OT.w, arg) + String.format("(%s)", regs[operand]);
 			//return String.format("0x%x", arg) + String.format("(%s)", regs[operand]);
 		}
 		case WordDispDefer: { // 0x0d
 			//return String.format("*0x%x(%s)", arg, regs[operand]);
-			return "*" + getArgStr(ot, arg) + String.format("(%s)", regs[operand]);
+			return "*" + getArgStr(OT.w, arg) + String.format("(%s)", regs[operand]);
 			//return "*" + String.format("0x%x", arg) + String.format("(%s)", regs[operand]);
 		}
 		case LongDisp: { // 0x0e
-			return getArgStr(ot, arg) + String.format("(%s)", regs[operand]);
+			return getArgStr(OT.l, arg) + String.format("(%s)", regs[operand]);
+		}
+		case LongDispDefer: { // 0x0f
+			return "*" + getArgStr(OT.l, arg) + String.format("(%s)", regs[operand]);
 		}
 		case Immed: {
+			/*
 			switch(ot) {
 			case f: {
 				return "$" + getArgStr(ot, arg) + " [f-float]";
@@ -102,11 +109,12 @@ public class Dump {
 				return "$" + getArgStr(ot, arg) + " [d-float]";
 			}
 			default: {
-				return "$" + getArgStr(ot, arg);
+				return "$" + getArgStr(OT.l, arg);
 			}
 			}
+			*/
 			
-			/*
+			
 			String fmt = "$0x%x";
 			switch(ot) {
 			case b:
@@ -133,13 +141,16 @@ public class Dump {
 			}
 			}
 			return String.format(fmt, arg);
-			*/
+			
 		}
 		case WordRel: { // program counter mode
 			return String.format("0x%x", arg);
 		}
 		case LongRel: { // 0xe : program conter mode
 			return String.format("0x%x", arg);
+		}
+		case LongRelDefer: { // 0x0f program counter mode
+			return String.format("*0x%x", arg);
 		}
 		case Branch1: { // branch disp byte
 			return String.format("0x%x", arg);
