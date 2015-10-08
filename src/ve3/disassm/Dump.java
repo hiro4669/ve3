@@ -35,8 +35,33 @@ public class Dump {
 			System.exit(1);
 		}
 		}
-		return "";
+		return "";		
+	}
+	
+	private static String getImmedArgStr(OT ot, String fmt, long arg) {
 		
+		switch(ot) {
+		case b:
+			return String.format(fmt, (byte)arg);
+		case ebl: {
+			return String.format(fmt, (int)arg);
+		}
+		case w: 
+			return String.format(fmt, (short)arg);
+		case l: 
+		case f:{			
+			return String.format(fmt, (int)arg);
+		}
+		case q:
+		case df: {
+			return String.format(fmt, (long)arg);
+		}
+		default: {
+			System.out.println("unrecognised optype(OT) in getImmedArgStr");
+			System.exit(1);
+		}
+		}
+		return "";
 	}
 	
 	private static String createOperand(Type type, byte operand, long arg, OT ot) {
@@ -140,7 +165,8 @@ public class Dump {
 				break;
 			}
 			}
-			return String.format(fmt, arg);
+			//return String.format(fmt, arg);
+			return getImmedArgStr(ot, fmt, arg);
 			
 		}
 		case WordRel: { // program counter mode
