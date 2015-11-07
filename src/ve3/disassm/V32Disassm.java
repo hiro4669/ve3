@@ -68,7 +68,7 @@ public class V32Disassm {
 		BVC(0x1c, new MetaInfo(OT.Brb)), BLSSU(0x1f, new MetaInfo(OT.Brb)),
 		CVTLD(0x6e, new MetaInfo(OT.l, OT.df)), INDEX(0xa, new MetaInfo(OT.l, OT.l, OT.l, OT.l, OT.l, OT.l)),
 		DIVF3(0x47, new MetaInfo(OT.f, OT.f, OT.f)), INSQUE(0x0e, new MetaInfo(OT.b, OT.b)),
-		DVTPS(0x8, new MetaInfo(OT.w, OT.b, OT.w, OT.b)), BITB(0x93, new MetaInfo(OT.b, OT.b)),
+		CVTPS(0x08, new MetaInfo(OT.w, OT.b, OT.w, OT.b)), BITB(0x93, new MetaInfo(OT.b, OT.b)),
 		BICB2(0x8a, new MetaInfo(OT.b, OT.b)), BISL3(0xc9, new MetaInfo(OT.l, OT.l, OT.l)),
 		DIVL3(0xc7, new MetaInfo(OT.l, OT.l, OT.l)), ASHL(0x78, new MetaInfo(OT.b, OT.l, OT.l)),
 		BICL3(0xcb, new MetaInfo(OT.l, OT.l, OT.l)), BGTR(0x14, new MetaInfo(OT.Brb)),
@@ -354,10 +354,12 @@ public class V32Disassm {
 	
 	
 	private String format(int index, byte[] rawdata, String s) {
-		return String.format("%4x:   %s    %s", index, new String(rawdata), s);
+		//return String.format("%4x:   %s    %s", index, new String(rawdata), s);
+		return String.format("%4x:\t%s\t%s", index, new String(rawdata), s);
 	}
 	private String format(int index, byte[] rawdata) {
-		return String.format("%4x:   %s", index, new String(rawdata));	
+		//return String.format("%4x:   %s", index, new String(rawdata));	
+		return String.format("%4x:\t%s", index, new String(rawdata));	
 	}
 	
 	

@@ -71,11 +71,11 @@ public class Dump {
 			String fmt = "$0x%x";
 			switch(ot) {			
 			case df: {
-				fmt += " [d-floot]";
+				fmt += " [d-float]";
 				break;
 			}
 			case f: {
-				fmt += " [f-floot]";
+				fmt += " [f-float]";
 				break;
 			}
 			}
@@ -157,11 +157,11 @@ public class Dump {
 				break;
 			}
 			case df: {
-				fmt = "$0x%016x [d-floot]";
+				fmt = "$0x%016x [d-float]";
 				break;
 			}
 			case f: {
-				fmt = "$0x%08x [f-floot]";
+				fmt = "$0x%08x [f-float]";
 				break;
 			}
 			}
