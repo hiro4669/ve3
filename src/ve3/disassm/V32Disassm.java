@@ -27,7 +27,8 @@ public class V32Disassm {
 		DUMMY1(0x5bd0, new MetaInfo()), DUMMY2(0x5be0, new MetaInfo()),
 		DUMMY3(0x599a, new MetaInfo()), DUMMY4(0x5b98, new MetaInfo()),
 		DUMMY5(0xffff, new MetaInfo()), DUMMY6(0xff50, new MetaInfo()),
-		DUMMY7(0x5b11, new MetaInfo()),
+		DUMMY7(0x5b11, new MetaInfo()), DUMMY8(0x7700, new MetaInfo()),
+		
 		HALT(0x00, new MetaInfo()), SUBL2(0xc2, new MetaInfo(OT.l, OT.l)),
 		MOVL(0xd0, new MetaInfo(OT.l, OT.l)), MOVAB(0x9e, new MetaInfo(OT.b, OT.l)),
 		TSTL(0xd5, new MetaInfo(OT.l)), BNEQ(0x12, new MetaInfo(OT.Brb)),
@@ -72,7 +73,17 @@ public class V32Disassm {
 		BICB2(0x8a, new MetaInfo(OT.b, OT.b)), BISL3(0xc9, new MetaInfo(OT.l, OT.l, OT.l)),
 		DIVL3(0xc7, new MetaInfo(OT.l, OT.l, OT.l)), ASHL(0x78, new MetaInfo(OT.b, OT.l, OT.l)),
 		BICL3(0xcb, new MetaInfo(OT.l, OT.l, OT.l)), BGTR(0x14, new MetaInfo(OT.Brb)),
-		DIVL2(0xc6, new MetaInfo(OT.l, OT.l));
+		DIVL2(0xc6, new MetaInfo(OT.l, OT.l)), DECW(0xb7, new MetaInfo(OT.w)),
+		MOVZWL(0x3c, new MetaInfo(OT.w, OT.l)), TSTW(0xb5, new MetaInfo(OT.w)),
+		CVTLW(0xf7, new MetaInfo(OT.l, OT.w)), AOBLSS(0xf2, new MetaInfo(OT.l, OT.l, OT.Brb)),
+		EMODD(0x74, new MetaInfo(OT.df, OT.b, OT.df, OT.l, OT.df)), MOVTUC(0x2f, new MetaInfo(OT.w, OT.b, OT.b, OT.b, OT.w, OT.b)),
+		ADAWI(0x58, new MetaInfo(OT.w, OT.w)), CVTDW(0x69, new MetaInfo(OT.df, OT.w)),
+		ADDP4(0x20, new MetaInfo(OT.w, OT.b, OT.w, OT.b)), MOVD(0x70, new MetaInfo(OT.df, OT.df)),
+		ACBD(0x6f, new MetaInfo(OT.df, OT.df, OT.df, OT.Brw)), MNEGD(0x72, new MetaInfo(OT.df, OT.df)),
+		SUBF3(0x43, new MetaInfo(OT.f, OT.f, OT.f)), TSTD(0x73, new MetaInfo(OT.df)),
+		DIVD2(0x66, new MetaInfo(OT.df, OT.df)), CVTFW(0x49, new MetaInfo(OT.f, OT.w));
+		
+		
 		
 		
 
@@ -296,7 +307,7 @@ public class V32Disassm {
 		OpInfoSub opsub = resolveDisp(minfo.arg2);
 		if (opsub.type == Type.Index) {
 			opinfo.setIdx2(opsub.operand);
-			opsub = resolveDisp(minfo.arg2);
+			opsub = resolveDisp(minfo.arg2);			
 		}
 		opinfo.setType2(opsub.type);
 		opinfo.setOpe2(opsub.operand);
@@ -412,8 +423,7 @@ public class V32Disassm {
 		}
 		case 2: {			
 			setArg2(ope.minfo);
-			showlog(format(index, memory.rawdump(), Dump.dump(opinfo, ope.opname)));
-			
+			showlog(format(index, memory.rawdump(), Dump.dump(opinfo, ope.opname)));			
 			break;
 		}
 		case 3: {

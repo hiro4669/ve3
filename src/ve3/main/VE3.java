@@ -12,14 +12,19 @@ public class VE3 {
 	
 	public static void main(String[] args) {
 		
+		String fileName = "df";
+		if (args.length > 0) {
+			fileName = args[0];
+		}
+		
 		try {
-			BufferedInputStream bin = new BufferedInputStream(new FileInputStream("echo"));
+			BufferedInputStream bin = new BufferedInputStream(new FileInputStream(fileName));
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();
 			
 			int count;
 			byte[] buffer = new byte[1024];
 			while ((count = bin.read(buffer, 0, buffer.length)) != -1) {
-				System.out.println("count = " + count);
+//				System.out.println("count = " + count);
 				bout.write(buffer, 0, count);
 			}		
 			byte[] rawdata = bout.toByteArray();

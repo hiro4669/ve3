@@ -237,22 +237,42 @@ public class Dump {
 	}
 	
 	private static String dump2(OpInfo opinfo) {
-		return dump1(opinfo) + "," + createOperand(opinfo.getType2(), opinfo.getOpe2(), opinfo.getArg2(), opinfo.getMetaInfo().arg2);
+		String s = dump1(opinfo) + "," + createOperand(opinfo.getType2(), opinfo.getOpe2(), opinfo.getArg2(), opinfo.getMetaInfo().arg2);
+		if (opinfo.getIdx2() != -1) {
+			s += createOperand(Type.Index, opinfo.getIdx2(), 0, null);
+		}		
+		return s;
 	}
 	
 	private static String dump3(OpInfo opinfo) {
-		return dump2(opinfo) + "," + createOperand(opinfo.getType3(), opinfo.getOpe3(), opinfo.getArg3(), opinfo.getMetaInfo().arg3);
+		String s = dump2(opinfo) + "," + createOperand(opinfo.getType3(), opinfo.getOpe3(), opinfo.getArg3(), opinfo.getMetaInfo().arg3);
+		if (opinfo.getIdx3() != -1) {
+			s += createOperand(Type.Index, opinfo.getIdx3(), 0, null);
+		}
+		return s;
 	}
 	
 	private static String dump4(OpInfo opinfo) {
-		return dump3(opinfo) + "," + createOperand(opinfo.getType4(), opinfo.getOpe4(), opinfo.getArg4(), opinfo.getMetaInfo().arg4);
+		String s = dump3(opinfo) + "," + createOperand(opinfo.getType4(), opinfo.getOpe4(), opinfo.getArg4(), opinfo.getMetaInfo().arg4);
+		if (opinfo.getIdx4() != -1) {
+			s += createOperand(Type.Index, opinfo.getIdx4(), 0, null);			
+		}
+		return s;
 	}
 	
 	private static String dump5(OpInfo opinfo) {
-		return dump4(opinfo) + "," + createOperand(opinfo.getType5(), opinfo.getOpe5(), opinfo.getArg5(), opinfo.getMetaInfo().arg5);
+		String s = dump4(opinfo) + "," + createOperand(opinfo.getType5(), opinfo.getOpe5(), opinfo.getArg5(), opinfo.getMetaInfo().arg5);
+		if (opinfo.getIdx5() != -1) {
+			s += createOperand(Type.Index, opinfo.getIdx5(), 0, null);			
+		}
+		return s;
 	}
 	
 	private static String dump6(OpInfo opinfo) {
-		return dump5(opinfo) + "," + createOperand(opinfo.getType6(), opinfo.getOpe6(), opinfo.getArg6(), opinfo.getMetaInfo().arg6);
+		String s = dump5(opinfo) + "," + createOperand(opinfo.getType6(), opinfo.getOpe6(), opinfo.getArg6(), opinfo.getMetaInfo().arg6);
+		if (opinfo.getIdx6() != -1) {
+			s += createOperand(Type.Index, opinfo.getIdx6(), 0, null);
+		}
+		return s;
 	}
 }
