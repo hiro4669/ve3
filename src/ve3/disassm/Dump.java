@@ -176,13 +176,13 @@ public class Dump {
 			return String.format("0x%x", arg);
 		}
 		case WordRelDefer: { // program counter mode
-			return String.format("*0x%x", arg);
+			return String.format("*0x%x", (int)arg);
 		}
 		case LongRel: { // 0xe : program conter mode
 			return String.format("0x%x", arg);
 		}
 		case LongRelDefer: { // 0x0f program counter mode
-			return String.format("*0x%x", arg);
+			return String.format("*0x%x", (int)arg);
 		}
 		case Branch1: { // branch disp byte
 			return String.format("0x%x", (int)arg);
