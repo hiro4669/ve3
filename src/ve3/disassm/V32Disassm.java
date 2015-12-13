@@ -1,5 +1,7 @@
 package ve3.disassm;
 
+import java.io.StringWriter;
+
 import ve3.hdw.ConcrateMemory;
 import ve3.hdw.Memory;
 import ve3.os.OpInfo;
@@ -12,12 +14,13 @@ public class V32Disassm {
 	private Memory memory;
 	private OpInfo opinfo;
 	private int tsize;
+	private StringWriter sw;
 
 	public static enum AdMode {
 		Branch, General, PC
 	}
 	
-	/* b:byte, w:word, l:long, Brb:Branch byte, Brw:Branch word */
+	/* b:byte, w:word, l:long, f:float, df:D_float, Brb:Branch byte, Brw:Branch word */
 	public static enum OT {
 		b, w, l, f, q, df, ebl, Brb, Brw 
 	}
@@ -28,6 +31,7 @@ public class V32Disassm {
 		DUMMY3(0x599a, new MetaInfo()), DUMMY4(0x5b98, new MetaInfo()),
 		DUMMY5(0xffff, new MetaInfo()), DUMMY6(0xff50, new MetaInfo()),
 		DUMMY7(0x5b11, new MetaInfo()), DUMMY8(0x7700, new MetaInfo()),
+		DUMMY9(0x5be9, new MetaInfo()),
 		
 		HALT(0x00, new MetaInfo()), MOVL(0xd0, new MetaInfo(OT.l, OT.l)), 
 		TSTL(0xd5, new MetaInfo(OT.l)), BNEQ(0x12, new MetaInfo(OT.Brb)),
@@ -142,6 +146,7 @@ public class V32Disassm {
 	public V32Disassm() {
 		memory = new ConcrateMemory(0xfffff);
 		opinfo = new OpInfo();
+		sw = new StringWriter();
 	}
 	
 	public V32Disassm(byte[] rawdata) {
@@ -417,18 +422,21 @@ public class V32Disassm {
 	
 	private void showlog(String s) {
 		System.out.println(s);
+		sw.write(s + "\r\n");
 		while(memory.remaining()) {
-			System.out.println(format(memory.getPrevPc(), memory.rawdump_rem()));
+			String log = format(memory.getPrevPc(), memory.rawdump_rem());
+			sw.write(log + "\r\n");
+			System.out.println(log);
 		}
 	}
 	
-	public void disassm() {
+	public String disassm() {
 		while (true) {
 			opinfo.clear();
 			run();
-			if (memory.getCurrentPc() > tsize) break;
-			
+			if (memory.getCurrentPc() > tsize) break;			
 		}
+		return sw.toString();
 	}
 	
 	private void run() {

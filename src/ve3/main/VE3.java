@@ -32,8 +32,9 @@ public class VE3 {
 			bin.close();
 			
 			V32Disassm disassm = new V32Disassm(rawdata);
-			disassm.disassm();
-		
+			String log = disassm.disassm();
+			System.out.println("--------");
+			System.out.println(log);
 		
 		
 		
