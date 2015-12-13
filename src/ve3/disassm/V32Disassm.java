@@ -32,7 +32,9 @@ public class V32Disassm {
 		DUMMY5(0xffff, new MetaInfo()), DUMMY6(0xff50, new MetaInfo()),
 		DUMMY7(0x5b11, new MetaInfo()), DUMMY8(0x7700, new MetaInfo()),
 		DUMMY9(0x5be9, new MetaInfo()), DUMMY10(0x5bde, new MetaInfo()),
-		DUMMY11(0x59c3, new MetaInfo()),
+		DUMMY11(0x59c3, new MetaInfo()),DUMMY12(0x5ad4, new MetaInfo()),
+		DUMMY13(0x5add, new MetaInfo()),DUMMY14(0x5afb, new MetaInfo()),
+		DUMMY15(0x5911, new MetaInfo()),
 		
 		HALT(0x00, new MetaInfo()), MOVL(0xd0, new MetaInfo(OT.l, OT.l)), 
 		TSTL(0xd5, new MetaInfo(OT.l)), 		

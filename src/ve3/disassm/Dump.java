@@ -185,10 +185,10 @@ public class Dump {
 			return String.format("*0x%x", arg);
 		}
 		case Branch1: { // branch disp byte
-			return String.format("0x%x", arg);
+			return String.format("0x%x", (int)arg);
 		}
 		case Branch2: {
-			return String.format("0x%x", arg);
+			return String.format("0x%x", (int)arg);
 		}
 		default: {
 			System.out.println("unrecognized type in Dump");
