@@ -10,12 +10,24 @@ import ve3.disassm.V32Disassm;
 
 public class VE3 {
 	
-	public static void main(String[] args) {
+	public static void main(String ...args) {
 		
-		String fileName = "df";
-		if (args.length > 0) {
-			fileName = args[0];
+		boolean disflg = false;
+		
+		String fileName = "hello";
+		
+		for (int i = 0; i < args.length; ++i) {
+			if (args[i].equals("-d")) {
+				disflg = true;
+			}			
 		}
+		if (args.length > 0 && !(args[args.length-1].startsWith("-"))) {
+			fileName = args[args.length-1];
+		}
+		
+//		if (args.length > 0) {
+			//fileName = args[0];
+		//}
 		
 		try {
 			BufferedInputStream bin = new BufferedInputStream(new FileInputStream(fileName));
@@ -31,8 +43,15 @@ public class VE3 {
 			bout.close();
 			bin.close();
 			
-			V32Disassm disassm = new V32Disassm(rawdata);
-			String log = disassm.disassm();
+			if (disflg) {
+				V32Disassm disassm = new V32Disassm(rawdata);
+				String log = disassm.disassm();
+				return;
+			}
+			
+			Context ctx = new Context(rawdata);
+			ctx.start();
+			
 		//	System.out.println("--------");
 //			System.out.println(log);
 		

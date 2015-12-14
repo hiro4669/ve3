@@ -25,7 +25,7 @@ public class V32Disassm {
 		b, w, l, f, q, df, ebl, Brb, Brw 
 	}
 	
-	enum Ope {
+	public enum Ope {
 
 		DUMMY1(0x5bd0, new MetaInfo()), DUMMY2(0x5be0, new MetaInfo()),
 		DUMMY3(0x599a, new MetaInfo()), DUMMY4(0x5b98, new MetaInfo()),

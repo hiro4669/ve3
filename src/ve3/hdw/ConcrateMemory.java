@@ -5,7 +5,8 @@ import java.io.PrintStream;
 
 public class ConcrateMemory implements Memory {
 	
-	private int size;
+//	private int size;
+	private int end;
 	private int maxSize;
 	private byte[] memory;
 	private int pc;
@@ -24,10 +25,18 @@ public class ConcrateMemory implements Memory {
 		rawout = new PrintStream(buf);
 	}
 	
-	public void load(byte[] rawdata, int offset, int size) {
+	public int load(byte[] rawdata, int offset, int size) {
 		System.arraycopy(rawdata, offset, memory, 0, size);
-		this.size = size;
 		pc = 0;
+		//this.size = size;
+		return (end = size);
+		
+	}
+	
+	public int load(byte[] rawdata, int roffset, int moffset, int size) {
+		System.arraycopy(rawdata, roffset, memory, moffset, size);		
+		pc = 0;
+		return (end = moffset + size);
 	}
 	
 	public byte fetch() {
@@ -70,14 +79,19 @@ public class ConcrateMemory implements Memory {
 		return pc;
 	}
 	
+	public void setPc(int pc) {
+		this.pc = pc;
+	}
+	
 	public int getPrevPc() {
 		return prevPc;
 	}
 	
 	public void dump() {
-		for (int i = 0; i < size; ++i) {
-			if (i % 16 == 0) System.out.println("");
+		for (int i = 0; i < end; ++i) {
+			if (i % 16 == 0) System.out.printf("\n%04x: ", i);
 			System.out.printf("%02x ", memory[i]);
+			
 		}
 	}
 	
