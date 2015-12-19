@@ -21,37 +21,37 @@ public class OpInfo {
 	private Type type1;
 	private byte ope1;
 	private long arg1;
-	private byte idx1;
+	private long addr1;
 	private Stack<Byte> idxs1 = new Stack<Byte>();
 	
 	private Type type2;
 	private byte ope2;
 	private long arg2;
-	private byte idx2;
+	private long addr2;
 	private Stack<Byte> idxs2 = new Stack<Byte>();
 	
 	private Type type3;
 	private byte ope3;
 	private long arg3;
-	private byte idx3;
+	private long addr3;
 	private Stack<Byte> idxs3 = new Stack<Byte>();
 	
 	private Type type4;
 	private byte ope4;
 	private long arg4;
-	private byte idx4;
+	private long addr4;
 	private Stack<Byte> idxs4 = new Stack<Byte>();
 	
 	private Type type5;
 	private byte ope5;
 	private long arg5;
-	private byte idx5;
+	private long addr5;
 	private Stack<Byte> idxs5 = new Stack<Byte>();
 	
 	private Type type6;
 	private byte ope6;
 	private long arg6;
-	private byte idx6;
+	private long addr6;
 	private Stack<Byte> idxs6 = new Stack<Byte>();
 	
 	
@@ -68,7 +68,6 @@ public class OpInfo {
 	
 	public void clear() {
 		opcode = -1;
-		idx1 = idx2 = idx3 = idx4 = idx5 = idx6 = -1;
 		idxs1.clear();
 		idxs2.clear();
 		idxs3.clear();
@@ -78,6 +77,7 @@ public class OpInfo {
 		minfo = null;
 		type1 = type2 = type3 = type4 = type5 = type6 =Type.NoType;
 		ope1 = ope2 = ope3 = ope4 = ope5 = ope6 = 0;
+		addr1 = addr2 = addr3 = addr4 = addr5 = addr6 = 0;
 	}
 	
 	public int setOpCode(int opcode) {
@@ -111,12 +111,6 @@ public class OpInfo {
 	}
 	public long getArg1() {
 		return arg1;
-	}
-	public void setIdx1(byte idx1) {
-		this.idx1 = idx1;
-	}
-	public byte getIdx1() {
-		return idx1;
 	}	
 	public void pushIdx1(byte id) {
 		idxs1.push(id);
@@ -131,6 +125,13 @@ public class OpInfo {
 	public boolean hasIdx1() {
 		return !idxs1.isEmpty();
 	}
+	public void setAddr1(long addr1) {
+		this.addr1 = addr1;
+	}
+	public long getAddr1() {
+		return addr1;
+	}
+	
 	
 	
 	/* for operand2 */
@@ -151,13 +152,7 @@ public class OpInfo {
 	}
 	public long getArg2() {
 		return arg2;
-	}
-	public void setIdx2(byte idx2) {
-		this.idx2 = idx2;
-	}
-	public byte getIdx2() {
-		return idx2;
-	}
+	}	
 	public void pushIdx2(byte id) {
 		idxs2.push(id);
 	}
@@ -171,6 +166,13 @@ public class OpInfo {
 	public boolean hasIdx2() {
 		return !idxs2.isEmpty();
 	}
+	public void setAddr2(long addr2) {
+		this.addr2 = addr2;
+	}
+	public long getAddr2() {
+		return addr2;
+	}
+	
 	
 	/* for operand3 */
 	public void setType3(Type type3) {
@@ -190,13 +192,7 @@ public class OpInfo {
 	}
 	public long getArg3() {
 		return arg3;
-	}
-	public void setIdx3(byte idx3) {
-		this.idx3 = idx3;
-	}
-	public byte getIdx3() {
-		return idx3;
-	}
+	}	
 	public void pushIdx3(byte id) {
 		idxs3.push(id);
 	}
@@ -209,6 +205,12 @@ public class OpInfo {
 	}
 	public boolean hasIdx3() {
 		return !idxs3.isEmpty();
+	}
+	public void setAddr3(long addr3) {
+		this.addr3 = addr3;
+	}
+	public long getAddr3() {
+		return addr3;
 	}
 	
 	/* for operand4 */
@@ -229,13 +231,7 @@ public class OpInfo {
 	}
 	public long getArg4() {
 		return arg4;
-	}
-	public void setIdx4(byte idx4) {
-		this.idx4 = idx4;
-	}
-	public byte getIdx4() {
-		return idx4;
-	}
+	}	
 	public void pushIdx4(byte id) {
 		idxs4.push(id);
 	}
@@ -248,6 +244,12 @@ public class OpInfo {
 	}
 	public boolean hasIdx4() {
 		return !idxs4.isEmpty();
+	}
+	public void setAddr4(long addr4) {
+		this.addr4 = addr4;
+	}
+	public long getAddr4() {
+		return addr4;
 	}
 	
 	/* for operand5 */
@@ -268,13 +270,7 @@ public class OpInfo {
 	}
 	public long getArg5() {
 		return arg5;
-	}
-	public void setIdx5(byte idx5) {
-		this.idx4 = idx5;
-	}
-	public byte getIdx5() {
-		return idx5;
-	}
+	}	
 	public void pushIdx5(byte id) {
 		idxs5.push(id);
 	}
@@ -287,6 +283,12 @@ public class OpInfo {
 	}
 	public boolean hasIdx5() {
 		return !idxs5.isEmpty();
+	}
+	public void setAddr5(long addr5) {
+		this.addr5 = addr5;
+	}
+	public long getAddr5() {
+		return addr5;
 	}
 	
 	/* for operand6 */
@@ -307,13 +309,7 @@ public class OpInfo {
 	}
 	public long getArg6() {
 		return arg6;
-	}
-	public void setIdx6(byte idx6) {
-		this.idx6 = idx6;
-	}
-	public byte getIdx6() {
-		return idx6;
-	}
+	}	
 	public void pushIdx6(byte id) {
 		idxs6.push(id);
 	}
@@ -327,7 +323,12 @@ public class OpInfo {
 	public boolean hasIdx6() {
 		return !idxs6.isEmpty();
 	}
-	
+	public void setAddr6(long addr6) {
+		this.addr6 = addr6;
+	}
+	public long getAddr6() {
+		return addr6;
+	}
 	
 	
 	public class OpInfoSub {
@@ -335,10 +336,13 @@ public class OpInfo {
 		public byte operand;
 		public long arg;
 		
+		public long addr; // to support over 4 bytes
+		
 		public OpInfoSub() {
 			type = Type.NoType;
 			operand = 0;
 			arg = 0;
+			addr = 0;
 		}
 	}
 	

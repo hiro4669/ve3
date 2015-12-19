@@ -234,17 +234,17 @@ public class V32Disassm {
 		switch(optype) {
 		case df:
 		case q: {
-			return memory.fetch8();
+			return memory.fetch8().lval;
 		}
 		case f:
 		case l: {
-			return memory.fetch4();			
+			return memory.fetch4().ival;			
 		}
 		case w: {
-			return memory.fetch2();
+			return memory.fetch2().sval;
 		}
 		case b: {			
-			return memory.fetch();
+			return memory.fetch().bval;
 		}
 		default: {
 			System.out.println("unrecognised optype(OT) in fetch");
@@ -265,27 +265,27 @@ public class V32Disassm {
 		}
 		case 0x9: { // Absolute
 			opinfo.opsub.type = Type.Abs;
-			opinfo.opsub.arg = memory.fetch4();
+			opinfo.opsub.arg = memory.fetch4().ival;
 			return opinfo.opsub;
 		}
 		case 0xc: { // word relative
 			opinfo.opsub.type = Type.WordRel;
-			opinfo.opsub.arg = memory.fetch2() + memory.getCurrentPc();
+			opinfo.opsub.arg = memory.fetch2().sval + memory.getCurrentPc();
 			return opinfo.opsub;
 		}
 		case 0xd: { // word relative deferred
 			opinfo.opsub.type = Type.WordRelDefer;
-			opinfo.opsub.arg = memory.fetch2() + memory.getCurrentPc();
+			opinfo.opsub.arg = memory.fetch2().sval + memory.getCurrentPc();
 			return opinfo.opsub;
 		}
 		case 0xe: { // long relative
 			opinfo.opsub.type = Type.LongRel;
-			opinfo.opsub.arg = memory.fetch4() + memory.getCurrentPc();
+			opinfo.opsub.arg = memory.fetch4().ival + memory.getCurrentPc();
 			return opinfo.opsub;
 		}
 		case 0xf: { // long relative deferred
 			opinfo.opsub.type = Type.LongRelDefer;
-			opinfo.opsub.arg = memory.fetch4() + memory.getCurrentPc();
+			opinfo.opsub.arg = memory.fetch4().ival + memory.getCurrentPc();
 			return opinfo.opsub;
 		}
 		default: {
@@ -299,16 +299,16 @@ public class V32Disassm {
 	private OpInfoSub resolveDisp(OT optype) {
 		if (optype == OT.Brb) {
 			opinfo.opsub.type = Type.Branch1;
-			opinfo.opsub.arg = memory.fetch() + memory.getCurrentPc();
+			opinfo.opsub.arg = memory.fetch().bval + memory.getCurrentPc();
 			//System.out.printf("disp = 0x%x\n", opinfo.opsub.arg);
 			return opinfo.opsub;
 		} else if(optype == OT.Brw) {
 			opinfo.opsub.type = Type.Branch2;
-			opinfo.opsub.arg = memory.fetch2() + memory.getCurrentPc();
+			opinfo.opsub.arg = memory.fetch2().sval + memory.getCurrentPc();
 			return opinfo.opsub;
 		}
 		
-		byte arg = memory.fetch();
+		byte arg = memory.fetch().bval;
 		byte type = (byte)((arg >> 4) & 0xf);
 		byte value = (byte)(arg & 0xf);
 		
@@ -358,42 +358,42 @@ public class V32Disassm {
 			if (value == 0xf) return resolveDispPc(optype, type);
 			opinfo.opsub.type = Type.ByteDisp;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
-			opinfo.opsub.arg = memory.fetch();
+			opinfo.opsub.arg = memory.fetch().bval;
 			return opinfo.opsub;				
 		}
 		case 0xb: { // Byte Displacement Deferred
 			if (value == 0xf) return resolveDispPc(optype, type);
 			opinfo.opsub.type = Type.ByteDispDefer;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
-			opinfo.opsub.arg = memory.fetch();
+			opinfo.opsub.arg = memory.fetch().bval;
 			return opinfo.opsub;
 		}
 		case 0x0c: { // Word Displacement
 			if (value == 0xf) return resolveDispPc(optype, type);
 			opinfo.opsub.type = Type.WordDisp;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
-			opinfo.opsub.arg = memory.fetch2();
+			opinfo.opsub.arg = memory.fetch2().sval;
 			return opinfo.opsub;
 		}
 		case 0x0d: { // Word Displacement Deferred
 			if (value == 0xf) return resolveDispPc(optype, type);
 			opinfo.opsub.type = Type.WordDispDefer;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
-			opinfo.opsub.arg = memory.fetch2();
+			opinfo.opsub.arg = memory.fetch2().sval;
 			return opinfo.opsub;
 		}
 		case 0x0e: { // Long Displacement
 			if (value == 0xf) return resolveDispPc(optype, type);
 			opinfo.opsub.type = Type.LongDisp;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
-			opinfo.opsub.arg = memory.fetch4();
+			opinfo.opsub.arg = memory.fetch4().ival;
 			return opinfo.opsub;
 		}
 		case 0x0f: { // Long Displacement Deferred
 			if (value == 0xf) return resolveDispPc(optype, type);
 			opinfo.opsub.type = Type.LongDispDefer;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
-			opinfo.opsub.arg = memory.fetch4();
+			opinfo.opsub.arg = memory.fetch4().ival;
 			return opinfo.opsub;
 		}
 		default: { // index
@@ -509,11 +509,11 @@ public class V32Disassm {
 	private void run() {
 		int index = memory.savePc();
 		//int b1 = (opinfo.setOpCode(memory.fetch())) & 0xff;
-		int b1 = opinfo.setOpCode(memory.fetch() & 0xff);
+		int b1 = opinfo.setOpCode(memory.fetch().bval & 0xff);
 		Ope ope = Ope.table[b1];
 
 		if (ope == null) {
-			b1 = opinfo.setOpCode(b1 << 8 | memory.fetch() & 0xff);			
+			b1 = opinfo.setOpCode(b1 << 8 | memory.fetch().bval & 0xff);			
 			ope = Ope.table[b1];
 			if (ope == null) {
 				System.out.printf("0x%x unrecognised mnemonic in run1\n", b1);

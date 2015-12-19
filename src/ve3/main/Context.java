@@ -3,11 +3,13 @@ package ve3.main;
 import ve3.hdw.ConcrateMemory;
 import ve3.hdw.Cpu;
 import ve3.hdw.Memory;
+import ve3.os.Unix32V;
 
 public class Context {
 	
 	private Cpu cpu;
 	private Memory memory;
+	private Unix32V os;
 	private byte[] rawdata;
 	private int tsize;
 	private int dsize;
@@ -26,6 +28,9 @@ public class Context {
 		
 		memory = new ConcrateMemory(0x100000);
 		cpu = new Cpu(memory);
+		os = new Unix32V(cpu, memory);
+		cpu.setOs(os);
+		
 		int offset = 0;
 		// load text
 		offset = memory.load(rawdata, 0x20, offset, tsize);
