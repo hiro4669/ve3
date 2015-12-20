@@ -49,6 +49,13 @@ public class Cpu {
 	private final PrintStream log;
 	
 	private boolean debug;
+	private byte[] space = "  ".getBytes();
+	
+	// for computation (e.g., carry, ov flags)
+	private long  val64;
+	private int   val32;
+	private short val16;
+	private byte  val8;
 	
 	
 	public static Ope[] table = new Ope[0xfffff];
@@ -332,8 +339,8 @@ public class Cpu {
 		opinfo.setAddr2(opsub.addr);
 	}
 	
-	private short getSrc2(Type type, long arg, long addr) {
-		return (short)getSrc4(type, arg, addr);
+	private short getShort(Type type, long arg, long addr) {
+		return (short)getInt(type, arg, addr);
 		/*
 		switch (type) {
 		case Literal: {
@@ -344,7 +351,7 @@ public class Cpu {
 		*/		
 	}
 	
-	private int getSrc4(Type type, long arg, long addr) {
+	private int getInt(Type type, long arg, long addr) {
 		switch (type) {
 		case Literal: 
 		case Immed: {
@@ -354,7 +361,7 @@ public class Cpu {
 			return reg[(int)addr];
 		}
 		default: {
-			System.out.println("unrecognized type in getSrc4: " + type);
+			System.out.println("unrecognized type in getInt: " + type);
 			System.exit(1);
 		}
 		}
@@ -362,7 +369,7 @@ public class Cpu {
 		return 0;
 	}
 	
-	private void storeDest4(Type type, long addr, int value) {
+	private void storeInt(Type type, long addr, int value) {
 		switch (type) {
 		case Register: {
 			reg[(int)(addr & 0xff)] = value;
@@ -378,7 +385,7 @@ public class Cpu {
 		}
 		default: {
 			System.out.println("value = " + value);
-			System.out.println("unrecognized type in storeDest4: " + type);
+			System.out.println("unrecognized type in storeInt: " + type);
 			System.exit(1);
 		}
 		}
@@ -438,10 +445,17 @@ public class Cpu {
 		//memory.dump(reg[sp], 4);
 	}
 	
+	public int popInt() {
+		int r = memory.readInt(reg[sp]);
+		reg[sp] += 4;
+		return r;
+	}
+	
 	
 	private void storeDisInfo(OpInfo opinfo, String opname) {
 		try {
-			log.write("  ".getBytes());
+			//log.write("  ".getBytes());
+			log.write(space);
 			log.write(Dump.dump(opinfo, opname).getBytes());
 		} catch (IOException e) {
 			
@@ -452,7 +466,7 @@ public class Cpu {
 		if (debug) {
 			showHeader();
 		}
-		for (int i = 0; i < 12; ++i) {
+		for (int i = 0; i < 4; ++i) {
 			run();
 		}
 	}
@@ -479,22 +493,24 @@ public class Cpu {
 			break;
 		}
 		default: {
-			System.out.printf("0x%x unrecognised size in run\n", ope.minfo.size);
+			System.out.printf("0x%x unrecognised size in run\n", ope.minfo.size);			
 			System.exit(1);
 		}
 		}
 		storeDisInfo(opinfo, ope.opname);
 		
 		switch (ope.mne) {
+		case 0: { // Halt
+			break;
+		}
 		case 0xd0: { // movl
-			int src = getSrc4(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
-			storeDest4(opinfo.getType2(), opinfo.getAddr2(), src);
+			int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			storeInt(opinfo.getType2(), opinfo.getAddr2(), src);
 			setNZVC(src < 0, src == 0, false, isC());			
 			break;
 		}
 		case 0xbc: { // chmk CHMKではフラグはいじらない(REI命令で戻されるから)．
-			int src = getSrc2(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
-			int num = memory.readInt(reg[ap]);
+			int src = getShort(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
 			if (debug) {
 				System.out.println(new String(logOut.toByteArray()));
 				logOut.reset();
@@ -503,13 +519,22 @@ public class Cpu {
 			break;
 		}
 		case 0xdd: { // pushl
-			int src = getSrc4(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
 			pushInt(src);
-			setNZVC(src < 0, src == 0, false, isC());
+			setNZVC(src < 0, src == 0, false, isC());						
+			break;
+		}
+		case 0xc2: { // subl2
+			int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int dst = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+			val64 = (long)dst - (long)src;
+			val32 = (int)val64;
+			storeInt(opinfo.getType2(), opinfo.getAddr2(), val32);
+			setNZVC(val32 < 0, val32 == 0, val64 != val32, (dst & 0xffffffffL) < (src & 0xffffffffL));
 			break;
 		}
 		default: {
-			System.out.printf("0x%x unrecognised size in run\n", ope.mne);
+			System.out.printf("unrecognised operator[0x%x] in run\n", ope.mne);
 			System.exit(1);
 		}
 		}

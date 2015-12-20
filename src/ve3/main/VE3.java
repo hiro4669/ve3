@@ -15,7 +15,7 @@ public class VE3 {
 		boolean disflg = false;
 		boolean debug = false;
 		
-		String fileName = "hello3";
+		String fileName = "hello2";
 		
 		for (int i = 0; i < args.length; ++i) {
 			if (args[i].equals("-d")) {
