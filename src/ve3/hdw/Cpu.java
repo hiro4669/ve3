@@ -350,8 +350,12 @@ public class Cpu {
 		case Immed: {
 			return (int)arg;
 		}
+		case Register: {
+			return reg[(int)addr];
+		}
 		default: {
-			System.out.println("unrecognized type in getSrc4");
+			System.out.println("unrecognized type in getSrc4: " + type);
+			System.exit(1);
 		}
 		}
 		
@@ -428,6 +432,12 @@ public class Cpu {
 		psl &= ~PSW_C;
 	}
 	
+	public void pushInt(int val) {
+		reg[sp] -= 4;
+		memory.writeInt(reg[sp], val);
+		//memory.dump(reg[sp], 4);
+	}
+	
 	
 	private void storeDisInfo(OpInfo opinfo, String opname) {
 		try {
@@ -442,7 +452,7 @@ public class Cpu {
 		if (debug) {
 			showHeader();
 		}
-		for (int i = 0; i < 10; ++i) {
+		for (int i = 0; i < 12; ++i) {
 			run();
 		}
 	}
@@ -490,6 +500,12 @@ public class Cpu {
 				logOut.reset();
 			}
 			os.syscall(src);			
+			break;
+		}
+		case 0xdd: { // pushl
+			int src = getSrc4(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			pushInt(src);
+			setNZVC(src < 0, src == 0, false, isC());
 			break;
 		}
 		default: {

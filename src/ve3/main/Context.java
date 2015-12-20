@@ -40,7 +40,7 @@ public class Context {
 		// load data
 		offset = memory.load(rawdata, 0x20+tsize, offset, dsize);
 		cpu.setPc(2);
-		cpu.setSp(0xfffff);
+		cpu.setSp(0x100000);
 		debug = false;
 		//System.out.println(offset);
 		//memory.dump();

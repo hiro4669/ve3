@@ -26,5 +26,7 @@ public interface Memory {
 	public byte[] rawdump_rem();
 	public boolean remaining();
 	public int getPrevPc();
+	
+	public void dump(int offset, int len);
 
 }

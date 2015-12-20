@@ -139,10 +139,18 @@ public class ConcrateMemory implements Memory {
 	public void dump() {
 		for (int i = 0; i < end; ++i) {
 			if (i % 16 == 0) System.out.printf("\n%04x: ", i);
-			System.out.printf("%02x ", memory[i]);
-			
+			System.out.printf("%02x ", memory[i]);		
 		}
 	}
+	
+	public void dump(int offset, int len) {
+		for (int i = offset; i < offset+len; ++i) {
+			if (i % 16 == 0) System.out.printf("\n%04x: ", i);
+			System.out.printf("%02x ", memory[i]);		
+		}
+		System.out.println();
+	}
+	
 	
 	public byte[] rawdump() {
 		int count = 0;
