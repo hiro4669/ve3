@@ -13,6 +13,10 @@ public interface Memory {
 	public int savePc();
 	public void setPc(int pc);
 	
+	
+	public void writeInt(int offset, int data);
+
+	
 	public byte readByte(int offset);
 	public short readShort(int offset);
 	public int readInt(int offset);

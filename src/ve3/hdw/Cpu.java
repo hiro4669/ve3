@@ -48,6 +48,8 @@ public class Cpu {
 	private final ByteArrayOutputStream logOut;
 	private final PrintStream log;
 	
+	private boolean debug;
+	
 	
 	public static Ope[] table = new Ope[0xfffff];
 	
@@ -74,7 +76,11 @@ public class Cpu {
 		}
 		opinfo = new OpInfo();	
 		psl = 0x41f0000;
-		
+		debug = false;		
+	}
+	
+	public void setDebug(boolean debug) {
+		this.debug = debug;
 	}
 	
 	public void setPc(int pc) {
@@ -227,7 +233,9 @@ public class Cpu {
 		}
 		case 6: { // Register Defered 
 			opinfo.opsub.type = Type.RegDefer;
-			opinfo.opsub.operand = (byte)(arg & 0xf);	
+			opinfo.opsub.operand = (byte)(arg & 0xf);
+			//opinfo.opsub.addr = (long)reg[opinfo.opsub.operand = (byte)(arg & 0xf)] & 0xffffffffL;
+			opinfo.opsub.addr = (long)reg[opinfo.opsub.operand] & 0xffffffffL;
 			return opinfo.opsub;
 		}
 		case 7: { // Auto Decrement
@@ -252,6 +260,7 @@ public class Cpu {
 			opinfo.opsub.type = Type.ByteDisp;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
 			opinfo.opsub.arg = fetch().bval;
+			opinfo.opsub.addr = (long)reg[opinfo.opsub.operand] + (long)opinfo.opsub.arg;
 			return opinfo.opsub;				
 		}
 		case 0xb: { // Byte Displacement Deferred
@@ -307,6 +316,7 @@ public class Cpu {
 		opinfo.setType1(opsub.type);
 		opinfo.setOpe1(opsub.operand);
 		opinfo.setArg1(opsub.arg);
+		opinfo.setAddr1(opsub.addr);
 		
 	}
 	
@@ -319,6 +329,7 @@ public class Cpu {
 		opinfo.setType2(opsub.type);
 		opinfo.setOpe2(opsub.operand);
 		opinfo.setArg2(opsub.arg);
+		opinfo.setAddr2(opsub.addr);
 	}
 	
 	private short getSrc2(Type type, long arg, long addr) {
@@ -353,8 +364,18 @@ public class Cpu {
 			reg[(int)(addr & 0xff)] = value;
 			break;
 		}
+		case RegDefer: {
+			memory.writeInt((int)addr, value);			
+			break;
+		}
+		case ByteDisp: {
+			memory.writeInt((int)addr, value);
+			break;
+		}
 		default: {
-			System.out.println("unrecognized type in storeDest4");
+			System.out.println("value = " + value);
+			System.out.println("unrecognized type in storeDest4: " + type);
+			System.exit(1);
 		}
 		}
 	}
@@ -402,6 +423,10 @@ public class Cpu {
 		psl = vf ? (psl | PSW_V) : (psl & ~PSW_V);
 		psl = cf ? (psl | PSW_C) : (psl & ~PSW_C);		
 	}
+	/* for OS system call*/
+	public void clearCarry() {
+		psl &= ~PSW_C;
+	}
 	
 	
 	private void storeDisInfo(OpInfo opinfo, String opname) {
@@ -414,14 +439,18 @@ public class Cpu {
 	}
 			
 	public void start() {
-		showHeader();
-		for (int i = 0; i < 4; ++i) {
+		if (debug) {
+			showHeader();
+		}
+		for (int i = 0; i < 10; ++i) {
 			run();
 		}
 	}
 	
-	private void run() {		
-		storeRegInfo();
+	private void run() {
+		if (debug) {
+			storeRegInfo();
+		}
 		
 		int b1 = opinfo.setOpCode(fetch().bval & 0xff);
 		Ope ope = Ope.table[b1];
@@ -449,15 +478,17 @@ public class Cpu {
 		switch (ope.mne) {
 		case 0xd0: { // movl
 			int src = getSrc4(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
-			storeDest4(opinfo.getType2(), opinfo.getOpe2(), src);
-			setNZVC(src < 0, src == 0, false, isC());
+			storeDest4(opinfo.getType2(), opinfo.getAddr2(), src);
+			setNZVC(src < 0, src == 0, false, isC());			
 			break;
 		}
-		case 0xbc: { // chmk
+		case 0xbc: { // chmk CHMKではフラグはいじらない(REI命令で戻されるから)．
 			int src = getSrc2(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
 			int num = memory.readInt(reg[ap]);
-			System.out.println(new String(logOut.toByteArray()));
-			logOut.reset();			
+			if (debug) {
+				System.out.println(new String(logOut.toByteArray()));
+				logOut.reset();
+			}
 			os.syscall(src);			
 			break;
 		}
@@ -467,7 +498,7 @@ public class Cpu {
 		}
 		}
 		
-		if (logOut.size() > 0) {
+		if (debug && logOut.size() > 0) {
 			System.out.println(new String(logOut.toByteArray()));
 			logOut.reset();
 		}

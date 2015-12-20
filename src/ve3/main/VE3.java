@@ -13,13 +13,16 @@ public class VE3 {
 	public static void main(String ...args) {
 		
 		boolean disflg = false;
+		boolean debug = false;
 		
-		String fileName = "hello";
+		String fileName = "hello4";
 		
 		for (int i = 0; i < args.length; ++i) {
 			if (args[i].equals("-d")) {
 				disflg = true;
-			}			
+			} else if (args[i].equals("-m")) {
+				debug = true;
+			}
 		}
 		if (args.length > 0 && !(args[args.length-1].startsWith("-"))) {
 			fileName = args[args.length-1];
@@ -48,8 +51,9 @@ public class VE3 {
 				String log = disassm.disassm();
 				return;
 			}
-			
+						
 			Context ctx = new Context(rawdata);
+			ctx.setDebug(debug);
 			ctx.start();
 			
 		//	System.out.println("--------");

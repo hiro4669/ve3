@@ -10,11 +10,18 @@ public class Unix32V {
 	private Cpu cpu;
 	private int[] reg;
 	
+	private boolean debug;
+	
 	public Unix32V(Cpu cpu, Memory memory) {
 		this.cpu = cpu;
 		this.reg = cpu.getRegister();
 		this.memory = memory;
-		this.rawmem = memory.getRawMemory();		
+		this.rawmem = memory.getRawMemory();
+		this.debug = false;
+	}
+	
+	public void setDebug(boolean debug) {
+		this.debug = debug;
 	}
 	
 	public void syscall(int sysnum) {
@@ -22,7 +29,9 @@ public class Unix32V {
 		case 1: { // exit
 			int argnum = memory.readInt(reg[Cpu.ap]);
 			int exnum = memory.readInt(reg[Cpu.ap] + 4);
-			System.out.printf("<exit(%d)>\n", exnum);
+			if (debug) {
+				System.out.printf("<exit(%d)>\n", exnum);
+			}
 			
 			/*
 			System.out.println("-- exit--");
@@ -45,10 +54,17 @@ public class Unix32V {
 			System.out.println("off = " + off);
 			System.out.println("len = " + len);
 			*/
-			System.out.printf("<write(%x, 0x%x, %x)", dst, off, len);
+			if (debug) {
+				System.out.printf("<write(%x, 0x%x, %x)", dst, off, len);
+			}
+			
 			System.out.write(rawmem, off, len);
-			System.out.printf("=> %x\n", len);
+			
+			if (debug) {
+				System.out.printf("=> %x\n", len);
+			}
 			reg[Cpu.r0] = len;
+			cpu.clearCarry();
 			
 			break;
 		}

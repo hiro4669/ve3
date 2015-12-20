@@ -13,12 +13,13 @@ public class Context {
 	private byte[] rawdata;
 	private int tsize;
 	private int dsize;
+	private boolean debug;
 	
 	public Context(byte[] rawdata) {
 		this.rawdata = rawdata;
 		init();
 	}
-	
+		
 	private void init() {
 		tsize = readInt(rawdata, 4);
 		dsize = readInt(rawdata, 8);
@@ -40,8 +41,14 @@ public class Context {
 		offset = memory.load(rawdata, 0x20+tsize, offset, dsize);
 		cpu.setPc(2);
 		cpu.setSp(0xfffff);
+		debug = false;
 		//System.out.println(offset);
 		//memory.dump();
+	}
+	
+	public void setDebug(boolean debug) {		
+		os.setDebug(this.debug = debug);
+		cpu.setDebug(debug);
 	}
 	
 	public void start() {
