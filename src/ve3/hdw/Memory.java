@@ -15,6 +15,7 @@ public interface Memory {
 	
 	
 	public void writeInt(int offset, int data);
+	public void writeByte(int offset, byte data);
 
 	
 	public byte readByte(int offset);

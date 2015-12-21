@@ -5,6 +5,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import ve3.disassm.V32Disassm;
 
@@ -15,18 +17,27 @@ public class VE3 {
 		boolean disflg = false;
 		boolean debug = false;
 		
-		String fileName = "hello2";
+		String fileName = null;
 		
+		List<String> argList = new ArrayList<String>();
 		for (int i = 0; i < args.length; ++i) {
 			if (args[i].equals("-d")) {
 				disflg = true;
 			} else if (args[i].equals("-m")) {
 				debug = true;
+			} else {
+				argList.add(args[i]);
 			}
 		}
+		if (argList.size() == 0) {
+			throw new RuntimeException();
+		}
+		fileName = argList.get(0);
+		/*
 		if (args.length > 0 && !(args[args.length-1].startsWith("-"))) {
 			fileName = args[args.length-1];
 		}
+		*/
 		
 //		if (args.length > 0) {
 			//fileName = args[0];
@@ -52,7 +63,7 @@ public class VE3 {
 				return;
 			}
 						
-			Context ctx = new Context(rawdata);
+			Context ctx = new Context(rawdata, argList);
 			ctx.setDebug(debug);
 			ctx.start();
 			

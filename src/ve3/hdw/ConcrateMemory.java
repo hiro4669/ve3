@@ -83,6 +83,9 @@ public class ConcrateMemory implements Memory {
 		return mval;		
 	}
 	
+	public void writeByte(int offset, byte data) {
+		memory[offset] = data;
+	}
 	public void writeInt(int offset, int data) {
 		memory[offset++] = (byte)(data & 0xff);
 		memory[offset++] = (byte)((data >> 8) & 0xff);

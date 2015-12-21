@@ -1,5 +1,8 @@
 package ve3.main;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ve3.hdw.ConcrateMemory;
 import ve3.hdw.Cpu;
 import ve3.hdw.Memory;
@@ -15,9 +18,12 @@ public class Context {
 	private int dsize;
 	private boolean debug;
 	
-	public Context(byte[] rawdata) {
+	public Context(byte[] rawdata, List<String> argList) {
 		this.rawdata = rawdata;
 		init();
+		List<String> envList = new ArrayList<String>();
+		envList.add("PATH=/usr/local/bin");
+		os.processArgs(argList, envList);
 	}
 		
 	private void init() {
@@ -45,7 +51,7 @@ public class Context {
 		//System.out.println(offset);
 		//memory.dump();
 	}
-	
+			
 	public void setDebug(boolean debug) {		
 		os.setDebug(this.debug = debug);
 		cpu.setDebug(debug);
