@@ -203,7 +203,7 @@ public class Dump {
 	
 	public static String dump(OpInfo opinfo, String opname) {
 		
-		switch(opinfo.getMetaInfo().size) {
+		switch(opinfo.minfo.size) {
 		case 0: {
 			return opname;	
 		}
@@ -226,7 +226,7 @@ public class Dump {
 			return opname + " " + dump6(opinfo);
 		}
 		default: {
-			System.out.println("unrecognized size in dump: " + opinfo.getMetaInfo().size);
+			System.out.println("unrecognized size in dump: " + opinfo.minfo.size);
 			System.exit(1);
 			return "";
 			
@@ -235,7 +235,7 @@ public class Dump {
 	}
 	
 	private static String dump1(OpInfo opinfo) {
-		String s = createOperand(opinfo.getType1(), opinfo.getOpe1(), opinfo.getArg1(), opinfo.getMetaInfo().arg1);
+		String s = createOperand(opinfo.getType1(), opinfo.getOpe1(), opinfo.getArg1(), opinfo.minfo.arg1);
 		while (opinfo.hasIdx1()) {
 			s += createOperand(Type.Index, opinfo.popIdx1(), 0, null);
 		}		
@@ -243,7 +243,7 @@ public class Dump {
 	}
 	
 	private static String dump2(OpInfo opinfo) {
-		String s = dump1(opinfo) + "," + createOperand(opinfo.getType2(), opinfo.getOpe2(), opinfo.getArg2(), opinfo.getMetaInfo().arg2);
+		String s = dump1(opinfo) + "," + createOperand(opinfo.getType2(), opinfo.getOpe2(), opinfo.getArg2(), opinfo.minfo.arg2);
 		while (opinfo.hasIdx2()) {
 			s += createOperand(Type.Index, opinfo.popIdx2(), 0, null);
 		}		
@@ -251,7 +251,7 @@ public class Dump {
 	}
 	
 	private static String dump3(OpInfo opinfo) {
-		String s = dump2(opinfo) + "," + createOperand(opinfo.getType3(), opinfo.getOpe3(), opinfo.getArg3(), opinfo.getMetaInfo().arg3);
+		String s = dump2(opinfo) + "," + createOperand(opinfo.getType3(), opinfo.getOpe3(), opinfo.getArg3(), opinfo.minfo.arg3);
 		while (opinfo.hasIdx3()) {
 			s += createOperand(Type.Index, opinfo.popIdx3(), 0, null);
 		}		
@@ -259,7 +259,7 @@ public class Dump {
 	}
 	
 	private static String dump4(OpInfo opinfo) {
-		String s = dump3(opinfo) + "," + createOperand(opinfo.getType4(), opinfo.getOpe4(), opinfo.getArg4(), opinfo.getMetaInfo().arg4);
+		String s = dump3(opinfo) + "," + createOperand(opinfo.getType4(), opinfo.getOpe4(), opinfo.getArg4(), opinfo.minfo.arg4);
 		while (opinfo.hasIdx4()) {
 			s += createOperand(Type.Index, opinfo.popIdx4(), 0, null);
 		}		
@@ -267,7 +267,7 @@ public class Dump {
 	}
 	
 	private static String dump5(OpInfo opinfo) {
-		String s = dump4(opinfo) + "," + createOperand(opinfo.getType5(), opinfo.getOpe5(), opinfo.getArg5(), opinfo.getMetaInfo().arg5);
+		String s = dump4(opinfo) + "," + createOperand(opinfo.getType5(), opinfo.getOpe5(), opinfo.getArg5(), opinfo.minfo.arg5);
 		while (opinfo.hasIdx5()) {
 			s += createOperand(Type.Index, opinfo.popIdx5(), 0, null);
 		}		
@@ -275,7 +275,7 @@ public class Dump {
 	}
 	
 	private static String dump6(OpInfo opinfo) {
-		String s = dump5(opinfo) + "," + createOperand(opinfo.getType6(), opinfo.getOpe6(), opinfo.getArg6(), opinfo.getMetaInfo().arg6);
+		String s = dump5(opinfo) + "," + createOperand(opinfo.getType6(), opinfo.getOpe6(), opinfo.getArg6(), opinfo.minfo.arg6);
 		while (opinfo.hasIdx6()) {
 			s += createOperand(Type.Index, opinfo.popIdx6(), 0, null);
 		}		

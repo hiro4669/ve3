@@ -526,7 +526,7 @@ public class V32Disassm {
 		}
 
 
-		opinfo.setMetaInfo(ope.minfo);
+		opinfo.minfo = ope.minfo;
 		switch(ope.minfo.size) {
 		case 0: {
 			showlog(format(index, memory.rawdump(), Dump.dump(opinfo, ope.opname)));

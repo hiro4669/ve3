@@ -57,7 +57,7 @@ public class OpInfo {
 	
 	
 	
-	private MetaInfo minfo;
+	public MetaInfo minfo;
 		
 	public OpInfoSub opsub;
 		
@@ -87,12 +87,6 @@ public class OpInfo {
 		return opcode;		
 	}
 	
-	public void setMetaInfo(MetaInfo minfo) {
-		this.minfo = minfo;
-	}
-	public MetaInfo getMetaInfo() {
-		return minfo;
-	}
 	/* for operand1 */
 	public void setType1(Type type1) {
 		this.type1 = type1;

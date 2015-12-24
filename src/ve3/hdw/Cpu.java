@@ -360,6 +360,12 @@ public class Cpu {
 		case Register: {
 			return reg[(int)addr];
 		}
+		case ByteDisp: {
+			//System.out.printf("%x\n", (int)addr);
+			//int val = memory.readInt((int)addr);
+			//System.out.println("val = " + val);
+			return memory.readInt((int)addr);
+		}
 		default: {
 			System.out.println("unrecognized type in getInt: " + type);
 			System.exit(1);
@@ -466,7 +472,7 @@ public class Cpu {
 		if (debug) {
 			showHeader();
 		}
-		for (int i = 0; i < 4; ++i) {
+		for (int i = 0; i < 7; ++i) {
 			run();
 		}
 	}
@@ -479,7 +485,7 @@ public class Cpu {
 		int b1 = opinfo.setOpCode(fetch().bval & 0xff);
 		Ope ope = Ope.table[b1];
 		
-		opinfo.setMetaInfo(ope.minfo);
+		opinfo.minfo = ope.minfo;
 		switch (ope.minfo.size) {
 		case 0: {
 			break;
@@ -498,6 +504,7 @@ public class Cpu {
 		}
 		}
 		storeDisInfo(opinfo, ope.opname);
+		
 		
 		switch (ope.mne) {
 		case 0: { // Halt
@@ -531,6 +538,14 @@ public class Cpu {
 			val32 = (int)val64;
 			storeInt(opinfo.getType2(), opinfo.getAddr2(), val32);
 			setNZVC(val32 < 0, val32 == 0, val64 != val32, (dst & 0xffffffffL) < (src & 0xffffffffL));
+			break;
+		}
+		case 0x9e: { // movab
+			//int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1(), opinfo.minfo.arg1);
+			int src = (int)opinfo.getAddr1();
+			//System.out.printf("addr = %x\n", src);
+			storeInt(opinfo.getType2(), opinfo.getAddr2(), src);
+			setNZVC(src < 0, src == 0, false, isC());			
 			break;
 		}
 		default: {
