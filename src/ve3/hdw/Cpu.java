@@ -153,39 +153,50 @@ public class Cpu {
 	}
 	
 	private OpInfoSub resolveDispPc(OT optype, byte type) {
+
 		switch(type) {
-		case 0x8: { // Immediate
+		case 0x8: { // Immediate OK
 			opinfo.opsub.type = Type.Immed;
-			opinfo.opsub.arg = fetch(optype);
+			opinfo.opsub.arg = fetch(optype);			
 			return opinfo.opsub;
 		}
 		case 0x9: { // Absolute
 			opinfo.opsub.type = Type.Abs;
 			opinfo.opsub.arg = fetch4().ival;
+			System.out.println(type + " not implemented yet in resolveDispPc");
+			System.exit(1);
 			return opinfo.opsub;
 		}
 		case 0xc: { // word relative
 			opinfo.opsub.type = Type.WordRel;
 			MVal mval = fetch2();
-			opinfo.opsub.arg = mval.sval + mval.pc;			
+			opinfo.opsub.arg = mval.sval + mval.pc;
+			System.out.println(type + " not implemented yet in resolveDispPc");
+			System.exit(1);
 			return opinfo.opsub;
 		}
 		case 0xd: { // word relative deferred
 			opinfo.opsub.type = Type.WordRelDefer;
 			MVal mval = fetch2();
-			opinfo.opsub.arg = mval.sval + mval.pc;				
+			opinfo.opsub.arg = mval.sval + mval.pc;
+			System.out.println(type + " not implemented yet in resolveDispPc");
+			System.exit(1);
 			return opinfo.opsub;
 		}
 		case 0xe: { // long relative
 			opinfo.opsub.type = Type.LongRel;
 			MVal mval = fetch4();
 			opinfo.opsub.arg = mval.ival + mval.pc;
+			System.out.println(type + " not implemented yet in resolveDispPc");
+			System.exit(1);
 			return opinfo.opsub;
 		}
 		case 0xf: { // long relative deferred
 			opinfo.opsub.type = Type.LongRelDefer;
 			MVal mval = fetch4();
-			opinfo.opsub.arg = mval.ival + mval.pc;			
+			opinfo.opsub.arg = mval.ival + mval.pc;		
+			System.out.println(type + " not implemented yet in resolveDispPc");
+			System.exit(1);
 			return opinfo.opsub;
 		}
 		default: {
@@ -206,11 +217,13 @@ public class Cpu {
 			MVal mval = fetch();
 			opinfo.opsub.type = Type.Branch1;
 			opinfo.opsub.arg = mval.bval + mval.pc;
+			opinfo.opsub.addr = opinfo.opsub.arg;
 			return opinfo.opsub;
 		} else if (optype == OT.Brw) {
 			MVal mval = fetch2();
 			opinfo.opsub.type = Type.Branch2;
 			opinfo.opsub.arg = mval.sval + mval.pc;
+			opinfo.opsub.addr = opinfo.opsub.arg;
 			return opinfo.opsub;
 		}
 		
@@ -221,15 +234,17 @@ public class Cpu {
 		case 0:
 		case 1:
 		case 2:
-		case 3: { // immediate data
+		case 3: { // Literal
 			opinfo.opsub.type = Type.Literal;
 			opinfo.opsub.operand = (byte)(arg & 0x3f);
 			opinfo.opsub.arg = opinfo.opsub.operand;
 			return opinfo.opsub;				
 		}
-		case 4: { // index
+		case 4: { // Index
 			opinfo.opsub.type = Type.Index;
 			opinfo.opsub.operand = (byte)(arg & 0x3f);
+			System.out.println(type + " not implemented yet in resolveDisp");
+			System.exit(1);
 			return opinfo.opsub;
 		}
 		case 5: { // Register
@@ -248,18 +263,41 @@ public class Cpu {
 		case 7: { // Auto Decrement
 			opinfo.opsub.type = Type.AutoDec;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
+			System.out.println(type + " not implemented yet in resolveDisp");
+			System.exit(1);
 			return opinfo.opsub;		
 		}
 		case 8: { // Auto Increment
 			if (value == 0xf) return resolveDispPc(optype, type);
 			opinfo.opsub.type = Type.AutoInc;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
+			opinfo.opsub.addr = reg[opinfo.opsub.operand];
+			switch (optype) {
+			case b: {
+				reg[opinfo.opsub.operand] += 1;
+				break;
+			}
+			case w: {
+				reg[opinfo.opsub.operand] += 2;
+				break;
+			}
+			case l: {
+				reg[opinfo.opsub.operand] += 4;
+				break;
+			}
+			default: {
+				System.out.println("unsupported optype in AutoIncrement in resolveDisp");
+				System.exit(1);
+			}
+			}
 			return opinfo.opsub;				
 		}
-		case 9: {
+		case 9: { // AutoIncDefer
 			if (value == 0xf) return resolveDispPc(optype, type);
 			opinfo.opsub.type = Type.AutoIncDefer;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
+			System.out.println(type + " not implemented yet in resolveDisp");
+			System.exit(1);
 			return opinfo.opsub;			
 		}
 		case 0xa: { // Byte Displacement
@@ -275,6 +313,8 @@ public class Cpu {
 			opinfo.opsub.type = Type.ByteDispDefer;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
 			opinfo.opsub.arg = fetch().bval;
+			System.out.println(type + " not implemented yet in resolveDisp");
+			System.exit(1);
 			return opinfo.opsub;
 		}
 		case 0x0c: { // Word Displacement
@@ -282,6 +322,8 @@ public class Cpu {
 			opinfo.opsub.type = Type.WordDisp;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
 			opinfo.opsub.arg = fetch2().sval;
+			System.out.println(type + " not implemented yet in resolveDisp");
+			System.exit(1);
 			return opinfo.opsub;
 		}
 		case 0x0d: { // Word Displacement Deferred
@@ -289,6 +331,8 @@ public class Cpu {
 			opinfo.opsub.type = Type.WordDispDefer;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
 			opinfo.opsub.arg = fetch2().sval;
+			System.out.println(type + " not implemented yet in resolveDisp");
+			System.exit(1);
 			return opinfo.opsub;
 		}
 		case 0x0e: { // Long Displacement
@@ -296,6 +340,8 @@ public class Cpu {
 			opinfo.opsub.type = Type.LongDisp;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
 			opinfo.opsub.arg = fetch4().ival;
+			System.out.println(type + " not implemented yet in resolveDisp");
+			System.exit(1);
 			return opinfo.opsub;
 		}
 		case 0x0f: { // Long Displacement Deferred
@@ -303,6 +349,8 @@ public class Cpu {
 			opinfo.opsub.type = Type.LongDispDefer;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
 			opinfo.opsub.arg = fetch4().ival;
+			System.out.println(type + " not implemented yet in resolveDisp");
+			System.exit(1);
 			return opinfo.opsub;
 		}
 		default: { // index
@@ -353,6 +401,9 @@ public class Cpu {
 	
 	private int getInt(Type type, long arg, long addr) {
 		switch (type) {
+		case Branch1: {
+			return (int)addr;
+		}
 		case Literal: 
 		case Immed: {
 			return (int)arg;
@@ -360,11 +411,15 @@ public class Cpu {
 		case Register: {
 			return reg[(int)addr];
 		}
-		case ByteDisp: {
+		case ByteDisp: {			
 			//System.out.printf("%x\n", (int)addr);
 			//int val = memory.readInt((int)addr);
 			//System.out.println("val = " + val);
 			return memory.readInt((int)addr);
+		}
+		case AutoInc: {
+			//System.out.printf("%x\n", (int)addr);
+			return memory.readInt((int)addr);			
 		}
 		default: {
 			System.out.println("unrecognized type in getInt: " + type);
@@ -472,9 +527,10 @@ public class Cpu {
 		if (debug) {
 			showHeader();
 		}
-		for (int i = 0; i < 7; ++i) {
+		for (int i = 0; i < 11; ++i) {
 			run();
 		}
+		//memory.dump(reg[sp], 0x100000 - reg[sp]); // show memory
 	}
 	
 	private void run() {
@@ -546,6 +602,20 @@ public class Cpu {
 			//System.out.printf("addr = %x\n", src);
 			storeInt(opinfo.getType2(), opinfo.getAddr2(), src);
 			setNZVC(src < 0, src == 0, false, isC());			
+			break;
+		}
+		case 0xd5: { // tstl
+			int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			val64 = (long)src - 0;
+			val32 = (int)val64;
+			setNZVC(val32 < 0, val32 == 0, false, false);
+			break;
+		}
+		case 0x12: { // benq			
+			if (!isZ()) {				
+				int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+				setPc(src);
+			}
 			break;
 		}
 		default: {
