@@ -42,9 +42,10 @@ public class Context {
 		// load text
 		offset = memory.load(rawdata, 0x20, offset, tsize);
 		offset = (offset + 0x1ff) & ~0x1ff;
-		//System.out.println(offset);
+		System.out.printf("data offset = 0x%x\n", offset);
 		// load data
 		offset = memory.load(rawdata, 0x20+tsize, offset, dsize);
+		//memory.dump(offset, 4);
 		cpu.setPc(2);
 		cpu.setSp(0x100000);
 		debug = false;

@@ -186,9 +186,7 @@ public class Cpu {
 		case 0xe: { // long relative
 			opinfo.opsub.type = Type.LongRel;
 			MVal mval = fetch4();
-			opinfo.opsub.arg = mval.ival + mval.pc;
-			System.out.println(type + " not implemented yet in resolveDispPc");
-			System.exit(1);
+			opinfo.opsub.addr = opinfo.opsub.arg = mval.ival + mval.pc;			
 			return opinfo.opsub;
 		}
 		case 0xf: { // long relative deferred
@@ -305,16 +303,25 @@ public class Cpu {
 			opinfo.opsub.type = Type.ByteDisp;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
 			opinfo.opsub.arg = fetch().bval;
-			opinfo.opsub.addr = (long)reg[opinfo.opsub.operand] + (long)opinfo.opsub.arg;
+			opinfo.opsub.addr = (long)reg[opinfo.opsub.operand] + (long)opinfo.opsub.arg; // minus OK
+			/*
+			System.out.printf("arg = %x, %d\n", opinfo.opsub.arg, opinfo.opsub.arg);
+			System.out.printf("reg = %x, %d\n", reg[opinfo.opsub.operand], reg[opinfo.opsub.operand]); 						
+			System.out.printf("addr = 0x%08x\n", opinfo.opsub.addr);
+			*/
 			return opinfo.opsub;				
 		}
 		case 0xb: { // Byte Displacement Deferred
 			if (value == 0xf) return resolveDispPc(optype, type);
 			opinfo.opsub.type = Type.ByteDispDefer;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
-			opinfo.opsub.arg = fetch().bval;
-			System.out.println(type + " not implemented yet in resolveDisp");
-			System.exit(1);
+			opinfo.opsub.arg = fetch().bval;			
+			long tmp = (long)reg[opinfo.opsub.operand] + (long)opinfo.opsub.arg; 
+			//System.out.printf("tmp = %x\n", tmp);
+			opinfo.opsub.addr = memory.readInt((int)tmp);
+			//System.out.printf("0x%x\n", opinfo.opsub.addr);
+			//System.out.println(type + " not implemented yet in resolveDisp");
+			//System.exit(1);
 			return opinfo.opsub;
 		}
 		case 0x0c: { // Word Displacement
@@ -417,6 +424,9 @@ public class Cpu {
 			//System.out.println("val = " + val);
 			return memory.readInt((int)addr);
 		}
+		case ByteDispDefer: {
+			return memory.readInt((int)addr);
+		}
 		case AutoInc: {
 			//System.out.printf("%x\n", (int)addr);
 			return memory.readInt((int)addr);			
@@ -444,8 +454,12 @@ public class Cpu {
 			memory.writeInt((int)addr, value);
 			break;
 		}
+		case LongRel: {
+			memory.writeInt((int)addr, value);			
+			break;
+		}
 		default: {
-			System.out.println("value = " + value);
+			System.out.printf("addr = 0x%x, value = 0x%x\n", addr, value);
 			System.out.println("unrecognized type in storeInt: " + type);
 			System.exit(1);
 		}
@@ -468,11 +482,6 @@ public class Cpu {
 				isZ() ? "Z" : "-",
 				isV() ? "V" : "-",
 				isC() ? "C" : "-"
-								
-				//((((psl & PSW_Z) >>> 2) & 1) == 1) ? "Z" : "-",
-//				((((psl & PSW_Z) >>> 2) & 1) == 1) ? "Z" : "-",
-				//((((psl & PSW_V) >>> 1) & 1) == 1) ? "V" : "-",
-				//((((psl & PSW_C))       & 1) == 1) ? "C" : "-"				
 			);		
 	}
 	
@@ -527,10 +536,11 @@ public class Cpu {
 		if (debug) {
 			showHeader();
 		}
-		for (int i = 0; i < 11; ++i) {
+		for (int i = 0; i < 14; ++i) {
 			run();
 		}
 		//memory.dump(reg[sp], 0x100000 - reg[sp]); // show memory
+		//memory.dump(0xf80, 4); 
 	}
 	
 	private void run() {
@@ -596,6 +606,16 @@ public class Cpu {
 			setNZVC(val32 < 0, val32 == 0, val64 != val32, (dst & 0xffffffffL) < (src & 0xffffffffL));
 			break;
 		}
+		case 0xd1: { // cmpl
+			int src1 = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int src2 = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+			val64 = (long)src1 - (long)src2;
+			val32 = (int)val64;
+			//System.out.printf("src1 = %x, src2 = %x\n", src1, src2);
+			setNZVC(val32 < 0, val32 == 0, false, (src1 & 0xffffffffL) < (src2 & 0xffffffffL));
+			break;
+			
+		}
 		case 0x9e: { // movab
 			//int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1(), opinfo.minfo.arg1);
 			int src = (int)opinfo.getAddr1();
@@ -614,6 +634,14 @@ public class Cpu {
 		case 0x12: { // benq			
 			if (!isZ()) {				
 				int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+				setPc(src);
+			}
+			break;
+		}
+		case 0x19: { // blss
+			if (isN()) {
+				int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+//				System.out.printf("pc = %x\n", src);
 				setPc(src);
 			}
 			break;

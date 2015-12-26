@@ -100,7 +100,7 @@ public class Dump {
 			return "@(" + regs[operand] + ")+";
 		}
 		case ByteDisp: { // 0xa
-			//return String.format("0x%x(%s)", arg, regs[operand]);
+			//return String.format("0x%x(%s)", arg, regs[operand]);			
 			String ds = (ot == OT.ebl) ? getArgStr(ot, arg) : getArgStr(OT.b, arg);
 			return ds + String.format("(%s)", regs[operand]);
 		}
