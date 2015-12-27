@@ -539,7 +539,7 @@ public class Cpu {
 		if (debug) {
 			showHeader();
 		}
-		for (int i = 0; i < 14; ++i) {
+		for (int i = 0; i < 28; ++i) {
 			run();
 		}
 		//memory.dump(reg[sp], 0x100000 - reg[sp]); // show memory
@@ -746,6 +746,13 @@ public class Cpu {
 			}
 			break;
 			//System.exit(1);
+		}
+		case 0x1e: { // bcc
+			if (!isC()) {
+				int nextPc = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+				setPc(nextPc);
+			}
+			break;
 		}
 		default: {
 			System.out.printf("unrecognised operator[0x%x] in run\n", ope.mne);
