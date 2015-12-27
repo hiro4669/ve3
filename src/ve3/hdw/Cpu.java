@@ -432,7 +432,7 @@ public class Cpu {
 			return memory.readInt((int)addr);			
 		}
 		case LongRel: {
-			return (int)addr;
+			return memory.readInt((int)addr);
 		}
 		default: {
 			System.out.println("unrecognized type in getInt: " + type);
@@ -539,11 +539,12 @@ public class Cpu {
 		if (debug) {
 			showHeader();
 		}
-		for (int i = 0; i < 28; ++i) {
+		
+		for (int i = 0; i < 19; ++i) {
 			run();
 		}
-		//memory.dump(reg[sp], 0x100000 - reg[sp]); // show memory
-		//memory.dump(0xf80, 4); 
+		//memory.dump(reg[sp], 0x100000 - reg[sp]); // show memory		
+	
 	}
 	
 	private void run() {
@@ -651,7 +652,8 @@ public class Cpu {
 		}
 		case 0xfb: { // calls
 			int arg = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
-			int next = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());			
+			//int next = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+			int next = (int)opinfo.getAddr2();
 			//System.out.printf("arg = %x, next = %x\n", arg, next);
 			
 			pushInt(arg); // push argument
@@ -753,6 +755,27 @@ public class Cpu {
 				setPc(nextPc);
 			}
 			break;
+		}
+		case 0xd4: { // clrl(f)
+			storeInt(opinfo.getType1(), opinfo.getAddr1(), 0);
+			setNZVC(false, true, false, isC());			
+			break;
+			
+		}
+		case 0xd7: { // decl
+			int src = getInt(opinfo.getType1(), opinfo.getAddr1(), opinfo.getAddr1());
+			val64 = (long)src - 1;
+			val32 = (int)val64;
+			setNZVC(val32 < 0, val32 == 0, val64 != val32, (src & 0xffffffffL) < (1 & 0xffffffffL));
+			System.out.printf("addr = 0x%x\n", opinfo.getAddr1());
+			System.out.printf("src = 0x%x\n", src);			
+
+			logOut.reset();
+			storeRegInfo();
+			System.out.println(new String(logOut.toByteArray()));
+			
+			
+			System.exit(1);
 		}
 		default: {
 			System.out.printf("unrecognised operator[0x%x] in run\n", ope.mne);

@@ -131,7 +131,7 @@ public class ConcrateMemory implements Memory {
 		return pc;
 	}
 	
-	public void setPc(int pc) {
+	public void setPc(int pc) {		
 		this.pc = pc;
 	}
 	
