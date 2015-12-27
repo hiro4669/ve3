@@ -738,10 +738,12 @@ public class Cpu {
 			//System.out.printf("sp =  %x\n", reg[sp]);
 			reg[sp] += last2bit; // restore alignment
 			//System.out.printf("sp =  %x\n", reg[sp]);
-			int argnum = popInt();            // restore arg number
-			//System.out.printf("sp =  %x\n", reg[sp]);
-			reg[sp] += (argnum & 0xff) << 2;  // remove arguments
-			//System.out.printf("sp =  %x\n", reg[sp]);
+			if (callsFlg) { // if comming from calls
+				int argnum = popInt();            // restore arg number
+				//System.out.printf("sp =  %x\n", reg[sp]);
+				reg[sp] += (argnum & 0xff) << 2;  // remove arguments
+				//System.out.printf("sp =  %x\n", reg[sp]);
+			}
 			break;
 			//System.exit(1);
 		}
