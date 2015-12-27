@@ -431,6 +431,9 @@ public class Cpu {
 			//System.out.printf("%x\n", (int)addr);
 			return memory.readInt((int)addr);			
 		}
+		case LongRel: {
+			return (int)addr;
+		}
 		default: {
 			System.out.println("unrecognized type in getInt: " + type);
 			System.exit(1);
@@ -645,6 +648,102 @@ public class Cpu {
 				setPc(src);
 			}
 			break;
+		}
+		case 0xfb: { // calls
+			int arg = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int next = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());			
+			//System.out.printf("arg = %x, next = %x\n", arg, next);
+			
+			pushInt(arg); // push argument
+			int tmpSp = reg[sp]; // keep current sp
+			//System.out.printf("tmpSp = 0x%x\n", tmpSp);
+			
+			byte last2bit = (byte)(reg[sp] & 0x3);
+			reg[sp] &= 0xfffffffc;
+			//System.out.printf("last2bit = %x\n", last2bit);
+			//System.out.printf("alined Sp = 0x%x\n", reg[sp]);
+			
+			
+			int nextPc = memory.getCurrentPc(); // keep next pc
+			//System.out.printf("nextPc = 0x%x\n", nextPc);
+			setPc(next);                        // set pc to callee
+			short entryMask = fetch2().sval;    // get entry mask 2bytes
+			short regMask = (short)(entryMask << 4);
+			for (int i = 11; i >= 0; --i, regMask <<= 1) {
+				if ((regMask & 0x8000) != 0) {
+					//System.out.printf("push reg[%d]\n", i);
+					pushInt(reg[i]); // push corresponding register to the stack
+				}
+			}
+			//System.out.printf("mask = 0x%x\n", entryMask);
+			
+			// push each register value to the stack
+			pushInt(nextPc);
+			pushInt(reg[fp]);
+			pushInt(reg[ap]);
+			reg[ap] = tmpSp;			
+			
+			setNZVC(false, false, false, false);
+		
+			// create mask info
+			int maskinfo = 0x20000000 | (last2bit << 30); // add last2bit of sp. 29,28 are fixed
+			//System.out.printf("maskinfo1 = %x\n", maskinfo);
+			maskinfo |= (entryMask << 16) & 0x0fff0000;
+			//System.out.printf("maskinfo2 = %x\n", maskinfo);
+			maskinfo |= psl & 0xffff;
+			//System.out.printf("maskinfo3 = %x\n", maskinfo);
+			
+			pushInt(maskinfo);
+			pushInt(0);
+			reg[fp] = reg[sp];
+			
+			// new psl
+			psl |= (entryMask >> 9) & 0x20; //IV bit
+			psl |= (entryMask >> 8) & 0x80; //DV bit
+			
+			/**  //for debug
+			logOut.reset();
+			storeRegInfo();
+			System.out.println(new String(logOut.toByteArray()));
+			logOut.reset();
+			memory.dump(reg[sp], 0xffff - reg[sp] + 1);
+			**/ // end of debug
+				
+			break;
+		}
+		case 0x4: { // ret			
+			reg[sp] = reg[fp] + 4; // restore stack pointer
+			int maskinfo = popInt();
+			//System.out.printf("sp = %x\n", reg[sp]);
+			//System.out.printf("maskinfo = %x\n", maskinfo);
+			
+			byte last2bit = (byte)((maskinfo >> 30) & 3); // keep last 2bit
+			//System.out.printf("last2bit = %x\n", last2bit);
+			boolean callsFlg = ((maskinfo >> 29) & 1) == 1; // otherwise, callg
+			short regMask = (short)((maskinfo >> 16) & 0xfff);
+			//System.out.printf("regMask = %x\n", regMask);
+			psl |= (maskinfo & 0xffff); // restore psw
+			
+			// restore register
+			reg[ap] = popInt();
+			reg[fp] = popInt();
+			setPc(popInt());
+			//System.out.printf("nextPc = %x\n", reg[pc]);
+			for (int i = 0; i <= 11; ++i, regMask >>= 1) {
+				if ((regMask & 1) == 1) {
+					reg[i] = popInt();            // restore r0-r11 based on the entry mask
+					//System.out.printf("push reg[%d] = 0x%x\n", i, reg[i]);
+				}				
+			}
+			//System.out.printf("sp =  %x\n", reg[sp]);
+			reg[sp] += last2bit; // restore alignment
+			//System.out.printf("sp =  %x\n", reg[sp]);
+			int argnum = popInt();            // restore arg number
+			//System.out.printf("sp =  %x\n", reg[sp]);
+			reg[sp] += (argnum & 0xff) << 2;  // remove arguments
+			//System.out.printf("sp =  %x\n", reg[sp]);
+			break;
+			//System.exit(1);
 		}
 		default: {
 			System.out.printf("unrecognised operator[0x%x] in run\n", ope.mne);

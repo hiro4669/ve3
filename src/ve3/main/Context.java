@@ -23,7 +23,7 @@ public class Context {
 		init();
 		List<String> envList = new ArrayList<String>();
 		envList.add("PATH=/usr/local/bin");
-		os.processArgs(argList, envList);
+		os.processArgs(argList, envList); // when call test, comment out 
 	}
 		
 	private void init() {
@@ -47,7 +47,14 @@ public class Context {
 		offset = memory.load(rawdata, 0x20+tsize, offset, dsize);
 		//memory.dump(offset, 4);
 		cpu.setPc(2);
-		cpu.setSp(0x100000);
+		
+		cpu.setSp(0x100000);		
+		// test for calls
+		//cpu.setSp(0xffff);
+		//cpu.getRegister()[cpu.r1] = 0x11;		
+		// end of test for calls
+		
+		
 		debug = false;
 		//System.out.println(offset);
 		//memory.dump();
