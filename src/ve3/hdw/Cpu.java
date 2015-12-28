@@ -261,8 +261,26 @@ public class Cpu {
 		case 7: { // Auto Decrement
 			opinfo.opsub.type = Type.AutoDec;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
-			System.out.println(type + " not implemented yet in resolveDisp");
-			System.exit(1);
+			
+			switch (optype) {
+			case b: {
+				reg[opinfo.opsub.operand] -= 1;
+				break;				
+			}
+			case w: {
+				reg[opinfo.opsub.operand] -= 2;
+				break;
+			}
+			case l: { 
+				reg[opinfo.opsub.operand] -= 4;
+				break;
+			}			
+			default: {
+				System.out.println("unsupported optype in AutoDecrement in resolveDisp");
+				System.exit(1);
+			}
+			}
+			opinfo.opsub.addr = reg[opinfo.opsub.operand];				
 			return opinfo.opsub;		
 		}
 		case 8: { // Auto Increment
@@ -408,16 +426,11 @@ public class Cpu {
 		
 	}
 	
+	private byte getByte(Type type, long arg, long addr) {
+		return (byte)getInt(type, arg, addr);		
+	}
 	private short getShort(Type type, long arg, long addr) {
-		return (short)getInt(type, arg, addr);
-		/*
-		switch (type) {
-		case Literal: {
-			return (short)arg;
-		}
-		}
-		return 0;
-		*/		
+		return (short)getInt(type, arg, addr);		
 	}
 	
 	private int getInt(Type type, long arg, long addr) {
@@ -473,6 +486,10 @@ public class Cpu {
 		}
 		case LongRel: {
 			memory.writeInt((int)addr, value);			
+			break;
+		}
+		case AutoDec: {
+			memory.writeInt((int)addr, value);
 			break;
 		}
 		default: {
@@ -801,8 +818,9 @@ public class Cpu {
 			*/
 			break;
 		}
-		case 0xdf: {
+		case 0xdf: { // pushal
 			int val32 = (int)opinfo.getAddr1();
+			//System.out.printf("val32 in pushal = %x\n", val32);
 			pushInt(val32);
 			setNZVC(val32 < 0, val32 == 0, false, isC());
 			/*
@@ -840,6 +858,16 @@ public class Cpu {
 			}			
 			break;
 		}		
+		case 0x98: { //cvtbl
+			byte src = getByte(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			val32 = src;	// signed convert		
+			storeInt(opinfo.getType2(), opinfo.getAddr2(), val32);
+			
+			setNZVC(val32 < 0, val32 == 0, false, false); // V is always false beccause
+			//memory.dump((int)opinfo.getAddr2(), 4);     // small will be converted to large
+			
+			break;
+		}
 		default: {
 			System.out.printf("unrecognised operator[0x%x] in run\n", ope.mne);
 			System.exit(1);
