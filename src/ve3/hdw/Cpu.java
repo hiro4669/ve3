@@ -394,6 +394,20 @@ public class Cpu {
 		opinfo.setAddr2(opsub.addr);
 	}
 	
+	private void setArg3(MetaInfo minfo) {
+		setArg2(minfo);
+		OpInfoSub opsub = null;
+		while ((opsub = resolveDisp(minfo.arg3)).type == Type.Index) {
+			opinfo.pushIdx3(opsub.operand);
+		}
+		
+		opinfo.setType3(opsub.type);
+		opinfo.setOpe3(opsub.operand);
+		opinfo.setArg3(opsub.arg);
+		opinfo.setAddr3(opsub.addr);
+		
+	}
+	
 	private short getShort(Type type, long arg, long addr) {
 		return (short)getInt(type, arg, addr);
 		/*
@@ -540,9 +554,11 @@ public class Cpu {
 			showHeader();
 		}
 		
-		for (int i = 0; i < 19; ++i) {
+		for (int i = 0; i < 40; ++i) {
 			run();
 		}
+		System.out.println("end of loop");
+		
 		//memory.dump(reg[sp], 0x100000 - reg[sp]); // show memory		
 	
 	}
@@ -554,6 +570,7 @@ public class Cpu {
 		
 		int b1 = opinfo.setOpCode(fetch().bval & 0xff);
 		Ope ope = Ope.table[b1];
+		//System.out.printf("b1 = %x\n", b1);
 		
 		opinfo.minfo = ope.minfo;
 		switch (ope.minfo.size) {
@@ -566,6 +583,10 @@ public class Cpu {
 		}
 		case 2: {
 			setArg2(ope.minfo);
+			break;
+		}
+		case 3: {
+			setArg3(ope.minfo);
 			break;
 		}
 		default: {
@@ -635,9 +656,12 @@ public class Cpu {
 			setNZVC(val32 < 0, val32 == 0, false, false);
 			break;
 		}
-		case 0x12: { // benq			
+		case 0x12: { // bneq			
+			//System.out.printf("addr = %x\n", opinfo.getAddr1());
+			//System.out.println(opinfo.getType1());			
 			if (!isZ()) {				
 				int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+				//System.out.printf("src = %x, addr = %x\n", src, opinfo.getAddr1());
 				setPc(src);
 			}
 			break;
@@ -767,16 +791,55 @@ public class Cpu {
 			val64 = (long)src - 1;
 			val32 = (int)val64;
 			setNZVC(val32 < 0, val32 == 0, val64 != val32, (src & 0xffffffffL) < (1 & 0xffffffffL));
+			/*			
 			System.out.printf("addr = 0x%x\n", opinfo.getAddr1());
 			System.out.printf("src = 0x%x\n", src);			
-
 			logOut.reset();
 			storeRegInfo();
 			System.out.println(new String(logOut.toByteArray()));
-			
-			
 			System.exit(1);
+			*/
+			break;
 		}
+		case 0xdf: {
+			int val32 = (int)opinfo.getAddr1();
+			pushInt(val32);
+			setNZVC(val32 < 0, val32 == 0, false, isC());
+			/*
+			logOut.reset();
+			storeRegInfo();
+			System.out.println(new String(logOut.toByteArray()));
+			memory.dump(reg[sp], 4);			
+			System.exit(1);
+			*/
+			break;
+		}
+		case 0xe0: { // bbs
+			int pos = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int base = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+			int addr = (int)opinfo.getAddr3();
+			/*
+			System.out.printf("0xc(r11) = ");
+			memory.dump(reg[r11] + 0xc, 4);
+			System.out.println();
+			System.out.printf("pos = %d, base = %x, addr = %x\n", pos, base, addr);
+			*/			
+			if (((base >>= pos) & 1) == 1) {
+				setPc(addr);
+			}
+			//System.out.printf("pos = %d, base = %x, addr = %x\n", pos, base, addr);
+			break;
+		}
+		case 0xe1: { // bbc
+			int pos = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int base = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+			int addr = (int)opinfo.getAddr3();
+			
+			if (((base >>= pos) & 1) == 0) {
+				setPc(addr);
+			}			
+			break;
+		}		
 		default: {
 			System.out.printf("unrecognised operator[0x%x] in run\n", ope.mne);
 			System.exit(1);
