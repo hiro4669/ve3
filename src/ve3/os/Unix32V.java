@@ -1,6 +1,8 @@
 package ve3.os;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import ve3.hdw.Cpu;
 import ve3.hdw.Memory;
@@ -24,6 +26,25 @@ public class Unix32V {
 	
 	public void setDebug(boolean debug) {
 		this.debug = debug;
+	}
+	
+	public Map<Integer, String> createSymbolTable(int offset, byte[] rawdata) {
+		Map<Integer, String> symTable = new HashMap<Integer, String>();
+		byte[] name = new byte[8];
+		for (int i = offset; i < rawdata.length; i += 16) {
+			System.arraycopy(rawdata, i, name, 0, 8);
+			int type = (rawdata[i + 8] & 0xff) | (rawdata[i + 9] & 0xff) << 8 |
+					(rawdata[i + 10] & 0xff) << 16 |  (rawdata[i + 11] & 0xff) << 24;
+			
+			int addr = (rawdata[i + 12] & 0xff) | (rawdata[i + 13] & 0xff) << 8 |
+					(rawdata[i + 14] & 0xff) << 16 |  (rawdata[i + 15] & 0xff) << 24;
+			if (type > 0xff) { // true?
+				symTable.put(addr, new String(name));
+				//System.out.printf("%08x: %s\n", addr, new String(name));
+			}
+			
+		}
+		return symTable;		
 	}
 	
 	public void processArgs(List<String> argList, List<String> envList) {
@@ -84,12 +105,12 @@ public class Unix32V {
 			if (debug) {
 				System.out.printf("<exit(%d)>\n", exnum);
 			}
-			
 			/*
 			System.out.println("-- exit--");
 			System.out.println("argnum = " + argnum);
 			System.out.println("ext = " + exnum);
 			*/
+
 			
 			System.exit(exnum);
 			
@@ -100,6 +121,7 @@ public class Unix32V {
 			int dst = memory.readInt(reg[Cpu.ap] + 4);
 			int off = memory.readInt(reg[Cpu.ap] + 8);
 			int len = memory.readInt(reg[Cpu.ap] + 12);
+
 			/*
 			System.out.println("argnum = " + argnum);
 			System.out.println("dst = " + dst);
@@ -113,12 +135,53 @@ public class Unix32V {
 			System.out.write(rawmem, off, len);
 			
 			if (debug) {
-				System.out.printf("=> %x\n", len);
+				System.out.printf(" => %x\n", len);
 			}
 			reg[Cpu.r0] = len;
 			cpu.clearCarry();
 			
 			break;
+		}
+		case 6: { // close
+			int argnum = memory.readInt(reg[Cpu.ap]);
+			int fd = memory.readInt(reg[Cpu.ap] + 4);
+			
+			
+			//System.out.println("argnum = " + argnum);
+			//System.out.println("fd     = " + fd);
+			
+			if (debug) {
+				System.out.printf("<close(%d) => 0>\n", fd);				
+			}
+			reg[Cpu.r0] = 0;
+			cpu.clearCarry();		
+			
+			break;
+		}
+		case 0x36: { // ioctl
+			int argnum = memory.readInt(reg[Cpu.ap]);
+			int fd = memory.readInt(reg[Cpu.ap] + 4);
+			int req = memory.readInt(reg[Cpu.ap] + 8);
+			int addr = memory.readInt(reg[Cpu.ap] + 12);
+			
+			if (debug) {
+				System.out.printf("<ioctl(%d, 0x%x, 0x%x)>\n", fd, req, addr);
+			}
+			/*
+			System.out.println("argnum = " + argnum);
+			System.out.printf("fd   = %x\n", fd);
+			System.out.printf("req  = %x\n", req);
+			System.out.printf("addr = %x\n", addr);
+			*/
+			cpu.clearCarry(); // meaning success
+			reg[Cpu.r0] = 0;
+			
+			//System.exit(1);
+			break;
+		}
+		default: {
+			System.out.println("unsupported syscam call number :" + sysnum);
+			System.exit(1);
 		}
 		}
 	}

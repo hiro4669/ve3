@@ -23,8 +23,10 @@ public class Context {
 		init();
 		List<String> envList = new ArrayList<String>();
 		envList.add("PATH=/usr/local/bin");
+		
 		os.processArgs(argList, envList); // when call test, comment out
 		cpu.setPc(2);
+		cpu.setSymTable(os.createSymbolTable(tsize + dsize + 32, rawdata)); // create and set
 	}
 		
 	private void init() {
