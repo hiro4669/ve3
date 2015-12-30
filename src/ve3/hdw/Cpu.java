@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Map;
+import java.util.Stack;
 
 import ve3.disassm.Dump;
 import ve3.disassm.V32Disassm;
@@ -60,6 +61,7 @@ public class Cpu {
 	
 	// for debug
 	private Map<Integer, String> symTable;
+	private Stack<String> callStack;
 	
 	public static Ope[] table = new Ope[0xfffff];
 	
@@ -87,6 +89,7 @@ public class Cpu {
 		opinfo = new OpInfo();	
 		psl = 0x41f0000;
 		debug = false;		
+		callStack = new Stack<String>();
 	}
 	
 	public void setSymTable(Map<Integer, String> symTable) {
@@ -607,7 +610,9 @@ public class Cpu {
 		if (debug) {
 			//log.printf("%x:", reg[pc]);
 			if (symTable.containsKey(reg[pc] - 2)) {
-				log.println(symTable.get(reg[pc] - 2));
+				//log.println(symTable.get(reg[pc] - 2));
+				log.println(callStack.push(symTable.get(reg[pc] - 2)));
+				
 			}
 			storeRegInfo();
 		}
@@ -810,7 +815,13 @@ public class Cpu {
 				
 			break;
 		}
-		case 0x4: { // ret			
+		case 0x4: { // ret
+			if (debug) {
+				callStack.pop();
+				log.print("\nback to : " + callStack.peek());
+			}
+			
+			
 			reg[sp] = reg[fp] + 4; // restore stack pointer
 			int maskinfo = popInt();
 			//System.out.printf("sp = %x\n", reg[sp]);
