@@ -62,6 +62,7 @@ public class Cpu {
 	// for debug
 	private Map<Integer, String> symTable;
 	private Stack<String> callStack;
+	private int stepCount = 0;
 	
 	public static Ope[] table = new Ope[0xfffff];
 	
@@ -482,6 +483,10 @@ public class Cpu {
 	
 	private void storeByte(Type type, long addr, byte value) {
 		switch (type) {
+		case Register: {
+			reg[(int)addr] |= (value & 0xff);
+			break;
+		}
 		case ByteDisp: {
 			memory.writeByte((int)addr, value);
 			break;
@@ -595,8 +600,8 @@ public class Cpu {
 		if (debug) {
 			showHeader();
 		}
-		
-		for (int i = 0; i < 433; ++i) {
+		// 2 is 433
+		for (int i = 0; i < 30; ++i, ++stepCount) {
 			run();			
 			//memory.dump(0x611, 1);
 		}
@@ -654,6 +659,14 @@ public class Cpu {
 			int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
 			storeInt(opinfo.getType2(), opinfo.getAddr2(), src);
 			setNZVC(src < 0, src == 0, false, isC());			
+			break;
+		}
+		case 0x90: { // movb
+			val8 = getByte(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			//System.out.printf("src = %x, addr = %x, dst_addr = %x\n", val8, opinfo.getAddr1(), opinfo.getAddr2());
+			//memory.dump(0xc04, 4);
+			storeByte(opinfo.getType2(), opinfo.getAddr2(), val8);
+			setNZVC(val8 < 0, val8 == 0, false, isC());			
 			break;
 		}
 		case 0xbc: { // chmk CHMKではフラグはいじらない(REI命令で戻されるから)．
@@ -816,7 +829,8 @@ public class Cpu {
 			break;
 		}
 		case 0x4: { // ret
-			if (debug) {
+			if (debug && (callStack.size() > 1)) {
+
 				callStack.pop();
 				log.print("\nback to : " + callStack.peek());
 			}
@@ -1021,12 +1035,27 @@ public class Cpu {
 			//System.out.printf("src = %x, dst = %x\n", src, dst);			
 			val64 = (long)src + (long)dst;
 			val32 = (int)val64;
-			storeInt(opinfo.getType2(), (int)laddr, val32);
+			storeInt(opinfo.getType2(), laddr, val32);
 			setNZVC(val32 < 0, val32 == 0, val64 != val32, (src & 0xffffffffL) + (dst & 0xffffffffL) >= 0x100000000L);			
 			break;
 		}
+		case 0xc1: { // addl3
+			int src1 = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int src2 = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+
+			//			System.out.printf("src1 = %x, src2 = %x, addr = %x\n", src1, src2, opinfo.getAddr3());
+			val64 = (long)src1 + (long)src2;
+			val32 = (int)val64;
+			storeInt(opinfo.getType3(), opinfo.getAddr3(), val32);
+			setNZVC(val32 < 0, val32 == 0, val64 != val32, (src1 & 0xffffffffL) + (src2 & 0xffffffffL) >= 0x100000000L);
+//			memory.dump(0xfff84, 4);
+
+			break;
+			
+		}
 		default: {
-			System.out.printf("unrecognised operator[0x%x] in run\n", ope.mne);
+			System.out.printf("unrecognised operator: 0x%x in run\n", ope.mne);
+			System.out.printf("stepCount = %d\n", stepCount);
 			System.exit(1);
 		}
 		}
