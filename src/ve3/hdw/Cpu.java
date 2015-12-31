@@ -433,8 +433,19 @@ public class Cpu {
 		opinfo.setType3(opsub.type);
 		opinfo.setOpe3(opsub.operand);
 		opinfo.setArg3(opsub.arg);
-		opinfo.setAddr3(opsub.addr);
-		
+		opinfo.setAddr3(opsub.addr);		
+	}
+	
+	private void setArg4(MetaInfo minfo) {
+		setArg3(minfo);
+		OpInfoSub opsub = null;
+		while ((opsub = resolveDisp(minfo.arg4)).type == Type.Index) {
+			opinfo.pushIdx4(opsub.operand);
+		}
+		opinfo.setType4(opsub.type);
+		opinfo.setOpe4(opsub.operand);
+		opinfo.setArg4(opsub.arg);
+		opinfo.setAddr4(opsub.addr);
 	}
 	
 	private byte getByte(Type type, long arg, long addr) {
@@ -530,6 +541,22 @@ public class Cpu {
 		default: {
 			System.out.printf("addr = 0x%x, value = 0x%x\n", addr, value);
 			System.out.println("unrecognized type in storeInt: " + type);
+			System.exit(1);
+		}
+		}
+	}
+
+	// quodward
+	private void storeLong(Type type, long addr, long value) {
+		switch (type) {
+		case Register: {
+			reg[(int)addr]     = (int)value;
+			reg[(int)addr + 1] = (int)(value >> 32);
+			break;
+		}
+		default: {
+			System.out.printf("addr = 0x%x, value = 0x%x\n", addr, value);
+			System.out.println("unrecognized type in storeLong: " + type);
 			System.exit(1);
 		}
 		}
@@ -650,6 +677,10 @@ public class Cpu {
 			setArg3(ope.minfo);
 			break;
 		}
+		case 4: {
+			setArg4(opinfo.minfo);
+			break;
+		}
 		default: {
 			System.out.printf("0x%x unrecognised size in run\n", ope.minfo.size);			
 			System.exit(1);
@@ -756,11 +787,12 @@ public class Cpu {
 			setNZVC(val32 < 0, val32 == 0, false, false);
 			break;
 		}
-		case 0x12: { // bneq			
+		case 0x12: { // bneq (Branch operation)
 			//System.out.printf("addr = %x\n", opinfo.getAddr1());
 			//System.out.println(opinfo.getType1());			
 			if (!isZ()) {				
-				int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+				//int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+				int src = (int)opinfo.getAddr1();
 				//System.out.printf("src = %x, addr = %x\n", src, opinfo.getAddr1());
 				setPc(src);
 			}
@@ -768,7 +800,8 @@ public class Cpu {
 		}
 		case 0x13: { // beql
 			if (isZ()) {				
-				int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+				//int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+				int src = (int)opinfo.getAddr1();
 				//System.out.printf("src = %x, addr = %x\n", src, opinfo.getAddr1());
 				setPc(src);
 			}
@@ -776,7 +809,8 @@ public class Cpu {
 		}
 		case 0x18: { // bgeq
 			if (!isN()) {
-				int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+				//int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+				int src = (int)opinfo.getAddr1();
 				//System.out.printf("pc = %x\n", src);
 				setPc(src);				
 			}			
@@ -784,7 +818,8 @@ public class Cpu {
 		}
 		case 0x19: { // blss
 			if (isN()) {
-				int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+				//int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+				int src = (int)opinfo.getAddr1();
 //				System.out.printf("pc = %x\n", src);
 				setPc(src);
 			}
@@ -901,13 +936,15 @@ public class Cpu {
 			//System.exit(1);
 		}
 		case 0x11: { // brb
-			int nextPc = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			//int nextPc = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int nextPc = (int)opinfo.getAddr1();
 			setPc(nextPc);			
 			break;
 		}
 		case 0x1e: { // bcc
 			if (!isC()) {
-				int nextPc = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+				//int nextPc = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+				int nextPc = (int)opinfo.getAddr1();
 				setPc(nextPc);
 			}
 			break;
@@ -917,11 +954,23 @@ public class Cpu {
 			setNZVC(false, true, false, isC());			
 			break;			
 		}
+		case 0x7c: { // clrd
+			storeLong(opinfo.getType1(), opinfo.getAddr1(), 0);
+			setNZVC(false, true, false, isC());
+			break;
+		}
 		case 0xd7: { // decl
-			int src = getInt(opinfo.getType1(), opinfo.getAddr1(), opinfo.getAddr1());
+			long laddr;
+			Type ltype;
+			int src = getInt(ltype = opinfo.getType1(), opinfo.getAddr1(), laddr = opinfo.getAddr1());
+			System.out.printf("src = %x, addr = %x\n", src, opinfo.getAddr1());
+//			memory.dump(0x614, 4);
 			val64 = (long)src - 1;
 			val32 = (int)val64;
+			storeInt(ltype, laddr, val32);
 			setNZVC(val32 < 0, val32 == 0, val64 != val32, (src & 0xffffffffL) < (1 & 0xffffffffL));
+			
+//			memory.dump(0x614, 4);
 			/*			
 			System.out.printf("addr = 0x%x\n", opinfo.getAddr1());
 			System.out.printf("src = 0x%x\n", src);			
@@ -1005,6 +1054,16 @@ public class Cpu {
 			
 			break;
 		}
+		case 0x32: { // cvtwl
+			short src = getShort(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			//System.out.printf("arg1 = %x, src = %x\n", opinfo.getArg1(), src);
+			val32 = src; // signed convert
+			storeInt(opinfo.getType2(), opinfo.getAddr2(), val32);
+			//System.out.printf("addr2 = %x\n", opinfo.getAddr2());
+			//memory.dump((int)opinfo.getAddr2(), 4);
+			setNZVC(val32 < 0, val32 == 0, false, false);			
+			break;
+		}
 		case 0xf6: { // cvtlb
 			int src = getInt(opinfo.getType1(), opinfo.getAddr1(), opinfo.getAddr1());
 			byte dst = (byte)src;
@@ -1039,11 +1098,12 @@ public class Cpu {
 		case 0xc8: { // bisl2
 			int laddr = 0;
 			Type ltype;
-			int mask = getByte(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
-			int dst  = getByte(ltype = opinfo.getType2(), opinfo.getArg2(), laddr = (int)opinfo.getAddr2());
+			int mask = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int dst  = getInt(ltype = opinfo.getType2(), opinfo.getArg2(), laddr = (int)opinfo.getAddr2());
+			//System.out.printf("mask = %x, dst = %x\n", mask, dst);
 			dst |= mask;
 			storeInt(ltype, laddr, dst);
-			setNZVC(dst < 0, dst == 0, false, isC());
+			setNZVC(dst < 0, dst == 0, false, isC());			
 			break;
 			
 		}
@@ -1071,21 +1131,28 @@ public class Cpu {
 			break;
 		}		
 		case 0xca: { // bicl2
+			long laddr;
+			Type ltype;
 			int mask = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
-			int dst  = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());						
-//			System.out.printf("mask = %x, dst = %x\n", mask, dst);
+			int dst  = getInt(ltype = opinfo.getType2(), opinfo.getArg2(), laddr = opinfo.getAddr2());						
+			//System.out.printf("mask = %x, dst = %x\n", mask, dst);
 			val32 = dst & ~mask;
-			setNZVC(val32 < 0, val32 == 0, false, isC());					
+			storeInt(ltype, laddr, val32);
+			setNZVC(val32 < 0, val32 == 0, false, isC());									
 			break;
 		}
 		case 0x8a: { // bicb2
+			long laddr;
+			Type ltype;
 			byte mask = getByte(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
-			byte dst  = getByte(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+			byte dst  = getByte(ltype = opinfo.getType2(), opinfo.getArg2(), laddr = opinfo.getAddr2());
 			//System.out.printf("mask = %x, dst = %x\n", mask, dst);
 			//System.out.printf("addr2 = %x\n", opinfo.getAddr2());
-			//memory.dump(0x610, 4);
+			//memory.dump(0xc18, 4);
 			val32 = val8 = (byte)(dst & ~mask);
 			setNZVC(val32 < 0, val32 == 0, false, isC());
+			storeByte(ltype, laddr, val8);
+			//memory.dump(0xc18, 4);			
 			break;
 		}
 		case 0xc0: { // addl2
@@ -1114,8 +1181,10 @@ public class Cpu {
 		case 0xf4: { // sobgeq
 			//memory.dump(0xc1c, 4);
 			int index = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
-			int addr = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+			//int addr = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+			int addr = (int)opinfo.getAddr2();
 			//System.out.printf("index = %x, addr = %x\n", index, addr);
+			//System.out.printf("addr = %x getAddr2 = %x\n", addr, opinfo.getAddr2());
 			val64 = (long)index - (long)1;
 			val32 = (int)val64;
 			//System.out.printf("val32 = %x\n", val32);
@@ -1123,7 +1192,15 @@ public class Cpu {
 			setNZVC(val32 < 0, val32 == 0, val64 != val32, isC());			
 			if (val32 >= 0) {
 				setPc(addr);
-			}			
+			}									
+			break;
+		}
+		case 0x9a: { // movzbl
+			byte src = getByte(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			val32 = (int)(src & 0xff); // unsigned extend
+			//System.out.printf("src = %x\n", src);
+			storeInt(opinfo.getType2(), opinfo.getAddr2(), val32);
+			setNZVC(false, val32 == 0, false, isC());						
 			break;
 		}
 		default: {
