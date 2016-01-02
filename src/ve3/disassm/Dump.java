@@ -16,10 +16,11 @@ public class Dump {
 		
 		switch(ot) {
 		case b:
+		case vb:
 			return String.format("0x%x", (byte)arg);
-		case ebl: {
-			return String.format("0x%x", (int)arg);
-		}
+		//case ebl: {
+//			return String.format("0x%x", (int)arg);
+		//}
 		case w: 
 			return String.format("0x%x", (short)arg);
 		case l: 
@@ -42,10 +43,11 @@ public class Dump {
 		
 		switch(ot) {
 		case b:
+		case vb:
 			return String.format(fmt, (byte)arg);
-		case ebl: {
-			return String.format(fmt, (int)arg);
-		}
+		//case ebl: {
+//			return String.format(fmt, (int)arg);
+		//}
 		case w: 
 			return String.format(fmt, (short)arg);
 		case l: 
@@ -101,7 +103,8 @@ public class Dump {
 		}
 		case ByteDisp: { // 0xa
 			//return String.format("0x%x(%s)", arg, regs[operand]);			
-			String ds = (ot == OT.ebl) ? getArgStr(ot, arg) : getArgStr(OT.b, arg);
+			//String ds = (ot == OT.ebl) ? getArgStr(ot, arg) : getArgStr(OT.b, arg);
+			String ds = getArgStr(OT.b, arg);
 			return ds + String.format("(%s)", regs[operand]);
 		}
 		case ByteDispDefer: { // 0x0b

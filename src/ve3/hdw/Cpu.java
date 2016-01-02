@@ -239,6 +239,21 @@ public class Cpu {
 		byte arg = fetch().bval;
 		byte type = (byte)((arg >> 4) & 0xf);
 		byte value = (byte)(arg & 0xf);
+		
+		// set pointer for bitfield type
+		switch(type) {
+		case 0:
+		case 1:
+		case 2:
+		case 3: {
+			opinfo.opsub.pos = reg[pc] - 1; // 
+		}
+		default: {
+			opinfo.opsub.pos = reg[pc]; // 
+		}
+		}
+		
+		
 		switch (type) {
 		case 0:
 		case 1:
@@ -408,7 +423,7 @@ public class Cpu {
 		opinfo.setOpe1(opsub.operand);
 		opinfo.setArg1(opsub.arg);
 		opinfo.setAddr1(opsub.addr);
-		
+		opinfo.setPos1(opsub.pos);
 	}
 	
 	private void setArg2(MetaInfo minfo) {
@@ -421,6 +436,7 @@ public class Cpu {
 		opinfo.setOpe2(opsub.operand);
 		opinfo.setArg2(opsub.arg);
 		opinfo.setAddr2(opsub.addr);
+		opinfo.setPos2(opsub.pos);
 	}
 	
 	private void setArg3(MetaInfo minfo) {
@@ -433,7 +449,8 @@ public class Cpu {
 		opinfo.setType3(opsub.type);
 		opinfo.setOpe3(opsub.operand);
 		opinfo.setArg3(opsub.arg);
-		opinfo.setAddr3(opsub.addr);		
+		opinfo.setAddr3(opsub.addr);
+		opinfo.setPos3(opsub.pos);
 	}
 	
 	private void setArg4(MetaInfo minfo) {
@@ -446,6 +463,7 @@ public class Cpu {
 		opinfo.setOpe4(opsub.operand);
 		opinfo.setArg4(opsub.arg);
 		opinfo.setAddr4(opsub.addr);
+		opinfo.setPos4(opsub.pos);
 	}
 	
 	private byte getByte(Type type, long arg, long addr) {
@@ -999,11 +1017,15 @@ public class Cpu {
 			int pos = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
 			int base = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
 			int addr = (int)opinfo.getAddr3();
+			
 			/*
 			System.out.printf("0xc(r11) = ");
 			memory.dump(reg[r11] + 0xc, 4);
 			System.out.println();
 			System.out.printf("pos = %d, base = %x, addr = %x\n", pos, base, addr);
+			
+			System.out.printf("pos2 = %x", opinfo.getPos2());
+			memory.dump((int)opinfo.getPos2(), 4);
 			*/			
 			if (((base >>= pos) & 1) == 1) {
 				setPc(addr);

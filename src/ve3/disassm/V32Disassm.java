@@ -20,9 +20,12 @@ public class V32Disassm {
 		Branch, General, PC
 	}
 	
-	/* b:byte, w:word, l:long, f:float, df:D_float, Brb:Branch byte, Brw:Branch word */
+	/** 
+	 * b:byte, w:word, l:long, f:float, df:D_float, Brb:Branch byte, Brw:Branch word
+	 * vb:bitfield byte  
+	 * */
 	public static enum OT {
-		b, w, l, f, q, df, ebl, Brb, Brw 
+		b, w, l, f, q, df, Brb, Brw, vb, 
 	}
 	
 	public enum Ope {
@@ -75,7 +78,7 @@ public class V32Disassm {
 		CVTLB(0xf6, new MetaInfo(OT.l, OT.b)), CVTBL(0x98, new MetaInfo(OT.b, OT.l)),
 		RET(0x4, new MetaInfo()), REMQUE(0x0f, new MetaInfo(OT.b, OT.l)),
 		XBICW3(0xab, new MetaInfo(OT.w, OT.w, OT.w)), 
-		BBC(0xe1, new MetaInfo(OT.l, OT.b, OT.Brb)), 
+		BBC(0xe1, new MetaInfo(OT.l, OT.vb, OT.Brb)), 
 		CVTWL(0x32, new MetaInfo(OT.w, OT.l)),	JMP(0x17, new MetaInfo(OT.b)),		
 		REMQHI(0x5e, new MetaInfo(OT.q, OT.l)), BICL2(0xca, new MetaInfo(OT.l, OT.l)),
 		MOVB(0x90, new MetaInfo(OT.b, OT.b)), 
@@ -89,7 +92,7 @@ public class V32Disassm {
 		CVTDF(0x76, new MetaInfo(OT.df, OT.f)), 
 		BRW(0x31, new MetaInfo(OT.Brw)), 
 		MOVC3(0x28, new MetaInfo(OT.w, OT.b, OT.b)), CVTBD(0x6c, new MetaInfo(OT.b, OT.df)),
-		BBS(0xe0, new MetaInfo(OT.l, OT.b, OT.Brb)), LOCC(0x3a, new MetaInfo(OT.b, OT.w, OT.b)),		
+		BBS(0xe0, new MetaInfo(OT.l, OT.vb, OT.Brb)), LOCC(0x3a, new MetaInfo(OT.b, OT.w, OT.b)),		
 		SKPC(0x3b, new MetaInfo(OT.b, OT.w, OT.b)), 
 		CVTLP(0xf9, new MetaInfo(OT.l, OT.w, OT.b)), EDITPC(0x38, new MetaInfo(OT.w, OT.b, OT.b, OT.b)),		
 		CVTLD(0x6e, new MetaInfo(OT.l, OT.df)), INDEX(0xa, new MetaInfo(OT.l, OT.l, OT.l, OT.l, OT.l, OT.l)),
@@ -243,7 +246,8 @@ public class V32Disassm {
 		case w: {
 			return memory.fetch2().sval;
 		}
-		case b: {			
+		case b: 
+		case vb: {			
 			return memory.fetch().bval;
 		}
 		default: {
