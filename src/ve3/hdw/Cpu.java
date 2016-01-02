@@ -633,7 +633,7 @@ public class Cpu {
 			showHeader();
 		}
 		// 2 is 433
-		//memory.dump(0xc00, 16);
+		memory.dump(0xc00, 16);
 		for (int i = 0; i < 800; ++i, ++stepCount) {
 			run();			
 			//memory.dump(0x611, 1);
@@ -1199,6 +1199,7 @@ public class Cpu {
 			byte src = getByte(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
 			val32 = (int)(src & 0xff); // unsigned extend
 			//System.out.printf("src = %x\n", src);
+			//System.out.printf("val32 = %x\n", val32);
 			storeInt(opinfo.getType2(), opinfo.getAddr2(), val32);
 			setNZVC(false, val32 == 0, false, isC());						
 			break;
