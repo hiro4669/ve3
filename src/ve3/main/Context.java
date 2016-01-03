@@ -1,5 +1,7 @@
 package ve3.main;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +19,17 @@ public class Context {
 	private int tsize;
 	private int dsize;
 	private boolean debug;
+	private boolean imode;
 	
+	public Context(byte[] rawdata) {
+		this.rawdata = rawdata;
+		imode = true;
+		debug = true;
+		initImode();
+		cpu.setDebug(debug);
+		
+	}
+		
 	public Context(byte[] rawdata, List<String> argList) {
 		this.rawdata = rawdata;
 		init();
@@ -27,6 +39,44 @@ public class Context {
 		os.processArgs(argList, envList); // when call test, comment out
 		cpu.setPc(2);
 		cpu.setSymTable(os.createSymbolTable(tsize + dsize + 32, rawdata)); // create and set
+	}
+	
+	private void initImode() {
+		memory = new ConcrateMemory(0x100000);
+		memory.load(rawdata, 0, rawdata.length);
+		cpu = new Cpu(memory);
+		
+	}
+	
+	public void startIMode() {
+		System.out.println("Start Interactive Mode");
+		memory.dump(0, 0x10);
+		cpu.showHeader();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+		String com;
+		System.out.print("command >>");
+		try {
+			while((com = reader.readLine()) != null) {
+				if (com.equals("s")) {
+					cpu.run();
+					System.out.println("command >>");
+				} else {
+					System.exit(1);
+				}
+			}
+		} catch (Exception e) {
+			System.exit(1);
+		}
+		
+		/*
+		cpu.run();
+		cpu.run();
+		cpu.run();		
+		cpu.run();
+		*/		
+		
+
+		
 	}
 		
 	private void init() {

@@ -186,7 +186,7 @@ public class V32Disassm {
 		DIVD2(0x66, new MetaInfo(OT.df, OT.df)),
 		EDIV(0x7b, new MetaInfo(OT.l, OT.q, OT.l, OT.l)),
 		EMODG(0x54, new MetaInfo(OT.f, OT.b, OT.f, OT.l, OT.f)), EMODD(0x74, new MetaInfo(OT.df, OT.b, OT.df, OT.l, OT.df)),
-		EXTV(0xee, new MetaInfo(OT.l, OT.b, OT.b, OT.l)), EXTZV(0xef, new MetaInfo(OT.l, OT.b, OT.b, OT.l)),
+		EXTV(0xee, new MetaInfo(OT.l, OT.b, OT.vb, OT.l)), EXTZV(0xef, new MetaInfo(OT.l, OT.b, OT.vb, OT.l)),
 		FFC(0xeb, new MetaInfo(OT.l, OT.b, OT.b, OT.l)), FFS(0xea, new MetaInfo(OT.l, OT.b, OT.b, OT.l)),
 		INSV(0xf0, new MetaInfo(OT.l, OT.l, OT.b, OT.b)), JSB(0x16, new MetaInfo(OT.b)),
 		MFPR(0xdb, new MetaInfo(OT.l, OT.l)), MOVPSL(0xdc, new MetaInfo(OT.l)),

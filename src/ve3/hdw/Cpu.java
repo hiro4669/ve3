@@ -151,7 +151,8 @@ public class Cpu {
 		case w: {
 			return fetch2().sval;
 		}
-		case b: {			
+		case b: 
+		case vb: {
 			return fetch().bval;
 		}
 		default: {
@@ -246,7 +247,7 @@ public class Cpu {
 		case 1:
 		case 2:
 		case 3: {
-			opinfo.opsub.pos = reg[pc] - 1; // 
+			opinfo.opsub.pos = reg[pc] - 1; // for immediate
 		}
 		default: {
 			opinfo.opsub.pos = reg[pc]; // 
@@ -267,7 +268,7 @@ public class Cpu {
 		case 4: { // Index
 			opinfo.opsub.type = Type.Index;
 			opinfo.opsub.operand = (byte)(arg & 0x3f);
-			System.out.println(type + " not implemented yet in resolveDisp");
+			System.out.println("Index(4) not implemented yet in resolveDisp");
 			System.exit(1);
 			return opinfo.opsub;
 		}
@@ -289,7 +290,8 @@ public class Cpu {
 			opinfo.opsub.operand = (byte)(arg & 0xf);
 			
 			switch (optype) {
-			case b: {
+			case b: 
+			case vb: {
 				reg[opinfo.opsub.operand] -= 1;
 				break;				
 			}
@@ -315,7 +317,8 @@ public class Cpu {
 			opinfo.opsub.operand = (byte)(arg & 0xf);
 			opinfo.opsub.addr = reg[opinfo.opsub.operand];
 			switch (optype) {
-			case b: {
+			case b: 
+			case vb: {
 				reg[opinfo.opsub.operand] += 1;
 				break;
 			}
@@ -473,6 +476,39 @@ public class Cpu {
 		return (short)getInt(type, arg, addr);		
 	}
 	
+	// for bitfield access
+	private int getIntV(Type type, long arg, long addr, long offset, long pos) {
+		switch (type) {
+		case Immed: {			
+			//System.out.printf("pos = %x\n", pos);
+			long data = memory.readLong((int)pos);
+			//System.out.printf("data = %016x\n", data);
+			int r = (int)((data >> offset) & 0xffffffffL);			
+			//System.out.printf("r = %016x\n", r);
+			return r;			
+		}
+		case Register: {
+			int v1 = reg[(int)addr];
+			int next = (addr == pc) ? 0 : (int)(addr + 1);
+			long data = (long)((long)reg[next] << 32 | v1);
+			int r = (int)((data >> offset) & 0xffffffffL);			
+			return r;
+		}
+		case RegDefer: {
+			long data = memory.readLong((int)addr);
+			System.out.printf("data = %016x\n", data);
+			int r = (int)((data >> offset) & 0xffffffffL);
+			System.out.printf("r   = %016x\n", r);
+			return r;
+		}
+		default: {
+			System.out.println("unrecognized type in getIntV: " + type);
+			System.exit(1);
+		}
+		}
+		return 0;
+	}
+	
 	private int getInt(Type type, long arg, long addr) {
 		switch (type) {
 		case Branch1: {
@@ -581,7 +617,7 @@ public class Cpu {
 	}
 		
 	
-	private void showHeader() {
+	public void showHeader() {
 		System.out.println("   r0       r1       r2       r3       r4       r5       r6       r7       r8       r9      r10    "
 				+ "  r11       ap       fp       sp       pc    NZVC");
 	}
@@ -663,10 +699,10 @@ public class Cpu {
 	
 	}
 	
-	private void run() {
+	public void run() {
 		if (debug) {
 			//log.printf("%x:", reg[pc]);
-			if (symTable.containsKey(reg[pc] - 2)) {
+			if (symTable != null && symTable.containsKey(reg[pc] - 2)) {
 				//log.println(symTable.get(reg[pc] - 2));
 				log.println(callStack.push(symTable.get(reg[pc] - 2)));
 				
@@ -678,6 +714,9 @@ public class Cpu {
 		Ope ope = Ope.table[b1];
 		//System.out.printf("b1 = %x\n", b1);
 		
+		if (ope == null) {
+			throw new RuntimeException();
+		}
 		opinfo.minfo = ope.minfo;
 		switch (ope.minfo.size) {
 		case 0: {
@@ -1224,6 +1263,57 @@ public class Cpu {
 			//System.out.printf("val32 = %x\n", val32);
 			storeInt(opinfo.getType2(), opinfo.getAddr2(), val32);
 			setNZVC(false, val32 == 0, false, isC());						
+			break;
+		}
+		case 0xee: { // extv
+			int pos = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			byte size= getByte(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());			
+			// bitfield access
+			int base = getIntV(opinfo.getType3(), opinfo.getArg3(), opinfo.getAddr3(), pos, opinfo.getPos3());
+			int mask = 0;
+			for (int i = 0; i < size; ++i) {
+				mask = (mask << 1) | 1;
+			}
+			System.out.printf("mask = %x\n", mask);
+			base &= mask;
+			
+			int signbit = (base >> (size - 1)) & 1;
+			int mask2 = signbit;
+			for (int i = 0; i < (32 - size); ++i) {
+				mask2 = (mask2 << 1) | signbit;
+			}
+			mask2 <<= size;
+			System.out.printf("mask2 = %x\n", mask2);
+			base |= mask2;
+			storeInt(opinfo.getType4(), opinfo.getAddr4(), base);
+			setNZVC(base < 0, base == 0, false, false);			
+			System.out.printf("pos = %x, size = %x, base = %x\n", pos, size, base);
+			// for temporary use
+			System.out.println("extv is not confirmed just implemented as extzv");
+			
+			logOut.reset();
+			storeRegInfo();
+			System.out.println(new String(logOut.toByteArray()));
+			logOut.reset();
+			
+			System.exit(1);
+			break;
+		}
+		case 0xef: { // extzv
+			int pos = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			byte size= getByte(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());			
+			// bitfield access
+			int base = getIntV(opinfo.getType3(), opinfo.getArg3(), opinfo.getAddr3(), pos, opinfo.getPos3());
+			int mask = 0;
+			for (int i = 0; i < size; ++i) {
+				mask = (mask << 1) | 1;
+			}
+			//System.out.printf("mask = %x\n", mask);			
+			base &= mask;
+			storeInt(opinfo.getType4(), opinfo.getAddr4(), base);
+			setNZVC(base < 0, base == 0, false, false);					
+			//System.out.printf("pos = %x, size = %x, base = %x\n", pos, size, base);
+			//System.out.printf("reg1 = %x\n", reg[r1]);			
 			break;
 		}
 		default: {

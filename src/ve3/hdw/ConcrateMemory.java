@@ -116,8 +116,23 @@ public class ConcrateMemory implements Memory {
 		byte b6 = (byte)(memory[offset++]);
 		byte b7 = (byte)(memory[offset++]);
 		byte b8 = (byte)(memory[offset++]);
-		return (long)((b8 & 0xff) << 56 | (b7 & 0xff) << 48 | (b6 & 0xff) << 40 | (b5 & 0xff) << 32 | 
-					(b4 & 0xff) << 24 | (b3 & 0xff) << 16 | (b2 & 0xff) << 8 | b1 & 0xff);		
+		/*
+		System.out.printf("b1 = %x\n", b1);
+		System.out.printf("b2 = %x\n", b2);
+		System.out.printf("b3 = %x\n", b3);
+		System.out.printf("b4 = %x\n", b4);
+		System.out.printf("b5 = %x\n", b5);
+		System.out.printf("b6 = %x\n", b6);
+		System.out.printf("b7 = %x\n", b7);
+		System.out.printf("b8 = %x\n", b8);
+		*/
+		int v1 = (b8 & 0xff) << 24 | (b7 & 0xff) << 16 | (b6 & 0xff) << 8 | b5 & 0xff;
+		int v2 = (b4 & 0xff) << 24 | (b3 & 0xff) << 16 | (b2 & 0xff) << 8 | b1 & 0xff;
+		return (long)(((long)v1 << 32) | v2);
+		
+		
+		//return (long)((b8 & 0xff) << 56 | (b7 & 0xff) << 48 | (b6 & 0xff) << 40 | (b5 & 0xff) << 32 | 
+					//(b4 & 0xff) << 24 | (b3 & 0xff) << 16 | (b2 & 0xff) << 8 | b1 & 0xff);		
 	}
 	
 	

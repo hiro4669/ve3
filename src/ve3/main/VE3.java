@@ -16,6 +16,7 @@ public class VE3 {
 		
 		boolean disflg = false;
 		boolean debug = false;
+		boolean imode = false;
 		
 		String fileName = null;
 		
@@ -25,6 +26,8 @@ public class VE3 {
 				disflg = true;
 			} else if (args[i].equals("-m")) {
 				debug = true;
+			} else if (args[i].equals("-i")) {
+				imode = true;
 			} else {
 				argList.add(args[i]);
 			}
@@ -63,10 +66,15 @@ public class VE3 {
 				String log = disassm.disassm();
 				return;
 			}
-						
-			Context ctx = new Context(rawdata, argList);
-			ctx.setDebug(debug);
-			ctx.start();
+				
+			if (imode) {
+				Context ctx = new Context(rawdata);
+				ctx.startIMode();
+			} else {
+				Context ctx = new Context(rawdata, argList);
+				ctx.setDebug(debug);
+				ctx.start();
+			}
 			
 		//	System.out.println("--------");
 //			System.out.println(log);
