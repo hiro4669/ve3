@@ -487,6 +487,16 @@ public class Cpu {
 			//System.out.printf("r = %016x\n", r);
 			return r;			
 		}
+		case ByteDisp: {
+			long data = memory.readLong((int)addr);
+			int r = (int)((data >> offset) & 0xffffffffL);
+			return r;
+		}
+		case LongRel: {
+			long data = memory.readLong((int)addr);
+			int r = (int)((data >> offset) & 0xffffffffL);
+			return r;
+		}
 		case Register: {
 			int v1 = reg[(int)addr];
 			int next = (addr == pc) ? 0 : (int)(addr + 1);
@@ -1054,9 +1064,9 @@ public class Cpu {
 		}
 		case 0xe0: { // bbs
 			int pos = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
-			int base = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+			//int base = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+			int base = getIntV(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2(), 0, 0);
 			int addr = (int)opinfo.getAddr3();
-			
 			/*
 			System.out.printf("0xc(r11) = ");
 			memory.dump(reg[r11] + 0xc, 4);
@@ -1070,16 +1080,19 @@ public class Cpu {
 				setPc(addr);
 			}
 			//System.out.printf("pos = %d, base = %x, addr = %x\n", pos, base, addr);
+			
 			break;
 		}
 		case 0xe1: { // bbc
 			int pos = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
-			int base = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
-			int addr = (int)opinfo.getAddr3();
-			
+			//int base = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+			int base = getIntV(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2(), 0, 0);
+			int addr = (int)opinfo.getAddr3();			
 			if (((base >>= pos) & 1) == 0) {
 				setPc(addr);
-			}			
+			}
+			//System.out.printf("pos = %d, base = %x, addr = %x\n", pos, base, addr);
+			//System.exit(1);
 			break;
 		}
 		case 0xe8: { // blbs

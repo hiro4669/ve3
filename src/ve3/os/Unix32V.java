@@ -39,8 +39,14 @@ public class Unix32V {
 			int addr = (rawdata[i + 12] & 0xff) | (rawdata[i + 13] & 0xff) << 8 |
 					(rawdata[i + 14] & 0xff) << 16 |  (rawdata[i + 15] & 0xff) << 24;
 			if (type > 0xff) { // true?
-				symTable.put(addr, new String(name));
-				//System.out.printf("%08x: %s\n", addr, new String(name));
+				int len = 8;
+				for (int j = 0; j < 8; ++j) {
+					if (name[j] == 0) {
+						len = j;
+						break;
+					}
+				}
+				symTable.put(addr, new String(name, 0, len));
 			}
 			
 		}
