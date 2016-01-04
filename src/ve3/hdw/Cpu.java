@@ -268,8 +268,28 @@ public class Cpu {
 		case 4: { // Index
 			opinfo.opsub.type = Type.Index;
 			opinfo.opsub.operand = (byte)(arg & 0x3f);
-			System.out.println("Index(4) not implemented yet in resolveDisp");
-			System.exit(1);
+			long regaddr = (long)(reg[opinfo.opsub.operand] & 0xffffffffL);
+			//System.out.printf("index reg[%d] = %x\n", opinfo.opsub.operand, regaddr);
+			switch (optype) {
+			case b: {
+				break;
+			}
+			case w: {
+				regaddr *= 2;
+				break;
+			}
+			case l:
+			case f: {
+				regaddr *= 4;
+				break;
+			}
+			default: {
+				System.out.println("unsupported OT in resolveDisp for Index Mode");
+				System.exit(1);
+				break;
+			}
+			}			
+			opinfo.opsub.iaddr = regaddr;			
 			return opinfo.opsub;
 		}
 		case 5: { // Register
@@ -427,6 +447,7 @@ public class Cpu {
 		opinfo.setArg1(opsub.arg);
 		opinfo.setAddr1(opsub.addr);
 		opinfo.setPos1(opsub.pos);
+		opinfo.setIAddr1(opsub.iaddr);
 	}
 	
 	private void setArg2(MetaInfo minfo) {
@@ -440,6 +461,7 @@ public class Cpu {
 		opinfo.setArg2(opsub.arg);
 		opinfo.setAddr2(opsub.addr);
 		opinfo.setPos2(opsub.pos);
+		opinfo.setIAddr2(opsub.iaddr);
 	}
 	
 	private void setArg3(MetaInfo minfo) {
@@ -454,6 +476,7 @@ public class Cpu {
 		opinfo.setArg3(opsub.arg);
 		opinfo.setAddr3(opsub.addr);
 		opinfo.setPos3(opsub.pos);
+		opinfo.setIAddr3(opsub.iaddr);
 	}
 	
 	private void setArg4(MetaInfo minfo) {
@@ -467,6 +490,7 @@ public class Cpu {
 		opinfo.setArg4(opsub.arg);
 		opinfo.setAddr4(opsub.addr);
 		opinfo.setPos4(opsub.pos);
+		opinfo.setIAddr4(opsub.iaddr);
 	}
 	
 	private byte getByte(Type type, long arg, long addr) {
@@ -568,6 +592,10 @@ public class Cpu {
 			break;
 		}
 		case ByteDisp: {
+			memory.writeByte((int)addr, value);
+			break;
+		}
+		case LongRel: {
 			memory.writeByte((int)addr, value);
 			break;
 		}
@@ -698,7 +726,7 @@ public class Cpu {
 		}
 		// 2 is 433
 		memory.dump(0xc00, 16);
-		for (int i = 0; i < 800; ++i, ++stepCount) {
+		for (int i = 0; i < 149; ++i, ++stepCount) {
 			run();			
 			//memory.dump(0x611, 1);
 		}
@@ -710,6 +738,7 @@ public class Cpu {
 	}
 	
 	public void run() {
+		opinfo.clear();
 		if (debug) {
 			//log.printf("%x:", reg[pc]);
 			if (symTable != null && symTable.containsKey(reg[pc] - 2)) {
@@ -753,7 +782,9 @@ public class Cpu {
 			System.exit(1);
 		}
 		}
-		storeDisInfo(opinfo, ope.opname);
+		if (debug) {
+			storeDisInfo(opinfo, ope.opname);
+		}
 		
 		
 		switch (ope.mne) {
@@ -828,6 +859,7 @@ public class Cpu {
 			val8 = (byte)(src1 - src2);
 			//val32 = (int)src1 - (int)src2;
 			//val8 = (byte)val32;
+			
 			setNZVC(val8 < 0, val8 == 0, false, (src1 & 0xff) < (src2 & 0xff));			
 			break;
 		}

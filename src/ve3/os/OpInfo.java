@@ -23,6 +23,7 @@ public class OpInfo {
 	private long arg1;
 	private long addr1;
 	private long pos1;
+	private long iaddr1;
 	private Stack<Byte> idxs1 = new Stack<Byte>();
 	
 	private Type type2;
@@ -30,6 +31,7 @@ public class OpInfo {
 	private long arg2;
 	private long addr2;
 	private long pos2;
+	private long iaddr2;
 	private Stack<Byte> idxs2 = new Stack<Byte>();
 	
 	private Type type3;
@@ -37,6 +39,7 @@ public class OpInfo {
 	private long arg3;
 	private long addr3;
 	private long pos3;
+	private long iaddr3;
 	private Stack<Byte> idxs3 = new Stack<Byte>();
 	
 	private Type type4;
@@ -44,6 +47,7 @@ public class OpInfo {
 	private long arg4;
 	private long addr4;
 	private long pos4;
+	private long iaddr4;
 	private Stack<Byte> idxs4 = new Stack<Byte>();
 	
 	private Type type5;
@@ -51,6 +55,7 @@ public class OpInfo {
 	private long arg5;
 	private long addr5;
 	private long pos5;
+	private long iaddr5;
 	private Stack<Byte> idxs5 = new Stack<Byte>();
 	
 	private Type type6;
@@ -58,6 +63,7 @@ public class OpInfo {
 	private long arg6;
 	private long addr6;
 	private long pos6;
+	private long iaddr6;
 	private Stack<Byte> idxs6 = new Stack<Byte>();
 	
 	
@@ -85,6 +91,8 @@ public class OpInfo {
 		ope1 = ope2 = ope3 = ope4 = ope5 = ope6 = 0;
 		addr1 = addr2 = addr3 = addr4 = addr5 = addr6 = 0;
 		pos1 = pos2 = pos3 = pos4 = pos5 = pos6 = 0;
+		iaddr1 = iaddr2 = iaddr3 = iaddr4 = iaddr5 = iaddr6 = 0;
+		opsub.iaddr = 0;
 	}
 	
 	public int setOpCode(int opcode) {
@@ -130,13 +138,17 @@ public class OpInfo {
 		this.addr1 = addr1;
 	}
 	public long getAddr1() {
-		return addr1;
+		//return addr1;
+		return iaddr1 + addr1;
 	}
 	public void setPos1(long pos1) {
 		this.pos1 = pos1;
 	}
 	public long getPos1() {
 		return pos1;
+	}
+	public void setIAddr1(long iaddr1) {
+		this.iaddr1 = iaddr1;
 	}
 	
 	
@@ -177,13 +189,17 @@ public class OpInfo {
 		this.addr2 = addr2;
 	}
 	public long getAddr2() {
-		return addr2;
+		//return addr2;
+		return iaddr2 + addr2;
 	}
 	public void setPos2(long pos2) {
 		this.pos2 = pos2;
 	}
 	public long getPos2() {
 		return pos2;
+	}
+	public void setIAddr2(long iaddr2) {
+		this.iaddr2 = iaddr2;
 	}
 	
 	
@@ -223,13 +239,17 @@ public class OpInfo {
 		this.addr3 = addr3;
 	}
 	public long getAddr3() {
-		return addr3;
+		//return addr3;
+		return iaddr3 + addr3;
 	}
 	public void setPos3(long pos3) {
 		this.pos3 = pos3;
 	}
 	public long getPos3() {
 		return pos3;
+	}
+	public void setIAddr3(long iaddr3) {
+		this.iaddr3 = iaddr3;
 	}
 	
 	/* for operand4 */
@@ -268,13 +288,17 @@ public class OpInfo {
 		this.addr4 = addr4;
 	}
 	public long getAddr4() {
-		return addr4;
+		//return addr4;
+		return iaddr4 + addr4;
 	}
 	public void setPos4(long pos4) {
 		this.pos4 = pos4;
 	}
 	public long getPos4() {
 		return pos4;
+	}
+	public void setIAddr4(long iaddr4) {
+		this.iaddr4 = iaddr4;
 	}
 	
 	/* for operand5 */
@@ -313,13 +337,17 @@ public class OpInfo {
 		this.addr5 = addr5;
 	}
 	public long getAddr5() {
-		return addr5;
+		//return addr5;
+		return iaddr5 + addr5;
 	}
 	public void setPos5(long pos5) {
 		this.pos5 = pos5;
 	}
 	public long getPos5() {
 		return pos5;
+	}
+	public void setIAddr5(long iaddr5) {
+		this.iaddr5 = iaddr5;
 	}
 	
 	
@@ -359,13 +387,17 @@ public class OpInfo {
 		this.addr6 = addr6;
 	}
 	public long getAddr6() {
-		return addr6;
+		//return addr6;
+		return iaddr6 + addr6;
 	}
 	public void setPos6(long pos6) {
 		this.pos6 = pos6;
 	}
 	public long getPos6() {
 		return pos6;
+	}
+	public void setIAddr6(long iaddr6) {
+		this.iaddr6 = iaddr6;
 	}
 	
 	
@@ -376,6 +408,7 @@ public class OpInfo {
 		
 		public long addr; // to support over 4 bytes
 		public long pos; //  point to data in memory address
+		public long iaddr; // index address
 		
 		public OpInfoSub() {
 			type = Type.NoType;
@@ -383,6 +416,7 @@ public class OpInfo {
 			arg = 0;
 			addr = 0;
 			pos = 0;
+			iaddr = 0;
 		}
 	}
 	

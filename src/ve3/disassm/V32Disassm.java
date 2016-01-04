@@ -22,7 +22,7 @@ public class V32Disassm {
 	
 	/** 
 	 * b:byte, w:word, l:long, f:float, df:D_float, Brb:Branch byte, Brw:Branch word
-	 * vb:bitfield byte  
+	 * vb:bitfield byte, q:quad
 	 * */
 	public static enum OT {
 		b, w, l, f, q, df, Brb, Brw, vb, 

@@ -57,14 +57,20 @@ public class Context {
 		System.out.print("command >>");
 		try {
 			while((com = reader.readLine()) != null) {
-				if (com.equals("s")) {
-					cpu.run();
-					System.out.println("command >>");
+				if (com.equals("s")) {					
+					cpu.run();					
+				} else if(com.equals("e")) {
+					System.out.println("address >>");
+					String addrs = reader.readLine();					
+					long addr = Long.parseUnsignedLong(addrs, 16);
+					memory.dump((int)addr, 4);					
 				} else {
 					System.exit(1);
 				}
+				System.out.println("command >>");
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			System.exit(1);
 		}
 		
