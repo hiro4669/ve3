@@ -1361,6 +1361,28 @@ public class Cpu {
 			//System.out.printf("reg1 = %x\n", reg[r1]);			
 			break;
 		}
+		case 0xcf: { // casel
+			int sel = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int base = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+			int limit = getInt(opinfo.getType3(), opinfo.getArg3(), opinfo.getAddr3());
+			int tmp = sel - base;
+//			System.out.printf("sel = %x, base = %x, limit = %x, tmp = %x\n", sel, base, limit, tmp);
+			int offset = 0;
+			boolean cflg;
+			if ((cflg = (tmp & 0xffffffffL) < (limit & 0xffffffffL)) || (tmp == limit)) {
+				offset = memory.readShort(reg[pc] + (tmp * 2));
+//				System.out.printf("offset(true) = %x\n", offset);
+			} else {
+				offset = (limit + 1) * 2;
+				//System.out.printf("offset(false) = %x\n", offset);
+			}
+			int nextpc = offset + reg[pc];
+			//System.out.printf("nextpc = %x\n", nextpc);
+			
+			setPc(nextpc);
+			setNZVC(tmp < limit, tmp == limit, false, cflg);					
+			break;
+		}
 		default: {
 			System.out.printf("unrecognised operator: 0x%x in run\n", ope.mne);
 			System.out.printf("stepCount = %d\n", stepCount);

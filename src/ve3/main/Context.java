@@ -67,7 +67,7 @@ public class Context {
 				} else {
 					System.exit(1);
 				}
-				System.out.println("command >>");
+				System.out.print("command >>");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
