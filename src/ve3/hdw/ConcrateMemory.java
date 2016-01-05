@@ -44,6 +44,9 @@ public class ConcrateMemory implements Memory {
 		pc = 0;
 		return (end = moffset + size);
 	}
+	public void rawWrite(byte[] rawdata, int roffset, int moffset, int size) {
+		System.arraycopy(rawdata, roffset, memory, moffset, size);
+	}
 	
 	public MVal fetch() {
 		mval.bval = memory[pc++];

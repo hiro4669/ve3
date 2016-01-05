@@ -15,6 +15,7 @@ import ve3.os.OpInfo;
 import ve3.os.OpInfo.OpInfoSub;
 import ve3.os.OpInfo.Type;
 import ve3.os.Unix32V;
+import ve3.util.BCDUtil;
 
 public class Cpu {
 	
@@ -637,6 +638,10 @@ public class Cpu {
 		}
 		}
 	}
+	
+	private void storeRawData(byte[] rawdata, int offset) {
+		memory.rawWrite(rawdata, 0, offset, rawdata.length);
+	}
 
 	// quodward
 	private void storeLong(Type type, long addr, long value) {
@@ -726,7 +731,7 @@ public class Cpu {
 		}
 		// 2 is 433
 		memory.dump(0xc00, 16);
-		for (int i = 0; i < 149; ++i, ++stepCount) {
+		for (int i = 0; i < 151; ++i, ++stepCount) {
 			run();			
 			//memory.dump(0x611, 1);
 		}
@@ -1378,9 +1383,39 @@ public class Cpu {
 			}
 			int nextpc = offset + reg[pc];
 			//System.out.printf("nextpc = %x\n", nextpc);
-			
+			//memory.dump(0xfffa0, 4);
 			setPc(nextpc);
 			setNZVC(tmp < limit, tmp == limit, false, cflg);					
+			break;
+		}
+		case 0xf9: { // cvtlp
+			int laddr;
+			int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int dstlen = getShort(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());			
+			//System.out.printf("src = %x, dstlen = %x, addr3 = %x\n", src, dstlen, opinfo.getAddr3());
+			byte[] decdata = BCDUtil.int2bcd(src);
+			byte[] newdata = BCDUtil.convert(decdata, dstlen);
+			/*
+			for (int i = 0; i < decdata.length; ++i) {
+				System.out.printf("%02x ", decdata[i]);
+			}
+			System.out.println();
+			for (int i = 0; i < newdata.length; ++i) {
+				System.out.printf("%02x ", newdata[i]);
+			}
+			System.out.println();
+			*/
+			
+			int val32 = BCDUtil.bcd2int(newdata);
+			//System.out.println("val32 = " + val32);			
+			//memory.dump((int)opinfo.getAddr3(), 6);
+			storeRawData(newdata, laddr = (int)opinfo.getAddr3());
+			//memory.dump((int)opinfo.getAddr3(), 6);
+			setNZVC(val32 < 0, val32 == 0, (src != val32), false);
+			reg[r0] = reg[r1] = reg[r2] = 0;
+			reg[r3] = laddr;
+			
+			//System.exit(1);
 			break;
 		}
 		default: {
