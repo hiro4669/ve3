@@ -737,8 +737,8 @@ public class Cpu {
 			showHeader();
 		}
 		// 2 is 433
-		memory.dump(0xc00, 16);
-		for (int i = 0; i < 152; ++i, ++stepCount) {
+		//memory.dump(0xc00, 16);
+		for (int i = 0; i < 800; ++i, ++stepCount) {
 			run();			
 			//memory.dump(0x611, 1);
 		}
@@ -1048,6 +1048,11 @@ public class Cpu {
 		}
 		case 0x11: { // brb
 			//int nextPc = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int nextPc = (int)opinfo.getAddr1();
+			setPc(nextPc);			
+			break;
+		}
+		case 0x31: { // brw
 			int nextPc = (int)opinfo.getAddr1();
 			setPc(nextPc);			
 			break;
@@ -1468,7 +1473,7 @@ public class Cpu {
 //			System.out.printf("reg0 = %x, reg1 = %x\n", reg[r0], reg[r1]);
 			setNZVC(false, reg[r0] == 0, false, false);			
 			break;
-		}
+		}		
 		default: {
 			System.out.printf("unrecognised operator: 0x%x in run\n", ope.mne);
 			System.out.printf("stepCount = %d\n", stepCount);
