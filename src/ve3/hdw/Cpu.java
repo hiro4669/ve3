@@ -738,11 +738,11 @@ public class Cpu {
 		}
 		// 2 is 433
 		memory.dump(0xc00, 16);
-		for (int i = 0; i < 151; ++i, ++stepCount) {
+		for (int i = 0; i < 152; ++i, ++stepCount) {
 			run();			
 			//memory.dump(0x611, 1);
 		}
-		//memory.dump(0xc1c, 4);
+		//memory.dump(0xffec8, 20);
 		System.out.println("end of loop");
 		
 		//memory.dump(reg[sp], 0x100000 - reg[sp]); // show memory		
@@ -1445,6 +1445,28 @@ public class Cpu {
 					reg[r0], reg[r1], reg[r2], reg[r3], reg[r4], reg[r5]);
 			*/
 			setNZVC(val32 < 0, isZ(), false, isC()); // Z and C is changed already
+			break;
+		}
+		case 0x3b: { // skpc
+			byte c = getByte(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			short len = getShort(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+			long addr = opinfo.getAddr3();
+//			System.out.printf("c = %x, len = %x, addr = %x\n", c, len, addr);
+			reg[r0] = len;
+			boolean found = false;
+			for (; reg[r0] > 0; --reg[r0]) {
+				byte tc = memory.readByte((int)addr++);
+				if (tc != c) {
+					reg[r1] = (int)(--addr);
+					found = true;
+					break;
+				} 
+			}
+			if (!found) {
+				reg[r1] = (int)addr;
+			}
+//			System.out.printf("reg0 = %x, reg1 = %x\n", reg[r0], reg[r1]);
+			setNZVC(false, reg[r0] == 0, false, false);			
 			break;
 		}
 		default: {
