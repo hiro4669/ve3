@@ -48,6 +48,12 @@ public class ConcrateMemory implements Memory {
 		System.arraycopy(rawdata, roffset, memory, moffset, size);
 	}
 	
+	public byte[] rawRead(int offset, int len) {
+		byte[] rdata = new byte[len];
+		System.arraycopy(memory, offset, rdata, 0, len);
+		return rdata;
+	}
+	
 	public MVal fetch() {
 		mval.bval = memory[pc++];
 		mval.pc = pc;

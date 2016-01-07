@@ -702,6 +702,13 @@ public class Cpu {
 		psl &= ~PSW_C;
 	}
 	
+	private void clearZero() {
+		psl &= ~PSW_Z;
+	}
+	public void setCarry() {
+		psl |= PSW_C;
+	}
+	
 	public void pushInt(int val) {
 		reg[sp] -= 4;
 		memory.writeInt(reg[sp], val);
@@ -1418,6 +1425,28 @@ public class Cpu {
 			//System.exit(1);
 			break;
 		}
+		case 0x38: { // editpc
+			short srclen = getShort(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			long srcaddr = opinfo.getAddr2();
+			long pataddr = opinfo.getAddr3();
+			long dstaddr = opinfo.getAddr4();
+			/*
+			System.out.printf("srclen = %x, srcaddr= %x, pataddr= %x, dstaddr = %x\n", srclen,
+					srcaddr, pataddr, dstaddr);
+					*/
+			val32 = execEditPc(srclen, srcaddr, pataddr, dstaddr);
+			
+			reg[r0] = srclen & 0xffff;
+			reg[r1] = (int)srcaddr;
+			reg[r2] = reg[r4] = 0;
+			/*
+			memory.dump(0x1000, 20);
+			System.out.printf("r0=%x, r1=%x, r2=%x, r3=%x, r4=%x, r5=%x\n",
+					reg[r0], reg[r1], reg[r2], reg[r3], reg[r4], reg[r5]);
+			*/
+			setNZVC(val32 < 0, isZ(), false, isC()); // Z and C is changed already
+			break;
+		}
 		default: {
 			System.out.printf("unrecognised operator: 0x%x in run\n", ope.mne);
 			System.out.printf("stepCount = %d\n", stepCount);
@@ -1431,5 +1460,185 @@ public class Cpu {
 		
 	}
 	
+	private void executeFloat(NibbleReader nr, int count) {
+		//System.out.printf("count = %d, addr = %x\n", count, reg[r5]);		
+		for (int i = 0; i < count; ++i) {
+			byte val = nr.readNext();	
+			
+			if (val != 0) {
+				if (!isC()) {
+					setCarry();	clearZero();
+					byte signflg = nr.getLast();
+					if (signflg == 0xc) { // plus
+						//System.out.printf("sign:0x20 ");
+						memory.writeByte(reg[r5]++, (byte)0x20);
+					} else if (signflg == 0xd) { // minus
+						//System.out.printf("sign:0x2d ");
+						memory.writeByte(reg[r5]++, (byte)0x2d);
+					} else { // default
+						//System.out.printf("sign:0x20 ");
+						memory.writeByte(reg[r5]++, (byte)0x20);
+					}
+				} 
+				//System.out.printf("%02x:0x30 ", val + 0x30);
+				memory.writeByte(reg[r5]++, (byte)(val + 0x30));
+			} else {
+				if (isC()) {
+					//System.out.printf("%02x:0x30 ", val);
+					memory.writeByte(reg[r5]++, (byte)0x30); // 0(zero)
+				} else {
+					//System.out.printf("%02x:0x20 ", val);
+					memory.writeByte(reg[r5]++, (byte)0x20); // sp(space)
+				}
+			}					
+		}
+		//System.out.println();
+	}
+	
+	private void executeMove(NibbleReader nr, int count) {
+		//System.out.printf("count = %d, addr = %x\n", count, reg[r5]);		
+		for (int i = 0; i < count; ++i) {
+			byte val = nr.readNext();				
+			if (val != 0) {
+				if (!isC()) {
+					setCarry();	clearZero();
+				} 
+				//System.out.printf("%02x:0x30 ", val + 0x30);
+				memory.writeByte(reg[r5]++, (byte)(val + 0x30));
+			} else {
+				//System.out.printf("%02x:0x30 ", val);
+				memory.writeByte(reg[r5]++, (byte)0x30);
+			}					
+		}
+		//System.out.println();
+	}
+	
+	private void executeEndFloat(NibbleReader nr) {
+		if (!isC()) {
+			setCarry();
+			byte signflg = nr.getLast();
+			if (signflg == 0xc) {
+				//System.out.printf("sign:0x20\n");
+				memory.writeByte(reg[r5]++, (byte)0x20);
+			} else if (signflg == 0xd) {
+				//System.out.printf("sign:0x2d\n");
+				memory.writeByte(reg[r5]++, (byte)0x2d);
+			}		
+		} else { //just debug
+			//System.out.println("do nothing");
+		}
+	}
+	
+	
+	
+	/**
+	 * Execute EditPc
+	 * @param srclen
+	 * @param srcaddr
+	 * @param pataddr
+	 * @param dstaddr
+	 * @return
+	 */
+	private int execEditPc(short srclen, long srcaddr, long pataddr, long dstaddr) {
+		int srcdatalen = (srclen / 2) + 1;
+		byte[] rawData = memory.rawRead((int)srcaddr, srcdatalen);
+		int rval = BCDUtil.bcd2int(rawData);
+		/*
+		for (int i = 0; i < rawData.length; ++i) {
+			System.out.printf("%02x ", rawData[i]);
+		}
+		System.out.println();
+		*/
+		
+		NibbleReader nr = new NibbleReader(srclen, rawData);
+		/*
+		for (int i = 0; i < srclen; ++i) {
+			System.out.printf("%02x ", nr.readNext());
+		}
+		byte last = nr.getLast();
+		System.out.printf("\nlast = %02x\n", last);
+		*/
+		reg[r5] = (int)dstaddr;
+		
+		
+		nr.resetPos(srclen);
+		while(true) {
+			int pattern = (memory.readByte((int)pataddr++)) & 0xff;
+			if (pattern == 0) {
+				reg[r3] = (int)(--pataddr);
+				break;
+			}
+			switch (pattern) {
+			case 0x01: { // EO$end_float
+				executeEndFloat(nr);
+				break;
+			}
+			case 0x91:
+			case 0x92:
+			case 0x93:
+			case 0x94:
+			case 0x95:
+			case 0x96:
+			case 0x97:
+			case 0x98:
+			case 0x99:
+			case 0x9a:
+			case 0x9b:
+			case 0x9c:
+			case 0x9d:
+			case 0x9e:
+			case 0x9f: { // EO$MOVE
+				executeFloat(nr, pattern & 0xf);
+				break;
+			}
+			case 0xa1: 
+			case 0xa2: 
+			case 0xa3: 
+			case 0xa4: 
+			case 0xa5: 
+			case 0xa6: 
+			case 0xa7: 
+			case 0xa8: 
+			case 0xa9: 
+			case 0xaa: 
+			case 0xab: 
+			case 0xac: 
+			case 0xad: 
+			case 0xae: 
+			case 0xaf:{ // EO$Float
+				executeFloat(nr, pattern & 0xf);
+				break;
+			}			
+			default: {
+				System.out.printf("unknown edit pattern type in editpc %x\n", pattern);
+				System.exit(1);
+				break;
+			}				
+			}					
+			//System.out.printf("%02x ", pattern);	
+		}
+		
+		return rval;
+	}
+	
+	private class NibbleReader {
+		private int pos;
+		private byte[] data;		
+		public NibbleReader(int len, byte[] data) {
+			this.data = data;
+			resetPos(len);
+		}		
+		public void resetPos(int len) {
+			pos = ((len % 2) == 0) ? 1 : 0;			
+		}		
+		public byte readNext() {
+			int index = pos / 2;			
+			return ((pos++ % 2)) == 0 ? (byte)((data[index] >> 4) & 0xf) :  
+				(byte)(data[index] & 0xf);				
+		}		
+		public byte getLast() {
+			return (byte)(data[data.length-1] & 0xf);
+		}
+	}
 
 }

@@ -63,7 +63,7 @@ public class Context {
 					System.out.println("address >>");
 					String addrs = reader.readLine();					
 					long addr = Long.parseUnsignedLong(addrs, 16);
-					memory.dump((int)addr, 4);					
+					memory.dump((int)addr, 20);					
 				} else {
 					System.exit(1);
 				}
@@ -72,17 +72,7 @@ public class Context {
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(1);
-		}
-		
-		/*
-		cpu.run();
-		cpu.run();
-		cpu.run();		
-		cpu.run();
-		*/		
-		
-
-		
+		}		
 	}
 		
 	private void init() {
