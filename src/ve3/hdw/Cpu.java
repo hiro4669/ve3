@@ -1536,7 +1536,19 @@ public class Cpu {
 			//System.out.printf("reg0 = %x, reg1 = %x\n", reg[r0], reg[r1]);
 			setNZVC(false, reg[r0] == 0, false, false);			
 			break;
-		}		
+		}
+		case 0x78: { // ashl
+			byte cnt = getByte(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int src = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+//			System.out.printf("cnt = %x, src = %x\n", cnt, src);
+			val64 = (cnt < 0) ? ((long)src >> (~cnt + 1)) : ((long)src << cnt);
+			val32 = (int)val64;
+			//System.out.printf("val32 = %x\n", val32);
+			//System.out.printf("val64 = %x\n", val64);
+			storeInt(opinfo.getType3(), opinfo.getAddr3(), val32);
+			setNZVC(val32 < 0, val32 == 0, val64 != val32, false);
+			break;
+		}
 		default: {
 			System.out.printf("unrecognised operator: 0x%x in run\n", ope.mne);
 			System.out.printf("stepCount = %d\n", stepCount);
