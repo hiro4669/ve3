@@ -609,6 +609,20 @@ public class Cpu {
 		}
 	}
 	
+	private void storeIntV(Type type, long addr, int value, int offset) {
+		switch (type) {
+		case Register: {			
+			reg[(int)(addr & 0xff)] = value;
+			break;
+		}
+		default: {
+			System.out.printf("addr = 0x%x, value = 0x%x\n", addr, value);
+			System.out.println("unrecognized type in storeIntV: " + type);
+			System.exit(1);
+		}
+		}
+	}
+	
 	private void storeInt(Type type, long addr, int value) {
 		switch (type) {
 		case Register: {
@@ -738,7 +752,7 @@ public class Cpu {
 		}
 		// 2 is 433
 		//memory.dump(0xc00, 16);
-		for (int i = 0; i < 800; ++i, ++stepCount) {
+		for (int i = 0; i < 1082; ++i, ++stepCount) {
 			run();			
 			//memory.dump(0x611, 1);
 		}
@@ -1075,11 +1089,22 @@ public class Cpu {
 			setNZVC(false, true, false, isC());
 			break;
 		}
+		case 0xd6: { // incl
+			long laddr;
+			Type ltype;
+			int src = getInt(ltype = opinfo.getType1(), opinfo.getAddr1(), laddr = opinfo.getAddr1());
+			//System.out.printf("src = %x, addr = %x\n", src, opinfo.getAddr1());
+			val64 = (long)src + 1;
+			val32 = (int)val64;
+			storeInt(ltype, laddr, val32);
+			setNZVC(val32 < 0, val32 == 0, val64 != val32, val64 >= (long)0x100000000L);			
+			break;
+		}
 		case 0xd7: { // decl
 			long laddr;
 			Type ltype;
 			int src = getInt(ltype = opinfo.getType1(), opinfo.getAddr1(), laddr = opinfo.getAddr1());
-			System.out.printf("src = %x, addr = %x\n", src, opinfo.getAddr1());
+//			System.out.printf("src = %x, addr = %x\n", src, opinfo.getAddr1());
 //			memory.dump(0x614, 4);
 			val64 = (long)src - 1;
 			val32 = (int)val64;
@@ -1142,6 +1167,20 @@ public class Cpu {
 			}
 			//System.out.printf("pos = %d, base = %x, addr = %x\n", pos, base, addr);
 			//System.exit(1);
+			break;
+		}
+		case 0xe3: { // bbcs
+			int pos = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int base = getIntV(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2(), 0, 0);
+			int addr = (int)opinfo.getAddr3();
+			int newstate = (1 << pos);
+			val32 = (base | newstate);
+			//System.out.printf("pos = %x, base = %x, addr = %x\n", pos, base, addr);
+			//System.out.printf("val32 = %x\n", val32);
+			storeIntV(opinfo.getType2(), opinfo.getAddr2(), val32, 0);			
+			if (((base >>= pos) & 1) == 0) {
+				setPc(addr);
+			}
 			break;
 		}
 		case 0xe8: { // blbs
@@ -1452,6 +1491,30 @@ public class Cpu {
 			setNZVC(val32 < 0, isZ(), false, isC()); // Z and C is changed already
 			break;
 		}
+		case 0x3a: { // locc
+			byte c = getByte(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			short len = getShort(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+			long addr = opinfo.getAddr3();
+			//System.out.printf("c = %x, len = %x, addr = %x\n", c, len, addr);
+			reg[r0] = len & 0xffff; // and operation is required
+			//System.out.printf("reg= %d\n", reg[r0]);
+			boolean found = false;
+			for (; reg[r0] > 0; --reg[r0]) {
+				byte tc = memory.readByte((int)addr++);
+				if (tc == c) {
+					//System.out.println("find!");
+					reg[r1] = (int)(--addr);
+					found = true;
+					break;
+				} 				
+			}
+			if (!found) {
+				reg[r1] = (int)addr;
+			}
+			setNZVC(false, reg[r0] == 0, false, false);					
+			//System.out.printf("reg0 = %x, reg1 = %x\n", reg[r0], reg[r1]);
+			break;
+		}
 		case 0x3b: { // skpc
 			byte c = getByte(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
 			short len = getShort(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
@@ -1470,7 +1533,7 @@ public class Cpu {
 			if (!found) {
 				reg[r1] = (int)addr;
 			}
-//			System.out.printf("reg0 = %x, reg1 = %x\n", reg[r0], reg[r1]);
+			//System.out.printf("reg0 = %x, reg1 = %x\n", reg[r0], reg[r1]);
 			setNZVC(false, reg[r0] == 0, false, false);			
 			break;
 		}		
