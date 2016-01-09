@@ -155,10 +155,13 @@ public class Unix32V {
 			
 			//System.out.println("argnum = " + argnum);
 			//System.out.println("fd     = " + fd);
+			int r = FSystem.close(fd);
+			
 			
 			if (debug) {
-				System.out.printf("<close(%d) => 0>\n", fd);				
+				System.out.printf("<close(%d) => %d>\n", fd, r);				
 			}
+			//System.exit(1);
 			reg[Cpu.r0] = 0;
 			cpu.clearCarry();		
 			
