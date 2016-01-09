@@ -752,7 +752,7 @@ public class Cpu {
 		}
 		// 2 is 433
 		//memory.dump(0xc00, 16);
-		for (int i = 0; i < 1082; ++i, ++stepCount) {
+		for (int i = 0; i < 1000; ++i, ++stepCount) {
 			run();			
 			//memory.dump(0x611, 1);
 		}
@@ -931,7 +931,16 @@ public class Cpu {
 				setPc(src);
 			}
 			break;
-		}
+		} 
+		
+		case 0x15: { // bleq
+			if (isN() || isZ()) {
+				int src = (int)opinfo.getAddr1();
+				setPc(src);
+			}
+			//System.exit(1);
+			break;
+		}		
 		case 0x18: { // bgeq
 			if (!isN()) {
 				//int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
