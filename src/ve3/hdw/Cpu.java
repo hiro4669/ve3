@@ -752,7 +752,7 @@ public class Cpu {
 		}
 		// 2 is 433
 		//memory.dump(0xc00, 16);
-		for (int i = 0; i < 1000; ++i, ++stepCount) {
+		for (int i = 0; i < 3000; ++i, ++stepCount) {
 			run();			
 			//memory.dump(0x611, 1);
 		}
@@ -1035,7 +1035,11 @@ public class Cpu {
 			boolean callsFlg = ((maskinfo >> 29) & 1) == 1; // otherwise, callg
 			short regMask = (short)((maskinfo >> 16) & 0xfff);
 			//System.out.printf("regMask = %x\n", regMask);
+			//psl |= (maskinfo & 0xffff); // restore psw
+			
+			psl &= 0xffff0000;
 			psl |= (maskinfo & 0xffff); // restore psw
+			//System.out.printf("psl %x\n", psl);
 			
 			// restore register
 			reg[ap] = popInt();
@@ -1072,6 +1076,12 @@ public class Cpu {
 		case 0x11: { // brb
 			//int nextPc = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
 			int nextPc = (int)opinfo.getAddr1();
+			setPc(nextPc);			
+			break;
+		}
+		case 0x17: { // jmp
+			int nextPc = (int)opinfo.getAddr1();
+			System.out.printf("nextpc = %x\n", nextPc);
 			setPc(nextPc);			
 			break;
 		}

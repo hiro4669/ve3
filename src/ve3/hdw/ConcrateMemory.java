@@ -170,6 +170,15 @@ public class ConcrateMemory implements Memory {
 		}
 	}
 	
+	public int seekZero(int offset) {
+		int pos = offset;
+		for (;; ++pos) {
+			if (memory[pos] == 0) {
+				return pos;
+			}
+		}
+	}
+	
 	public void dump(int offset, int len) {
 		for (int i = offset; i < offset+len; ++i) {
 			if (i % 16 == 0) System.out.printf("\n%04x: ", i);

@@ -116,10 +116,40 @@ public class Unix32V {
 			System.out.println("argnum = " + argnum);
 			System.out.println("ext = " + exnum);
 			*/
-
-			
 			System.exit(exnum);
 			
+			break;
+		}
+		case 3: { // read
+			int argnum = memory.readInt(reg[Cpu.ap]);
+			int fd = memory.readInt(reg[Cpu.ap] + 4);
+			int addr = memory.readInt(reg[Cpu.ap] + 8);
+			int len = memory.readInt(reg[Cpu.ap] + 12);
+			
+			/*
+			System.out.println("argnum = " + argnum);
+			System.out.println("fnum = " + fd);
+			System.out.printf("addr = %x\n",  addr);
+			System.out.println("len = " + len);
+			*/
+			
+			//memory.dump(addr, 10);			
+			int rlen = FSystem.read(fd, rawmem, addr, len);			
+			//memory.dump(addr, 10);
+			
+			if (debug) {
+				System.out.printf("<read(%d, 0x%x, %d) => %d>\n", fd, addr, len, rlen);
+			}
+			
+			if (rlen != -1) {
+				reg[Cpu.r0] = rlen;
+				cpu.clearCarry();
+			} else {
+				reg[Cpu.r0] = 1; // should be fix soon as ERROR
+				cpu.setCarry();
+			}
+						
+//			System.exit(1);
 			break;
 		}
 		case 4: { // write
@@ -135,17 +165,54 @@ public class Unix32V {
 			System.out.println("len = " + len);
 			*/
 			if (debug) {
-				System.out.printf("<write(%x, 0x%x, %x)", dst, off, len);
+				System.out.printf("<write(%x, 0x%x, %d)", dst, off, len);
 			}
 			
-			System.out.write(rawmem, off, len);
+			//System.out.write(rawmem, off, len);
+			int rlen = FSystem.write(rawmem, dst, off, len);
 			
 			if (debug) {
-				System.out.printf(" => %x\n", len);
+				System.out.printf(" => %x\n", rlen);
 			}
-			reg[Cpu.r0] = len;
-			cpu.clearCarry();
 			
+			if (rlen != -1) {
+				reg[Cpu.r0] = len;
+				cpu.clearCarry();
+			} else {
+				reg[Cpu.r0] = 1; // should be fix soon as ERROR
+				cpu.setCarry();
+			}
+			
+			break;
+		}
+		case 5: { // open
+			int argnum = memory.readInt(reg[Cpu.ap]);
+			int filep = memory.readInt(reg[Cpu.ap] + 4);
+			int mode = memory.readInt(reg[Cpu.ap] + 8);
+			
+			//System.out.printf("argnum = %x, filep = %x, mode = %x\n", argnum, filep, mode);
+			int pos = memory.seekZero(filep);
+			//System.out.printf("pos = %x, len = %d\n", pos, pos - filep);
+			String fileName = new String(memory.rawRead(filep, (pos - filep)));
+			//System.out.println("fileName = " + fileName);
+			
+			
+			int fnum = FSystem.open(fileName, mode);
+			//System.out.println("fnum = " + fnum);
+			
+			if (fnum == -1) {
+				reg[Cpu.r0] = fnum;
+				cpu.setCarry();
+			} else {			
+				reg[Cpu.r0] = fnum;
+				cpu.clearCarry();
+			}
+			
+			if (debug) {
+				System.out.printf("<open(0x%x, %d) => %d>\n", filep, mode, fnum);
+			}
+			
+						
 			break;
 		}
 		case 6: { // close

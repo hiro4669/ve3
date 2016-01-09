@@ -29,6 +29,11 @@ public class FileTest {
 			System.out.printf("%c", buf[i]);
 		}
 		
+		rfile.read(buf, 0, buf.length);
+		for (int i = 0; i < buf.length; ++i) {
+			System.out.printf("%c", buf[i]);
+		}
+		
 		System.in.close();
 		
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));

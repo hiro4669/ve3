@@ -30,5 +30,6 @@ public interface Memory {
 	public int getPrevPc();
 	
 	public void dump(int offset, int len);
+	public int seekZero(int offset);
 
 }
