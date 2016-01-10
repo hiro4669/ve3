@@ -197,19 +197,19 @@ public class Unix32V {
 			//System.out.println("fileName = " + fileName);
 			
 			
-			int fnum = FSystem.open(fileName, mode);
+			int fd = FSystem.open(fileName, mode);
 			//System.out.println("fnum = " + fnum);
 			
-			if (fnum == -1) {
-				reg[Cpu.r0] = fnum;
+			if (fd == -1) {
+				reg[Cpu.r0] = fd;
 				cpu.setCarry();
 			} else {			
-				reg[Cpu.r0] = fnum;
+				reg[Cpu.r0] = fd;
 				cpu.clearCarry();
 			}
 			
 			if (debug) {
-				System.out.printf("<open(0x%x, %d) => %d>\n", filep, mode, fnum);
+				System.out.printf("<open(0x%x, %d) => %d>\n", filep, mode, fd);
 			}
 			
 						
@@ -231,6 +231,31 @@ public class Unix32V {
 			//System.exit(1);
 			reg[Cpu.r0] = 0;
 			cpu.clearCarry();		
+			
+			break;
+		}
+		case 8: { // creat
+			int argnum = memory.readInt(reg[Cpu.ap]);
+			int filep = memory.readInt(reg[Cpu.ap] + 4);
+			int mode = memory.readInt(reg[Cpu.ap] + 8);
+			//System.out.printf("argnum = %d, filep = %x, mode = %o\n", argnum, filep, mode);
+			int pos = memory.seekZero(filep);
+			String fileName = new String(memory.rawRead(filep, (pos - filep)));
+			//System.out.println("fileName = " + fileName);
+			
+			int fd = FSystem.creat(fileName, mode);
+
+			if (fd == -1) {
+				reg[Cpu.r0] = fd;
+				cpu.setCarry();
+			} else {			
+				reg[Cpu.r0] = fd;
+				cpu.clearCarry();
+			}
+			
+			if (debug) {
+				System.out.printf("<creat(0x%x, %04o) => %d>\n", filep, mode, fd);
+			}
 			
 			break;
 		}

@@ -751,8 +751,10 @@ public class Cpu {
 			showHeader();
 		}
 		// 2 is 433
-		//memory.dump(0xc00, 16);
-		for (int i = 0; i < 3000; ++i, ++stepCount) {
+		//memory.dump(0xc00, 16);		
+		//for (int i = 0; i < 3000; ++i, ++stepCount) {
+		//for (int i = 0; i < 170; ++i, ++stepCount) {						
+		for (int i = 0; i < 220; ++i, ++stepCount) {			
 			run();			
 			//memory.dump(0x611, 1);
 		}
@@ -819,6 +821,7 @@ public class Cpu {
 		}
 		case 0xd0: { // movl
 			int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			//System.out.printf("src = %x\n", src);
 			storeInt(opinfo.getType2(), opinfo.getAddr2(), src);
 			setNZVC(src < 0, src == 0, false, isC());			
 			break;
@@ -907,6 +910,7 @@ public class Cpu {
 		}
 		case 0xd5: { // tstl
 			int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			//System.out.printf("src = %x\n", src);
 			val64 = (long)src - 0;
 			val32 = (int)val64;
 			setNZVC(val32 < 0, val32 == 0, false, false);
@@ -932,7 +936,13 @@ public class Cpu {
 			}
 			break;
 		} 
-		
+		case 0x14: { // bgtr;			
+			if (!isN() && !isZ()) { // {N OR Z} EQL 0   
+				int src = (int)opinfo.getAddr1();
+				setPc(src);
+			} 
+			break;
+		}
 		case 0x15: { // bleq
 			if (isN() || isZ()) {
 				int src = (int)opinfo.getAddr1();
@@ -957,6 +967,14 @@ public class Cpu {
 //				System.out.printf("pc = %x\n", src);
 				setPc(src);
 			}
+			break;
+		}
+		case 0x1f: {
+			if (isC()) {
+				int src = (int)opinfo.getAddr1();
+//				System.out.printf("pc = %x\n", src);
+				setPc(src);
+			}			
 			break;
 		}
 		case 0xfb: { // calls
@@ -1288,6 +1306,23 @@ public class Cpu {
 			break;
 			
 		}
+		case 0xc9: { // bisl3
+			int mask = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int src  = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+			/*
+			System.out.printf("mask = %x, src = %x, \n", mask, src);
+			System.out.println("type =" + opinfo.getType3());
+			System.out.printf("dst = %x\n", opinfo.getAddr3());
+			*/
+			
+			val32 = src | mask;
+			//System.out.printf("val32 = %x\n", val32);
+			//memory.dump((int)opinfo.getAddr3(), 4);
+			storeInt(opinfo.getType3(), opinfo.getAddr3(), val32);
+			//memory.dump((int)opinfo.getAddr3(), 4);
+			setNZVC(val32 < 0, val32 == 0, false, isC());						
+			break;
+		}
 		case 0xce: { // mnegl
 			int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
 			//System.out.printf("src = %x\n", src);
@@ -1320,6 +1355,17 @@ public class Cpu {
 			val32 = dst & ~mask;
 			storeInt(ltype, laddr, val32);
 			setNZVC(val32 < 0, val32 == 0, false, isC());									
+			break;
+		}
+		case 0xcb: { // bicl3
+			int mask = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int src  = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+			//System.out.printf("mask = %x, src = %x\n", mask, src);
+			val32 = src & ~mask;
+			storeInt(opinfo.getType3(), opinfo.getAddr3(), val32);
+			//System.out.printf("val32 = %x\n", val32);
+			setNZVC(val32 < 0, val32 == 0, false, isC());
+			//System.exit(1);
 			break;
 		}
 		case 0x8a: { // bicb2
@@ -1566,6 +1612,66 @@ public class Cpu {
 			//System.out.printf("val64 = %x\n", val64);
 			storeInt(opinfo.getType3(), opinfo.getAddr3(), val32);
 			setNZVC(val32 < 0, val32 == 0, val64 != val32, false);
+			break;
+		}
+		case 0xc6: { // div2
+			Type ltype;
+			long laddr;
+			int divr = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int quo  = getInt(ltype = opinfo.getType2(), opinfo.getArg2(), laddr = opinfo.getAddr2());
+			
+			//System.out.printf("divr = %x, quo = %x\n", divr, quo);			
+			if (divr == 0) {
+				setNZVC(false, false, true, false);
+				System.err.println("div 0 error in run");
+				System.exit(1);
+			}
+			val64 = (long)quo / (long)divr;
+			val32 = (int)val64;
+			
+			//System.out.printf("val32 = %x\n", val32);
+			storeInt(ltype, laddr, val32);
+			setNZVC(val32 < 0, val32 == 0, val64 != val32, false);			
+			break;
+		}
+		case 0xc7: { // divl3
+			int divr = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int divd = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+//			System.out.printf("divr = %x, divd = %x\n", divr, divd);
+			
+			if (divr == 0) {
+				setNZVC(false, false, true, false);
+				System.err.println("div 0 error in run");
+				System.exit(1);
+			}
+			
+			val64 = (long)divd / (long)divr;
+			val32 = (int)val64;
+//			System.out.printf("val32 = %x\n", val32);
+			storeInt(opinfo.getType3(), opinfo.getAddr3(), val32);
+			setNZVC(val32 < 0, val32 == 0, val64 != val32, false);
+			//System.exit(1);
+			break;
+		}
+		case 0xf1: { // acbl
+			Type ltype;
+			long laddr;
+			int limit = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int add   = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+			int index = getInt(ltype = opinfo.getType3(), opinfo.getArg3(), laddr = opinfo.getAddr3());
+			int nextPc = (int)opinfo.getAddr4();
+			
+			//System.out.printf("limit = %x, add = %x, index = %x\n", limit, add, index);
+			//System.out.printf("nextPc = %x\n", nextPc);
+			val64 = (long)add + (long)index;
+			val32 = (int)val64;			
+			if ((add >= 0) && (val32 <= limit) ||
+					((add < 0) && (val32 >= limit))) {
+				setPc(nextPc);
+			} 
+			//System.out.printf("limit = %x, add = %x, index = %x\n", limit, add, val32);
+			storeInt(ltype, laddr, val32);
+			setNZVC(val32 < 0, val32 == 0, val64 != val32, isC());						
 			break;
 		}
 		default: {

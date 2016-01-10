@@ -1,6 +1,7 @@
 package ve3.test;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 
@@ -54,7 +55,11 @@ public class FileTest {
 			System.out.println("fd = " + fnum);
 		}
 		
-		FSystem.close(18);
+		int r = FSystem.close(18);
+		//System.out.println(r);
+		
+		int fd = FSystem.creat("test", 0666);
+		System.out.println("fd = " + fd);
 
 	}
 

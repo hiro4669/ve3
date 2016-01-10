@@ -42,7 +42,7 @@ public class FSystem {
 					
 		try {
 			File f = new File(file);
-			if (!f.exists()) {
+			if (!f.exists()) {				
 				return -1;
 			}			
 			
@@ -115,6 +115,21 @@ public class FSystem {
 			}			
 		}			
 		}
+	}
+	
+	public static int creat(String fileName, int mode) {
+		File f = new File(fileName);
+		int fd = -1;
+		if (!f.exists()) {
+			try {
+				f.createNewFile();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return fd;
+			}						
+		}	
+		fd = open(fileName, 1);
+		return fd;
 	}
 	
 
