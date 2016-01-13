@@ -206,8 +206,10 @@ public class Cpu {
 			opinfo.opsub.type = Type.LongRelDefer;
 			MVal mval = fetch4();
 			opinfo.opsub.arg = mval.ival + mval.pc;		
-			System.out.println(type + " not implemented yet in resolveDispPc");
-			System.exit(1);
+			//System.out.printf("long relative = %x\n", opinfo.opsub.arg);
+			//memory.dump((int)opinfo.opsub.arg, 4);
+			opinfo.opsub.addr = memory.readInt((int)opinfo.opsub.arg);
+			//System.out.printf("long relative = %x\n", opinfo.opsub.addr);			
 			return opinfo.opsub;
 		}
 		default: {
@@ -575,6 +577,9 @@ public class Cpu {
 		case LongRel: {
 			return memory.readInt((int)addr);
 		}
+		case LongRelDefer: {
+			return  memory.readInt((int)addr);
+		}
 		default: {
 			System.out.println("unrecognized type in getInt: " + type);
 			System.exit(1);
@@ -597,6 +602,14 @@ public class Cpu {
 			break;
 		}
 		case LongRel: {
+			memory.writeByte((int)addr, value);
+			break;
+		}
+		case AutoInc: {
+			memory.writeByte((int)addr, value);
+			break;
+		}
+		case RegDefer: {
 			memory.writeByte((int)addr, value);
 			break;
 		}
@@ -642,6 +655,10 @@ public class Cpu {
 			break;
 		}
 		case AutoDec: {
+			memory.writeInt((int)addr, value);
+			break;
+		}
+		case LongRelDefer: {
 			memory.writeInt((int)addr, value);
 			break;
 		}
@@ -754,7 +771,7 @@ public class Cpu {
 		//memory.dump(0xc00, 16);		
 		//for (int i = 0; i < 3000; ++i, ++stepCount) {
 		//for (int i = 0; i < 170; ++i, ++stepCount) {						
-		for (int i = 0; i < 220; ++i, ++stepCount) {			
+		for (int i = 0; i < 1000; ++i, ++stepCount) {			
 			run();			
 			//memory.dump(0x611, 1);
 		}
@@ -1386,17 +1403,22 @@ public class Cpu {
 			long laddr;
 			int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
 			int dst = getInt(opinfo.getType2(), opinfo.getArg2(), laddr = opinfo.getAddr2());
-			//System.out.printf("src = %x, dst = %x\n", src, dst);			
+			//System.out.printf("src = %x, dst = %x\n", src, dst);
+			
 			val64 = (long)src + (long)dst;
 			val32 = (int)val64;
+			//System.out.printf("val32 = %x\n", val32);
 			storeInt(opinfo.getType2(), laddr, val32);
+			//memory.dump((int)laddr, 4);
+			
+			
 			setNZVC(val32 < 0, val32 == 0, val64 != val32, (src & 0xffffffffL) + (dst & 0xffffffffL) >= 0x100000000L);			
 			break;
 		}
 		case 0xc1: { // addl3
 			int src1 = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
 			int src2 = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
-			//			System.out.printf("src1 = %x, src2 = %x, addr = %x\n", src1, src2, opinfo.getAddr3());
+			//System.out.printf("src1 = %x, src2 = %x, addr = %x\n", src1, src2, opinfo.getAddr3());
 			val64 = (long)src1 + (long)src2;
 			val32 = (int)val64;
 			storeInt(opinfo.getType3(), opinfo.getAddr3(), val32);
@@ -1614,7 +1636,7 @@ public class Cpu {
 			setNZVC(val32 < 0, val32 == 0, val64 != val32, false);
 			break;
 		}
-		case 0xc6: { // div2
+		case 0xc6: { // divl2
 			Type ltype;
 			long laddr;
 			int divr = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());

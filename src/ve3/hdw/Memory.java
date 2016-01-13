@@ -12,6 +12,8 @@ public interface Memory {
 	public int getCurrentPc();
 	public int savePc();
 	public void setPc(int pc);
+	public void setEOH(long eoh);
+	public long getEOH();
 	
 	
 	public void writeInt(int offset, int data);

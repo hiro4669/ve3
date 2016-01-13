@@ -13,6 +13,7 @@ public class Unix32V {
 	private byte[] rawmem;
 	private Cpu cpu;
 	private int[] reg;
+	private long end;
 	
 	private boolean debug;
 	
@@ -22,6 +23,7 @@ public class Unix32V {
 		this.memory = memory;
 		this.rawmem = memory.getRawMemory();
 		this.debug = false;
+		this.end = memory.getEOH();
 	}
 	
 	public void setDebug(boolean debug) {
@@ -257,6 +259,20 @@ public class Unix32V {
 				System.out.printf("<creat(0x%x, %04o) => %d>\n", filep, mode, fd);
 			}
 			
+			break;
+		}
+		case 0x11: { // sbrk
+			int argnum = memory.readInt(reg[Cpu.ap]);
+			int limit = memory.readInt(reg[Cpu.ap] + 4);
+			int size = (int)(limit - end);
+			end = limit;
+			
+			if (debug) {
+				System.out.printf("<sbrk(%x) => 0x%x>\n", size, size);
+			}
+			reg[Cpu.r0] = (int)size;
+			cpu.clearCarry();
+			//System.exit(1);
 			break;
 		}
 		case 0x36: { // ioctl

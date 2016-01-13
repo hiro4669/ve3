@@ -18,6 +18,7 @@ public class Context {
 	private byte[] rawdata;
 	private int tsize;
 	private int dsize;
+	private int bsize;
 	private boolean debug;
 	private boolean imode;
 	
@@ -78,22 +79,28 @@ public class Context {
 	private void init() {
 		tsize = readInt(rawdata, 4);
 		dsize = readInt(rawdata, 8);
+		bsize = readInt(rawdata, 12);
 		
-		System.out.println("tsize = " + tsize);
-		System.out.println("dsize = " + dsize);
+		
+		System.out.printf("tsize = 0x%x\n", tsize);
+		System.out.printf("dsize = 0x%x\n", dsize);
+		System.out.printf("bsize = 0x%x\n", bsize);
 		
 		memory = new ConcrateMemory(0x100000);
-		cpu = new Cpu(memory);
-		os = new Unix32V(cpu, memory);
-		cpu.setOs(os);
-		
 		int offset = 0;
 		// load text
 		offset = memory.load(rawdata, 0x20, offset, tsize);
 		offset = (offset + 0x1ff) & ~0x1ff;
+		memory.setEOH((long)(offset + dsize + bsize));
 		System.out.printf("data offset = 0x%x\n", offset);
+		System.out.printf("end = begin of sbrk = 0x%x\n", memory.getEOH());
 		// load data
-		offset = memory.load(rawdata, 0x20+tsize, offset, dsize);
+		offset = memory.load(rawdata, 0x20+tsize, offset, dsize);		
+		
+		cpu = new Cpu(memory);
+		os = new Unix32V(cpu, memory);
+		cpu.setOs(os);
+		
 		//memory.dump(offset, 4);
 		//cpu.setPc(2);
 		

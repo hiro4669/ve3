@@ -14,6 +14,8 @@ public class ConcrateMemory implements Memory {
 	private ByteArrayOutputStream buf;
 	private PrintStream rawout;
 	private MVal mval;
+	private long eoh; // end of heap
+	
 	
 	private boolean remain;
 	
@@ -35,8 +37,15 @@ public class ConcrateMemory implements Memory {
 		System.arraycopy(rawdata, offset, memory, 0, size);
 		pc = 0;
 		//this.size = size;
-		return (end = size);
-		
+		return (end = size);	
+	}
+	
+	public void setEOH(long eoh) {
+		this.eoh = eoh;
+	}
+	
+	public long getEOH() {
+		return eoh;
 	}
 	
 	public int load(byte[] rawdata, int roffset, int moffset, int size) {
