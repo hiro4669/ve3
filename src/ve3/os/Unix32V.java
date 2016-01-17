@@ -275,6 +275,22 @@ public class Unix32V {
 			//System.exit(1);
 			break;
 		}
+		case 0x13: { // lseek
+			int argnum = memory.readInt(reg[Cpu.ap]);
+			int fd = memory.readInt(reg[Cpu.ap] + 4);
+			int off = memory.readInt(reg[Cpu.ap] + 8);
+			int mode = memory.readInt(reg[Cpu.ap] + 12);
+			
+			long noff = FSystem.lseek(fd, off, mode);
+			
+			if (debug) {
+				System.out.printf("<lseek(%x, 0x%x, %d) = %x>\n", fd, off, mode, noff);
+			}
+			reg[Cpu.r0] = (int)noff;
+			cpu.clearCarry();			
+			break;
+			
+		}
 		case 0x36: { // ioctl
 			int argnum = memory.readInt(reg[Cpu.ap]);
 			int fd = memory.readInt(reg[Cpu.ap] + 4);

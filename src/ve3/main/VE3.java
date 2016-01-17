@@ -17,6 +17,7 @@ public class VE3 {
 		boolean disflg = false;
 		boolean debug = false;
 		boolean imode = false;
+		boolean sysdbg = false;
 		
 		String fileName = null;
 		
@@ -28,6 +29,8 @@ public class VE3 {
 				debug = true;
 			} else if (args[i].equals("-i")) {
 				imode = true;
+			} else if (args[i].equals("-s")) {
+				sysdbg = true;
 			} else {
 				argList.add(args[i]);
 			}
@@ -71,8 +74,9 @@ public class VE3 {
 				Context ctx = new Context(rawdata);
 				ctx.startIMode();
 			} else {
-				Context ctx = new Context(rawdata, argList);
+				Context ctx = new Context(rawdata, argList);				
 				ctx.setDebug(debug);
+				ctx.setSysDebug(sysdbg);
 				ctx.start();
 			}
 			

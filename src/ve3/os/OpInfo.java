@@ -92,7 +92,7 @@ public class OpInfo {
 		addr1 = addr2 = addr3 = addr4 = addr5 = addr6 = 0;
 		pos1 = pos2 = pos3 = pos4 = pos5 = pos6 = 0;
 		iaddr1 = iaddr2 = iaddr3 = iaddr4 = iaddr5 = iaddr6 = 0;
-		opsub.iaddr = 0;
+		opsub.clear();
 	}
 	
 	public int setOpCode(int opcode) {
@@ -411,6 +411,9 @@ public class OpInfo {
 		public long iaddr; // index address
 		
 		public OpInfoSub() {
+			this.clear();
+		}
+		public void clear() {
 			type = Type.NoType;
 			operand = 0;
 			arg = 0;

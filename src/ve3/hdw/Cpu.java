@@ -451,6 +451,7 @@ public class Cpu {
 		opinfo.setAddr1(opsub.addr);
 		opinfo.setPos1(opsub.pos);
 		opinfo.setIAddr1(opsub.iaddr);
+		opsub.clear();
 	}
 	
 	private void setArg2(MetaInfo minfo) {
@@ -465,6 +466,7 @@ public class Cpu {
 		opinfo.setAddr2(opsub.addr);
 		opinfo.setPos2(opsub.pos);
 		opinfo.setIAddr2(opsub.iaddr);
+		opsub.clear();
 	}
 	
 	private void setArg3(MetaInfo minfo) {
@@ -480,6 +482,7 @@ public class Cpu {
 		opinfo.setAddr3(opsub.addr);
 		opinfo.setPos3(opsub.pos);
 		opinfo.setIAddr3(opsub.iaddr);
+		opsub.clear();
 	}
 	
 	private void setArg4(MetaInfo minfo) {
@@ -494,6 +497,7 @@ public class Cpu {
 		opinfo.setAddr4(opsub.addr);
 		opinfo.setPos4(opsub.pos);
 		opinfo.setIAddr4(opsub.iaddr);
+		opsub.clear();
 	}
 	
 	private byte getByte(Type type, long arg, long addr) {
@@ -771,7 +775,7 @@ public class Cpu {
 		//memory.dump(0xc00, 16);		
 		//for (int i = 0; i < 3000; ++i, ++stepCount) {
 		//for (int i = 0; i < 170; ++i, ++stepCount) {						
-		for (int i = 0; i < 1000; ++i, ++stepCount) {			
+		for (int i = 0; i < 3800; ++i, ++stepCount) {			
 			run();			
 			//memory.dump(0x611, 1);
 		}
@@ -917,9 +921,16 @@ public class Cpu {
 			setNZVC(src < 0, src == 0, false, isC());			
 			break;
 		}
+		case 0x3e: { // movaw
+			int src = (int)opinfo.getAddr1();
+			storeInt(opinfo.getType2(), opinfo.getAddr2(), src);
+			setNZVC(src < 0, src == 0, false, isC());			
+			break;
+		}
 		case 0xde: { // moval
 			int src = (int)opinfo.getAddr1();
-			//System.out.printf("addr = %x\n", src);
+			//System.out.printf("src = %x\n", src);
+			//System.out.printf("dst = %x\n", opinfo.getAddr2());
 			storeInt(opinfo.getType2(), opinfo.getAddr2(), src);
 			setNZVC(src < 0, src == 0, false, isC());
 			
@@ -1791,13 +1802,15 @@ public class Cpu {
 	private int execEditPc(short srclen, long srcaddr, long pataddr, long dstaddr) {
 		int srcdatalen = (srclen / 2) + 1;
 		byte[] rawData = memory.rawRead((int)srcaddr, srcdatalen);
-		int rval = BCDUtil.bcd2int(rawData);
+		
 		/*
 		for (int i = 0; i < rawData.length; ++i) {
 			System.out.printf("%02x ", rawData[i]);
 		}
 		System.out.println();
 		*/
+		
+		int rval = BCDUtil.bcd2int(rawData);
 		
 		NibbleReader nr = new NibbleReader(srclen, rawData);
 		/*

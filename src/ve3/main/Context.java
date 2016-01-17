@@ -115,6 +115,11 @@ public class Context {
 		//System.out.println(offset);
 		//memory.dump();
 	}
+	
+	public void setSysDebug(boolean sysdbg) {
+		os.setDebug(sysdbg);
+		cpu.setDebug(false);
+	}
 			
 	public void setDebug(boolean debug) {		
 		os.setDebug(this.debug = debug);

@@ -132,6 +132,34 @@ public class FSystem {
 		return fd;
 	}
 	
+	public static long lseek(int fd, int offset, int mode) {
+		RandomAccessFile rfile = nodeMap.get(fd);
+		try {
+			long noffset = 0;
+			switch(mode) {
+			case 0:
+				noffset = offset;
+				break;
+			case 1:
+				noffset = rfile.getFilePointer() + offset;
+				break;
+			case 2:
+				noffset = rfile.length() + offset;
+				break;
+			default: {
+				System.err.println("unsupported lseek mode in FSystem" + mode);
+				System.exit(1);				
+			}		
+			}
+			rfile.seek(noffset);
+			
+			return noffset;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException();
+		}		
+	}
+	
 
 
 }
