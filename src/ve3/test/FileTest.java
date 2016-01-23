@@ -60,6 +60,9 @@ public class FileTest {
 		
 		int fd = FSystem.creat("test", 0666);
 		System.out.println("fd = " + fd);
+		
+		
+		
 
 	}
 

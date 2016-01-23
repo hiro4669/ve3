@@ -537,9 +537,9 @@ public class Cpu {
 		}
 		case RegDefer: {
 			long data = memory.readLong((int)addr);
-			System.out.printf("data = %016x\n", data);
+			//System.out.printf("data = %016x\n", data);
 			int r = (int)((data >> offset) & 0xffffffffL);
-			System.out.printf("r   = %016x\n", r);
+			//System.out.printf("r   = %016x\n", r);
 			return r;
 		}
 		default: {
@@ -1127,7 +1127,7 @@ public class Cpu {
 		}
 		case 0x17: { // jmp
 			int nextPc = (int)opinfo.getAddr1();
-			System.out.printf("nextpc = %x\n", nextPc);
+			//System.out.printf("nextpc = %x\n", nextPc);
 			setPc(nextPc);			
 			break;
 		}
@@ -1206,6 +1206,12 @@ public class Cpu {
 			//int base = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
 			int base = getIntV(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2(), 0, 0);
 			int addr = (int)opinfo.getAddr3();
+			
+			if (pos > 31) {
+				System.err.println("Fault Happen in BBS");
+				System.err.printf("pos need to be below 32 but %d\n", pos);
+				System.exit(1);
+			}			
 			/*
 			System.out.printf("0xc(r11) = ");
 			memory.dump(reg[r11] + 0xc, 4);
@@ -1226,7 +1232,14 @@ public class Cpu {
 			int pos = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
 			//int base = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
 			int base = getIntV(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2(), 0, 0);
-			int addr = (int)opinfo.getAddr3();			
+			int addr = (int)opinfo.getAddr3();
+			if (pos > 31) {
+				System.err.println("Fault Happen in BBC");
+				System.err.printf("pos need to be below 32 but %d\n", pos);
+				System.exit(1);
+			}	
+			
+			
 			if (((base >>= pos) & 1) == 0) {
 				setPc(addr);
 			}
@@ -1239,6 +1252,13 @@ public class Cpu {
 			int base = getIntV(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2(), 0, 0);
 			int addr = (int)opinfo.getAddr3();
 			int newstate = (1 << pos);
+			
+			if (pos > 31) {
+				System.err.println("Fault Happen in BBCS");
+				System.err.printf("pos need to be below 32 but %d\n", pos);
+				System.exit(1);
+			}	
+			
 			val32 = (base | newstate);
 			//System.out.printf("pos = %x, base = %x, addr = %x\n", pos, base, addr);
 			//System.out.printf("val32 = %x\n", val32);
@@ -1507,6 +1527,17 @@ public class Cpu {
 			for (int i = 0; i < size; ++i) {
 				mask = (mask << 1) | 1;
 			}
+			
+			if (size > 32) {
+				System.err.println("Fault Happen in EXTZV");
+				System.err.printf("size need to be below 32 but %d\n", size);
+				System.exit(1);
+			}
+			if (pos > 31) {
+				System.err.println("Fault Happen in EXTZV");
+				System.err.printf("pos need to be below 32 but %d\n", pos);
+				System.exit(1);
+			}	
 			//System.out.printf("mask = %x\n", mask);			
 			base &= mask;
 			storeInt(opinfo.getType4(), opinfo.getAddr4(), base);
