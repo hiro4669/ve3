@@ -141,7 +141,7 @@ public class FSystem {
 				noffset = offset;
 				break;
 			case 1:
-				noffset = rfile.getFilePointer() + offset;
+				noffset = rfile.getFilePointer() + offset;								
 				break;
 			case 2:
 				noffset = rfile.length() + offset;

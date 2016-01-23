@@ -74,9 +74,9 @@ public class VE3 {
 				Context ctx = new Context(rawdata);
 				ctx.startIMode();
 			} else {
-				Context ctx = new Context(rawdata, argList);				
-				ctx.setDebug(debug);
-				ctx.setSysDebug(sysdbg);
+				Context ctx = new Context(rawdata, argList);
+				ctx.setDebug(debug);				
+				ctx.setSysDebug(sysdbg | debug);				
 				ctx.start();
 			}
 			

@@ -666,6 +666,10 @@ public class Cpu {
 			memory.writeInt((int)addr, value);
 			break;
 		}
+		case ByteDispDefer: {
+			memory.writeInt((int)addr, value);
+			break;
+		}
 		default: {
 			System.out.printf("addr = 0x%x, value = 0x%x\n", addr, value);
 			System.out.println("unrecognized type in storeInt: " + type);
@@ -775,7 +779,7 @@ public class Cpu {
 		//memory.dump(0xc00, 16);		
 		//for (int i = 0; i < 3000; ++i, ++stepCount) {
 		//for (int i = 0; i < 170; ++i, ++stepCount) {						
-		for (int i = 0; i < 3800; ++i, ++stepCount) {			
+		for (int i = 0; i < 2400; ++i, ++stepCount) {			
 			run();			
 			//memory.dump(0x611, 1);
 		}
@@ -1736,6 +1740,21 @@ public class Cpu {
 			//System.out.printf("limit = %x, add = %x, index = %x\n", limit, add, val32);
 			storeInt(ltype, laddr, val32);
 			setNZVC(val32 < 0, val32 == 0, val64 != val32, isC());						
+			break;
+		}
+		case 0x28: { // movc3
+			int len = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			//System.out.printf("len = %x, src = %x, dst = %x\n", len, opinfo.getAddr2(), opinfo.getAddr3());
+			byte[] tmp = memory.rawRead((int)opinfo.getAddr2(), len);
+			memory.rawWrite(tmp, 0, (int)opinfo.getAddr3(), len);
+			reg[r0] = reg[r2] = reg[r4] = reg[r5] = 0;
+			reg[r1] = (int)opinfo.getAddr2() + len;
+			reg[r3] = (int)opinfo.getAddr3() + len;
+			setNZVC(false, true, false, false);
+			
+			memory.dump((int)opinfo.getAddr2(), len);
+			//System.out.println("stepcount = " + stepCount);
+			//System.exit(1);
 			break;
 		}
 		default: {

@@ -118,7 +118,7 @@ public class Context {
 	
 	public void setSysDebug(boolean sysdbg) {
 		os.setDebug(sysdbg);
-		cpu.setDebug(false);
+		//cpu.setDebug(false);
 	}
 			
 	public void setDebug(boolean debug) {		
