@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ve3.util.RuntimeUtil;
+
 public class FSystem {
 	
 	private static final int MIN_NUM = 3;
@@ -54,9 +56,9 @@ public class FSystem {
 		}
 	}
 	
-	public static int close(int fnum) {
-		RandomAccessFile rfile = nodeMap.remove(fnum);
+	public static int close(int fnum) {		
 		
+		RandomAccessFile rfile = nodeMap.remove(fnum);		
 		try {
 			if (rfile != null) { rfile.close(); }		
 		} catch (Exception e) {
@@ -158,6 +160,62 @@ public class FSystem {
 			e.printStackTrace();
 			throw new RuntimeException();
 		}		
+	}
+	
+	public static int stat(String fileName, Stat st) {
+		String ret = RuntimeUtil.exec("stat", "-f d=%d i=%i p=%p l=%l u=%u g=%g s=%z r=%r a=%a m=%m c=%c", fileName).trim();
+		String[] rets = ret.split(" ");
+		for (String s : rets) {
+			String[] pairs = s.split("=");
+			int val = Integer.parseInt(pairs[1]);
+			switch (pairs[0].charAt(0)) {
+			case 'd': {
+				st.dev = val;
+				break;
+			}
+			case 'i': {
+				st.inode = val;
+				break;
+			}
+			case 'p': {
+				st.permission = val;
+				break;
+			}
+			case 'l': {
+				st.link = val;
+				break;
+			}
+			case 'u': {
+				st.uid = val;
+				break;
+			}
+			case 'g': {
+				st.gid = val;
+				break;
+			}
+			case 'r': {
+				st.rdev = val;
+				break;
+			}
+			case 's': {
+				st.size = val;
+				break;
+			}
+			case 'a': {
+				st.atime = val;
+				break;				
+			}
+			case 'm': {
+				st.mtime = val;
+				break;				
+			}
+			case 'c': {
+				st.ctime = val;
+				break;				
+			}
+			}			
+		}
+		return 0;
 	}
 	
 
