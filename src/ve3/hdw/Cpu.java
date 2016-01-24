@@ -50,6 +50,8 @@ public class Cpu {
 	private Unix32V os;
 	private final ByteArrayOutputStream logOut;
 	private final PrintStream log;
+	private final ByteArrayOutputStream symOut;
+	private final PrintStream sym;
 	
 	private boolean debug;
 	private byte[] space = "  ".getBytes();
@@ -76,6 +78,8 @@ public class Cpu {
 	public Cpu() {
 		logOut = new ByteArrayOutputStream();
 		log = new PrintStream(logOut);
+		symOut = new ByteArrayOutputStream();
+		sym = new PrintStream(symOut);
 		init();
 	}
 	
@@ -613,7 +617,7 @@ public class Cpu {
 			memory.writeByte((int)addr, value);
 			break;
 		}
-		case RegDefer: {
+		case RegDefer: {			
 			memory.writeByte((int)addr, value);
 			break;
 		}
@@ -778,8 +782,13 @@ public class Cpu {
 		// 2 is 433
 		//memory.dump(0xc00, 16);		
 		//for (int i = 0; i < 3000; ++i, ++stepCount) {
-		//for (int i = 0; i < 170; ++i, ++stepCount) {						
-		for (int i = 0; i < 2400; ++i, ++stepCount) {			
+		//for (int i = 0; i < 170; ++i, ++stepCount) {
+
+		if (symTable != null && symTable.containsKey(reg[pc] - 2)) {
+			log.println(callStack.push(symTable.get(reg[pc] - 2)));			
+		} 
+		
+		for (int i = 0; i < 7000; ++i, ++stepCount) {			
 			run();			
 			//memory.dump(0x611, 1);
 		}
@@ -795,9 +804,12 @@ public class Cpu {
 		if (debug) {
 			//log.printf("%x:", reg[pc]);
 			if (symTable != null && symTable.containsKey(reg[pc] - 2)) {
-				//log.println(symTable.get(reg[pc] - 2));
-				log.println(callStack.push(symTable.get(reg[pc] - 2)));
-				
+				//log.println(symTable.get(reg[pc] - 2));				
+				//log.println(callStack.push(symTable.get(reg[pc] - 2)));				
+			} else {
+				//sym.printf("0x%x", reg[pc] - 2);
+				//log.println(callStack.push(new String(symOut.toByteArray())));;
+				//symOut.reset();
 			}
 			storeRegInfo();
 		}
@@ -1001,6 +1013,13 @@ public class Cpu {
 			}
 			break;
 		}
+		case 0x1a: { // bgtru
+			if (!isC() && !isZ()) {
+				int src = (int)opinfo.getAddr1();
+				setPc(src);
+			}
+			break;			
+		}
 		case 0x1f: {
 			if (isC()) {
 				int src = (int)opinfo.getAddr1();
@@ -1027,6 +1046,8 @@ public class Cpu {
 			
 			int nextPc = memory.getCurrentPc(); // keep next pc
 			//System.out.printf("nextPc = 0x%x\n", nextPc);
+						
+			
 			setPc(next);                        // set pc to callee
 			short entryMask = fetch2().sval;    // get entry mask 2bytes
 			//System.out.printf("entry mask = %x\n", entryMask);
@@ -1041,6 +1062,15 @@ public class Cpu {
 			
 			// push each register value to the stack
 			pushInt(nextPc);
+			if (debug) {
+				log.printf(" ;[%x:%x]: ", reg[sp], nextPc);
+				log.printf("\n%x:", reg[pc] - 2);
+				if (symTable != null && symTable.containsKey(reg[pc] - 2)) {
+					log.printf(callStack.push(symTable.get(reg[pc] - 2)));
+				} else {
+					log.printf(callStack.push("___private___"));
+				}
+			}
 			pushInt(reg[fp]);
 			pushInt(reg[ap]);
 			reg[ap] = tmpSp;			
@@ -1095,6 +1125,10 @@ public class Cpu {
 			reg[ap] = popInt();
 			reg[fp] = popInt();
 			setPc(retPc = popInt());
+			if (debug) {
+				log.printf(" ;[%x:%x]: ", reg[sp]-4, retPc);
+			}
+
 			
 			//System.out.printf("nextPc = %x\n", reg[pc]);
 			for (int i = 0; i <= 11; ++i, regMask >>= 1) {
@@ -1116,7 +1150,12 @@ public class Cpu {
 			
 			if (debug && (callStack.size() > 1)) {
 				callStack.pop();
-				log.printf("\nback to %s(0x%x): ", callStack.peek(), retPc);
+				log.printf("\n");
+				for (int i = 0; i < callStack.size() - 1; ++i) {
+					log.printf("-> %s", callStack.get(i));
+				}
+				
+				log.printf("-> %s(0x%x): ", callStack.peek(), retPc);
 				//log.print("\nback to : " + callStack.peek());
 			}
 			
@@ -1139,13 +1178,17 @@ public class Cpu {
 			int nextPc = (int)opinfo.getAddr1();
 			setPc(nextPc);			
 			break;
-		}
-		case 0x1e: { // bcc
+		}		case 0x1e: { // bcc
 			if (!isC()) {
 				//int nextPc = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
 				int nextPc = (int)opinfo.getAddr1();
 				setPc(nextPc);
 			}
+			break;
+		}
+		case 0x94: { // clrb			
+			storeByte(opinfo.getType1(), opinfo.getAddr1(), (byte)0);
+			setNZVC(false, true, false, isC());				
 			break;
 		}
 		case 0xd4: { // clrl(f)
@@ -1394,10 +1437,20 @@ public class Cpu {
 			//System.out.printf("mask = %x, src = %x\n", mask, src);
 			//System.out.printf("addr2 = %x\n", opinfo.getAddr2());
 			//memory.dump((int)opinfo.getAddr2(), 4);
-			val32 = val8 = (byte)(mask & src);
-			setNZVC(val32 < 0, val32 == 0, false, isC());			
+			val8 = (byte)(mask & src);
+			//System.out.printf("val8 = %x\n", val8);
+			//setNZVC(val32 < 0, val32 == 0, false, isC());			
+			setNZVC(val8 < 0, val8 == 0, false, isC());
 			break;
-		}		
+		}
+		case 0xd3: { // bitl
+			int mask = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int src = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());			
+			//System.out.printf("mask = %x, src = %x\n", mask, src);
+			val32 = mask & src;
+			setNZVC(val32 < 0, val32 == 0, false, isC());
+			break;
+		}
 		case 0xca: { // bicl2
 			long laddr;
 			Type ltype;
@@ -1477,6 +1530,19 @@ public class Cpu {
 			if (val32 >= 0) {
 				setPc(addr);
 			}									
+			break;
+		}
+		case 0xf5: {
+			int index = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int addr = (int)opinfo.getAddr2();
+			//System.out.printf("index = %x, addr = %x\n", index, addr);
+			val64 = (long)index - (long)1;
+			val32 = (int)val64;
+			storeInt(opinfo.getType1(), opinfo.getAddr1(), val32);
+			setNZVC(val32 < 0, val32 == 0, val64 != val32, isC());
+			if (val32 > 0) {
+				setPc(addr);
+			}
 			break;
 		}
 		case 0x9a: { // movzbl
@@ -1752,9 +1818,20 @@ public class Cpu {
 			reg[r3] = (int)opinfo.getAddr3() + len;
 			setNZVC(false, true, false, false);
 			
-			memory.dump((int)opinfo.getAddr2(), len);
+			//memory.dump((int)opinfo.getAddr2(), len);
 			//System.out.println("stepcount = " + stepCount);
 			//System.exit(1);
+			break;
+		}
+		case 0xc5: { // mull3
+			int mulr = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int muld = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+			//System.out.printf("mulr = %x, muld = %x\n", mulr, muld);			
+			val64 = (long)(mulr & 0xffffffffL) * (long)(muld & 0xffffffffL);
+			val32 = (int)val64;
+			storeInt(opinfo.getType3(), opinfo.getAddr3(), val32);
+			//System.out.printf("val64 = %x, val32 = %x\n", val64, val32);
+			setNZVC(val32 < 0, val32 == 0, val64 != val32, false);			
 			break;
 		}
 		default: {
@@ -1765,6 +1842,7 @@ public class Cpu {
 		}		
 		if (debug && logOut.size() > 0) {
 			System.out.println(new String(logOut.toByteArray()));
+			//memory.dump(0xfff60, 4); // for debug
 			logOut.reset();
 		}
 		
