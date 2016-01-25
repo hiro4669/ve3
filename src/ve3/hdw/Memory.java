@@ -18,6 +18,7 @@ public interface Memory {
 	
 	public void writeInt(int offset, int data);
 	public void writeByte(int offset, byte data);
+	public void writeShort(int offset, short data);
 	public void rawWrite(byte[] rawdata, int roffset, int moffset, int size);
 	public byte[] rawRead(int offset, int len);
 	

@@ -178,7 +178,11 @@ public class FSystem {
 				break;
 			}
 			case 'p': {
-				st.permission = val;
+				int sum = 0;
+				for (int i = pairs[1].length() - 1, j = 0; i >= 0; --i, ++j) {
+					sum += Math.pow(8, j) * (pairs[1].charAt(i) - 0x30);
+				}
+				st.permission = sum;
 				break;
 			}
 			case 'l': {

@@ -1554,6 +1554,14 @@ public class Cpu {
 			setNZVC(false, val32 == 0, false, isC());						
 			break;
 		}
+		case 0x3c: { // movzwl
+			short src = getShort(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			//System.out.printf("(fp) = %x, src = %x, addr=%x\n", reg[fp], src, opinfo.getAddr1());
+			//memory.dump((int)opinfo.getAddr1(), 4);
+			val32 = (int)(src & 0xffff);
+			storeInt(opinfo.getType2(), opinfo.getAddr2(), val32);
+			break;
+		}		
 		case 0xee: { // extv
 			int pos = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
 			byte size= getByte(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());			

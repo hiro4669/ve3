@@ -26,7 +26,19 @@ public class StatTest {
 		
 		p = Runtime.getRuntime().exec("stat -f p=%p nm");
 		reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-		System.out.println(reader.readLine());
+		String permission = reader.readLine();
+		System.out.println(permission);
+		String[] pairs = permission.split("=");
+		System.out.println(pairs[1]);
+		int sum = 0;
+		System.out.println("len = " + pairs[1].length());
+		for (int i = pairs[1].length() - 1, j = 0; i >= 0; --i, ++j) {
+			System.out.println(pairs[1].charAt(i));
+			sum += Math.pow(8, j) * (pairs[1].charAt(i) - 0x30);
+			System.out.println("sum = " + sum);
+		}
+
+		
 		
 		p = Runtime.getRuntime().exec("stat -f l=%l nm");
 		reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -63,6 +75,7 @@ public class StatTest {
 		Stat st = new Stat();
 		FSystem.stat("nm", st);
 		System.out.println(st.size);
+		System.out.println(st.permission);
 		
 		
 	}

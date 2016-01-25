@@ -275,6 +275,60 @@ public class Unix32V {
 			//System.exit(1);
 			break;
 		}
+		case 0x12: { // stat
+			int argnum = memory.readInt(reg[Cpu.ap]);
+			int filep = memory.readInt(reg[Cpu.ap] + 4);
+			int addr = memory.readInt(reg[Cpu.ap] + 8);
+			
+			//System.out.printf("argnum = %x, filep = %x, addr = %x\n", argnum, filep, addr);
+			int pos = memory.seekZero(filep);
+			String fileName = new String(memory.rawRead(filep, (pos - filep)));
+			//System.out.println("fileName = " + fileName);			
+			Stat st = new Stat();
+			FSystem.stat(fileName, st);
+			
+			/*
+			System.out.printf("dev    = %x\n", (short)(st.dev >> 16));
+			System.out.printf("inode  = %x\n", (short)(st.inode >> 16));
+			System.out.printf("permit = %x\n", (short)st.permission);
+			System.out.printf("link   = %x\n", (short)st.link);
+			System.out.printf("uid    = %x\n", (short)st.uid);
+			System.out.printf("gid    = %x\n", (short)st.gid);
+			System.out.printf("rdev   = %x\n", (short)st.rdev);
+			System.out.printf("size   = %x\n", st.size);
+			System.out.printf("atime  = %x\n", st.atime);
+			System.out.printf("mtime  = %x\n", st.mtime);
+			System.out.printf("ctime  = %x\n", st.ctime);
+			*/
+			//memory.dump(addr, 4);
+			memory.writeShort(addr, (short)(st.dev >> 16));
+			addr += 2;
+			memory.writeShort(addr, (short)(st.inode >> 16));
+			addr += 2;
+			memory.writeShort(addr, (short)(st.permission));
+			addr += 2;
+			memory.writeShort(addr, (short)(st.link));
+			addr += 2;
+			memory.writeShort(addr, (short)(st.uid));
+			addr += 2;
+			memory.writeShort(addr, (short)(st.gid));
+			addr += 2;
+			memory.writeShort(addr, (short)(st.rdev));
+			addr += 2;
+			addr = (addr + 3) & ~3;
+			memory.writeInt(addr, st.size);
+			addr += 4;
+			memory.writeInt(addr, st.atime);
+			addr += 4;
+			memory.writeInt(addr, st.mtime);
+			addr += 4;
+			memory.writeInt(addr, st.ctime);			
+			//memory.dump(addr-26, 30);			
+			
+			reg[Cpu.r0] = 0;
+			cpu.clearCarry();			
+			break;
+		}
 		case 0x13: { // lseek
 			int argnum = memory.readInt(reg[Cpu.ap]);
 			int fd = memory.readInt(reg[Cpu.ap] + 4);
