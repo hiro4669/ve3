@@ -188,8 +188,7 @@ public class Cpu {
 			opinfo.opsub.type = Type.WordRel;
 			MVal mval = fetch2();
 			opinfo.opsub.arg = mval.sval + mval.pc;
-			System.out.println(type + " not implemented yet in resolveDispPc");
-			System.exit(1);
+			opinfo.opsub.addr = opinfo.opsub.arg;
 			return opinfo.opsub;
 		}
 		case 0xd: { // word relative deferred
@@ -588,8 +587,12 @@ public class Cpu {
 		case LongRelDefer: {
 			return  memory.readInt((int)addr);
 		}
+		case WordRel: {
+			return memory.readInt((int)addr);			
+		}
 		default: {
 			System.out.println("unrecognized type in getInt: " + type);
+			System.out.printf("reg[pc] = %x\n", reg[pc]);
 			System.exit(1);
 		}
 		}
@@ -618,6 +621,10 @@ public class Cpu {
 			break;
 		}
 		case RegDefer: {			
+			memory.writeByte((int)addr, value);
+			break;
+		}
+		case WordRel: {
 			memory.writeByte((int)addr, value);
 			break;
 		}
@@ -671,6 +678,10 @@ public class Cpu {
 			break;
 		}
 		case ByteDispDefer: {
+			memory.writeInt((int)addr, value);
+			break;
+		}
+		case WordRel: {
 			memory.writeInt((int)addr, value);
 			break;
 		}
@@ -779,16 +790,14 @@ public class Cpu {
 		if (debug) {
 			showHeader();
 		}
-		// 2 is 433
 		//memory.dump(0xc00, 16);		
-		//for (int i = 0; i < 3000; ++i, ++stepCount) {
-		//for (int i = 0; i < 170; ++i, ++stepCount) {
 
 		if (symTable != null && symTable.containsKey(reg[pc] - 2)) {
 			log.println(callStack.push(symTable.get(reg[pc] - 2)));			
 		} 
-		
-		for (int i = 0; i < 7000; ++i, ++stepCount) {			
+
+		//for (int i = 0; i < 71000; ++i, ++stepCount) {					
+		for (int i = 0; i < 2000; ++i, ++stepCount) {			
 			run();			
 			//memory.dump(0x611, 1);
 		}
@@ -950,6 +959,13 @@ public class Cpu {
 			storeInt(opinfo.getType2(), opinfo.getAddr2(), src);
 			setNZVC(src < 0, src == 0, false, isC());
 			
+			break;
+		}
+		case 0x95: { // tstb
+			int src = getByte(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			//System.out.printf("src = %x, addr = %x\n", src, opinfo.getAddr1());
+			val8 = (byte)(src - 0);
+			setNZVC(val8 < 0, val8 == 0, false, false);			
 			break;
 		}
 		case 0xd5: { // tstl
@@ -1381,7 +1397,7 @@ public class Cpu {
 			byte dst = getByte(ltype = opinfo.getType2(), opinfo.getArg2(), laddr = (int)opinfo.getAddr2());
 			//System.out.printf("addr2 = %x\n", laddr);
 			//System.out.printf("mask = %x, dst = %x\n", mask, dst);
-			//memory.dump(0x620, 4);
+			//memory.dump(laddr, 4);
 			val32 = (dst |= mask);
 			//System.out.printf("mask = %x, dst = %x\n", mask, dst);
 			storeByte(ltype, laddr, dst);
