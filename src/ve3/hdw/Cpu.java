@@ -195,8 +195,7 @@ public class Cpu {
 			opinfo.opsub.type = Type.WordRelDefer;
 			MVal mval = fetch2();
 			opinfo.opsub.arg = mval.sval + mval.pc;
-			System.out.println(type + " not implemented yet in resolveDispPc");
-			System.exit(1);
+			opinfo.opsub.addr = memory.readInt((int)opinfo.opsub.arg);
 			return opinfo.opsub;
 		}
 		case 0xe: { // long relative
@@ -277,7 +276,8 @@ public class Cpu {
 			long regaddr = (long)(reg[opinfo.opsub.operand] & 0xffffffffL);
 			//System.out.printf("index reg[%d] = %x\n", opinfo.opsub.operand, regaddr);
 			switch (optype) {
-			case b: {
+			case b: 
+			case vb: {
 				break;
 			}
 			case w: {
@@ -402,8 +402,7 @@ public class Cpu {
 			opinfo.opsub.type = Type.WordDisp;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
 			opinfo.opsub.arg = fetch2().sval;
-			System.out.println(type + " not implemented yet in resolveDisp");
-			System.exit(1);
+			opinfo.opsub.addr = (long)reg[opinfo.opsub.operand] + (long)opinfo.opsub.arg;
 			return opinfo.opsub;
 		}
 		case 0x0d: { // Word Displacement Deferred
@@ -526,6 +525,15 @@ public class Cpu {
 			int r = (int)((data >> offset) & 0xffffffffL);
 			return r;
 		}
+		case WordRel: {
+			//System.out.printf("r0 = %x\n", reg[r0]);
+			//System.out.printf("addr = %x\n", addr);						
+			long data = memory.readLong((int)addr);
+			//memory.dump((int)addr, 32);			
+			int r = (int)((data >> offset) & 0xffffffffL);
+			//System.out.printf("r = %x\n", r);
+			return r;
+		}
 		case LongRel: {
 			long data = memory.readLong((int)addr);
 			int r = (int)((data >> offset) & 0xffffffffL);
@@ -590,9 +598,15 @@ public class Cpu {
 		case WordRel: {
 			return memory.readInt((int)addr);			
 		}
+		case AutoDec: {
+			return memory.readInt((int)addr);
+		}
+		case WordRelDefer: {
+			return memory.readInt((int)addr);
+		}
 		default: {
 			System.out.println("unrecognized type in getInt: " + type);
-			System.out.printf("reg[pc] = %x\n", reg[pc]);
+			System.out.printf("reg[pc] = %x, stepCount = %d\n", reg[pc], stepCount);
 			System.exit(1);
 		}
 		}
@@ -628,9 +642,18 @@ public class Cpu {
 			memory.writeByte((int)addr, value);
 			break;
 		}
+		case WordRelDefer: {
+			memory.writeByte((int)addr, value);
+			break;
+		}
+		case AutoDec: {
+			memory.writeByte((int)addr, value);
+			break;
+		}
 		default: {
 			System.out.printf("addr = 0x%x, value = 0x%x\n", addr, value);
 			System.out.println("unrecognized type in storeByte: " + type);
+			System.out.printf("reg[pc] = %x, stepCount = %d\n", reg[pc], stepCount);
 			System.exit(1);
 		}
 		
@@ -646,6 +669,7 @@ public class Cpu {
 		default: {
 			System.out.printf("addr = 0x%x, value = 0x%x\n", addr, value);
 			System.out.println("unrecognized type in storeIntV: " + type);
+			System.out.printf("reg[pc] = %x, stepCount = %d\n", reg[pc], stepCount);
 			System.exit(1);
 		}
 		}
@@ -688,6 +712,7 @@ public class Cpu {
 		default: {
 			System.out.printf("addr = 0x%x, value = 0x%x\n", addr, value);
 			System.out.println("unrecognized type in storeInt: " + type);
+			System.out.printf("reg[pc] = %x, stepCount = %d\n", reg[pc], stepCount);			
 			System.exit(1);
 		}
 		}
@@ -797,7 +822,7 @@ public class Cpu {
 		} 
 
 		//for (int i = 0; i < 71000; ++i, ++stepCount) {					
-		for (int i = 0; i < 2000; ++i, ++stepCount) {			
+		for (int i = 0; i < 9800; ++i, ++stepCount) {			
 			run();			
 			//memory.dump(0x611, 1);
 		}
@@ -931,6 +956,7 @@ public class Cpu {
 			byte src1 = getByte(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
 			byte src2 = getByte(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
 			//System.out.printf("src1 = %x, src2 = %x\n", src1, src2);
+			//memory.dump((int)opinfo.getAddr1(), 4);
 			val8 = (byte)(src1 - src2);
 			//val32 = (int)src1 - (int)src2;
 			//val8 = (byte)val32;
@@ -1194,7 +1220,8 @@ public class Cpu {
 			int nextPc = (int)opinfo.getAddr1();
 			setPc(nextPc);			
 			break;
-		}		case 0x1e: { // bcc
+		}		
+		case 0x1e: { // bcc
 			if (!isC()) {
 				//int nextPc = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
 				int nextPc = (int)opinfo.getAddr1();
@@ -1220,7 +1247,7 @@ public class Cpu {
 		case 0xd6: { // incl
 			long laddr;
 			Type ltype;
-			int src = getInt(ltype = opinfo.getType1(), opinfo.getAddr1(), laddr = opinfo.getAddr1());
+			int src = getInt(ltype = opinfo.getType1(), opinfo.getArg1(), laddr = opinfo.getAddr1());
 			//System.out.printf("src = %x, addr = %x\n", src, opinfo.getAddr1());
 			val64 = (long)src + 1;
 			val32 = (int)val64;
@@ -1231,7 +1258,7 @@ public class Cpu {
 		case 0xd7: { // decl
 			long laddr;
 			Type ltype;
-			int src = getInt(ltype = opinfo.getType1(), opinfo.getAddr1(), laddr = opinfo.getAddr1());
+			int src = getInt(ltype = opinfo.getType1(), opinfo.getArg1(), laddr = opinfo.getAddr1());
 //			System.out.printf("src = %x, addr = %x\n", src, opinfo.getAddr1());
 //			memory.dump(0x614, 4);
 			val64 = (long)src - 1;
@@ -1375,8 +1402,10 @@ public class Cpu {
 			break;
 		}
 		case 0xf6: { // cvtlb
-			int src = getInt(opinfo.getType1(), opinfo.getAddr1(), opinfo.getAddr1());
+			int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
 			byte dst = (byte)src;
+			//System.out.println("type = " + opinfo.getType1());
+			//System.out.printf("dst = %x\n", dst);
 			//System.out.printf("addr1 = %x, src = %x\n", opinfo.getAddr1(), src);
 			//memory.dump((int)opinfo.getAddr1(), 4);
 			//System.out.printf("addr2 = %x\n", opinfo.getAddr2());			
@@ -1845,6 +1874,18 @@ public class Cpu {
 			//memory.dump((int)opinfo.getAddr2(), len);
 			//System.out.println("stepcount = " + stepCount);
 			//System.exit(1);
+			break;
+		}
+		case 0xc4: { // mull2
+			Type ltype;
+			long laddr;
+			int mulr = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int prod = getInt(ltype = opinfo.getType2(), opinfo.getArg2(), laddr = opinfo.getAddr2());
+			//System.out.printf("mulr = %x, prod = %x\n", mulr, prod);
+			val64 = (long)(mulr & 0xffffffffL) * (long)(prod & 0xffffffffL);
+			val32 = (int)val64;
+			storeInt(ltype, laddr, val32);
+			setNZVC(val32 < 0, val32 == 0, val64 != val32, false);			
 			break;
 		}
 		case 0xc5: { // mull3
