@@ -1,6 +1,7 @@
 package ve3.os;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,9 +16,18 @@ public class FSystem {
 	private static final int MIN_NUM = 3;
 	private static int current = MIN_NUM;
 	private static Map<Integer, RandomAccessFile> nodeMap = new HashMap<Integer, RandomAccessFile>();
-	
+	private static boolean[] reserved = {true, true, true};
+	private final static int stdin  = 0;
+	private final static int stdout = 1;
+	private final static int stderr = 2;
+
 	
 	private static final int getAvailable() {
+		// for stdin/stdout/stderr
+		for (int i = 0; i < reserved.length; ++i) {
+			if (!reserved[i]) return i;
+		}
+		
 		int fnum = MIN_NUM;
 		for (;;++fnum)
 			if (!nodeMap.containsKey(fnum)) break;
@@ -56,7 +66,29 @@ public class FSystem {
 		}
 	}
 	
-	public static int close(int fnum) {		
+	public static int close(int fnum) {	
+		
+		switch (fnum) {
+		case FSystem.stdin:
+		case FSystem.stdout:
+		case FSystem.stderr: {
+			if (reserved[fnum]) {
+				reserved[fnum] = false;
+				return 0;
+			} else {
+				RandomAccessFile rfile = nodeMap.remove(fnum);
+				try {
+					if (rfile != null) { 
+						rfile.close();
+						reserved[fnum] = true;
+						return 0;
+					}		
+				} catch (Exception e) {					
+					return -1;
+				}
+			}			
+		}
+		}
 		
 		RandomAccessFile rfile = nodeMap.remove(fnum);		
 		try {
@@ -67,54 +99,95 @@ public class FSystem {
 		return 0;
 	}
 	
+	private static int doWrite(byte[] src, int fnum, int off, int len) {
+		RandomAccessFile rfile = nodeMap.get(fnum);
+		if (rfile == null) {
+			System.err.println("Cannot find target file " + fnum);				
+			return -1;
+		}			
+		try {
+			rfile.write(src, off, len);
+			return len;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return -1;
+		}
+	}
+	
 	public static int write(byte[] src, int fnum, int off, int len) {
 		switch (fnum) {
+		case FSystem.stdin: {
+			if (reserved[fnum]) {
+				throw new RuntimeException();
+			} else {
+				return doWrite(src, fnum, off, len);				
+			}			
+		}
 		case 1: {
-			System.out.write(src, off, len);
-			return len;
+			if (reserved[fnum]) {
+				System.out.write(src, off, len);
+				return len;
+			} else {
+				return doWrite(src, fnum, off, len);
+			}			
 		}
 		case 2: {
-			System.err.write(src, off, len);
-			return len;		
+			if (reserved[fnum]) {							
+				System.err.write(src, off, len);
+				return len;		
+			} else {
+				return doWrite(src, fnum, off, len);				
+			}
 		}
 		default: {
-			RandomAccessFile rfile = nodeMap.get(fnum);
-			if (rfile == null) {
-				System.err.println("Cannot find target file " + fnum);				
-				return -1;
-			}			
-			try {
-				rfile.write(src, off, len);
-				return len;
-			} catch (Exception e) {
-				e.printStackTrace();
-				return -1;
-			}		
+			return doWrite(src, fnum, off, len);
 		}
 		}
 				
 	}
 	
+	private static int doRead(int fnum, byte[] dst, int off, int len) {
+		RandomAccessFile rfile = nodeMap.get(fnum);
+		if (rfile == null) {
+			System.err.println("Cannot find target file " + fnum);
+			System.exit(1);
+		}
+		try {
+			int num = rfile.read(dst, off, len);
+			return num;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return -1;
+		}	
+	}
+	
+	
 	public static int read(int fnum, byte[] dst, int off, int len) {
 		switch (fnum) {
-		case 1:
-		case 2: {
-			System.err.println("cannot read from stdout/stderr");
-			return -1;			
+		case FSystem.stdin: {
+			if (reserved[fnum]) {
+				try {
+					int r = System.in.read(dst, off, len);
+					return r;
+				} catch (IOException e) {
+					e.printStackTrace();
+					return -1;
+				}
+			} else {
+				return doRead(fnum, dst, off, len);
+			}
+		}
+		case FSystem.stdout:
+		case FSystem.stderr: {
+			if (reserved[fnum]) {
+				System.err.println("cannot read from stdout/stderr");
+				return -1;			
+			} else {
+				return doRead(fnum, dst, off, len);
+			}
 		}
 		default: {
-			RandomAccessFile rfile = nodeMap.get(fnum);
-			if (rfile == null) {
-				System.err.println("Cannot find target file " + fnum);
-				System.exit(1);
-			}
-			try {
-				int num = rfile.read(dst, off, len);
-				return num;
-			} catch (Exception e) {
-				e.printStackTrace();
-				return -1;
-			}			
+			return doRead(fnum, dst, off, len);
 		}			
 		}
 	}
@@ -135,6 +208,16 @@ public class FSystem {
 	}
 	
 	public static long lseek(int fd, int offset, int mode) {
+		switch (fd) {
+		case FSystem.stdin:
+		case FSystem.stdout:
+		case FSystem.stderr: {
+			if (reserved[fd]) throw new RuntimeException();					
+		}
+		}
+		
+		
+		
 		RandomAccessFile rfile = nodeMap.get(fd);
 		try {
 			long noffset = 0;
