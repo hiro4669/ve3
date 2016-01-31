@@ -174,7 +174,7 @@ public class Unix32V {
 			int rlen = FSystem.write(rawmem, dst, off, len);
 			
 			if (debug) {
-				System.out.printf(" => %x\n", rlen);
+				System.out.printf(" => %d>\n", rlen);
 			}
 			
 			if (rlen != -1) {
