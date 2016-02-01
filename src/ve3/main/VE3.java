@@ -20,7 +20,7 @@ public class VE3 {
 		boolean sysdbg = false;
 		
 		String fileName = null;
-		
+		String vaxRoot = "";
 		List<String> argList = new ArrayList<String>();
 		for (int i = 0; i < args.length; ++i) {
 			if (args[i].equals("-d")) {
@@ -31,6 +31,9 @@ public class VE3 {
 				imode = true;
 			} else if (args[i].equals("-s")) {
 				sysdbg = true;
+			} else if (args[i].equals("-r")) {
+				vaxRoot = args[++i];
+				//System.out.println("vaxRoot = " + vaxRoot);
 			} else {
 				argList.add(args[i]);
 			}
@@ -74,7 +77,7 @@ public class VE3 {
 				Context ctx = new Context(rawdata);
 				ctx.startIMode();
 			} else {
-				Context ctx = new Context(rawdata, argList);
+				Context ctx = new Context(rawdata, argList, vaxRoot);
 				ctx.setDebug(debug);				
 				ctx.setSysDebug(sysdbg | debug);				
 				ctx.start();

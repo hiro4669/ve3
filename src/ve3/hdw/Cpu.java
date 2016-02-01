@@ -604,6 +604,9 @@ public class Cpu {
 		case WordRelDefer: {
 			return memory.readInt((int)addr);
 		}
+		case WordDisp: {
+			return memory.readInt((int)addr);			
+		}
 		default: {
 			System.out.println("unrecognized type in getInt: " + type);
 			System.out.printf("reg[pc] = %x, stepCount = %d\n", reg[pc], stepCount);
@@ -706,6 +709,10 @@ public class Cpu {
 			break;
 		}
 		case WordRel: {
+			memory.writeInt((int)addr, value);
+			break;
+		}
+		case WordRelDefer: {
 			memory.writeInt((int)addr, value);
 			break;
 		}
@@ -822,7 +829,7 @@ public class Cpu {
 		} 
 
 		//for (int i = 0; i < 71000; ++i, ++stepCount) {					
-		for (int i = 0; i < 9800; ++i, ++stepCount) {			
+		for (int i = 0; i < 40000; ++i, ++stepCount) {			
 			run();			
 			//memory.dump(0x611, 1);
 		}
@@ -1259,7 +1266,7 @@ public class Cpu {
 			long laddr;
 			Type ltype;
 			int src = getInt(ltype = opinfo.getType1(), opinfo.getArg1(), laddr = opinfo.getAddr1());
-//			System.out.printf("src = %x, addr = %x\n", src, opinfo.getAddr1());
+//			System.out.printf("src = %x, addr = %x\n", src, laddr);
 //			memory.dump(0x614, 4);
 			val64 = (long)src - 1;
 			val32 = (int)val64;

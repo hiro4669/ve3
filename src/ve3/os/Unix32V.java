@@ -9,16 +9,18 @@ import ve3.hdw.Memory;
 
 public class Unix32V {
 	
-	private Memory memory;
+	private final Memory memory;
 	private byte[] rawmem;
-	private Cpu cpu;
+	private final Cpu cpu;
 	private int[] reg;
 	private long end;
+	private final String vaxRoot;
 	
 	private boolean debug;
 	
-	public Unix32V(Cpu cpu, Memory memory) {
+	public Unix32V(final Cpu cpu, final Memory memory, final String vaxRoot) {
 		this.cpu = cpu;
+		this.vaxRoot = vaxRoot;
 		this.reg = cpu.getRegister();
 		this.memory = memory;
 		this.rawmem = memory.getRawMemory();
@@ -53,6 +55,18 @@ public class Unix32V {
 			
 		}
 		return symTable;		
+	}
+	
+	private String convertPath(final String path) {
+		if (path.startsWith("/tmp")) {
+			return path;
+		}
+		
+		if (path.startsWith("/")) {
+			return vaxRoot + path;
+		} else {
+			return path;
+		}
 	}
 	
 	public void processArgs(List<String> argList, List<String> envList) {
@@ -196,10 +210,12 @@ public class Unix32V {
 			int pos = memory.seekZero(filep);
 			//System.out.printf("pos = %x, len = %d\n", pos, pos - filep);
 			String fileName = new String(memory.rawRead(filep, (pos - filep)));
-			//System.out.println("fileName = " + fileName);
+			String newPath = convertPath(fileName);
+			
+
 			
 			
-			int fd = FSystem.open(fileName, mode);
+			int fd = FSystem.open(newPath, mode);
 			//System.out.println("fnum = " + fnum);
 			
 			if (fd == -1) {
@@ -212,6 +228,8 @@ public class Unix32V {
 			
 			if (debug) {
 				System.out.printf("<open(0x%x, %d) => %d>\n", filep, mode, fd);
+				//System.out.println("fileName = " + fileName);
+				//System.out.println("convert path = " + newPath);
 			}
 			
 						

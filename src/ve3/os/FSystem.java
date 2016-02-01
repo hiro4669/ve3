@@ -52,7 +52,7 @@ public class FSystem {
 		}				
 		int fnum = getAvailable();
 					
-		try {
+		try {			
 			File f = new File(file);
 			if (!f.exists()) {				
 				return -1;
@@ -182,7 +182,7 @@ public class FSystem {
 			if (reserved[fnum]) {
 				System.err.println("cannot read from stdout/stderr");
 				return -1;			
-			} else {
+			} else {				
 				return doRead(fnum, dst, off, len);
 			}
 		}

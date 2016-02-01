@@ -21,6 +21,7 @@ public class Context {
 	private int bsize;
 	private boolean debug;
 	private boolean imode;
+	private String vaxRoot;
 	
 	public Context(byte[] rawdata) {
 		this.rawdata = rawdata;
@@ -31,8 +32,9 @@ public class Context {
 		
 	}
 		
-	public Context(byte[] rawdata, List<String> argList) {
+	public Context(byte[] rawdata, List<String> argList, String vaxRoot) {
 		this.rawdata = rawdata;
+		this.vaxRoot = vaxRoot;
 		init();
 		List<String> envList = new ArrayList<String>();
 		envList.add("PATH=/usr/local/bin");
@@ -98,7 +100,7 @@ public class Context {
 		offset = memory.load(rawdata, 0x20+tsize, offset, dsize);		
 		
 		cpu = new Cpu(memory);
-		os = new Unix32V(cpu, memory);
+		os = new Unix32V(cpu, memory, vaxRoot);
 		cpu.setOs(os);
 		
 		//memory.dump(offset, 4);
