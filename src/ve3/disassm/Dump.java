@@ -175,6 +175,9 @@ public class Dump {
 		case Abs: { //Absolute mode (in program counter mode)
 			return String.format("*0x%x", (int)arg);
 		}
+		case ByteRel: { // program counter mode
+			return String.format("0x%x", arg);
+		}
 		case WordRel: { // program counter mode
 			return String.format("0x%x", arg);
 		}
@@ -194,7 +197,7 @@ public class Dump {
 			return String.format("0x%x", (int)arg);
 		}
 		default: {
-			System.out.println("unrecognized type in Dump");
+			System.out.println("unrecognized type in Dump: " + type);
 			System.exit(1);
 			break;
 		}

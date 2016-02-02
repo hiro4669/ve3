@@ -65,6 +65,33 @@ public class V32Disassm {
 		DUMMY65(0x5bd5, new MetaInfo()), DUMMY66(0xfff3, new MetaInfo()), 
 		DUMMY67(0xff61, new MetaInfo()), DUMMY68(0x57c0, new MetaInfo()),
 		DUMMY69(0x59de, new MetaInfo()), DUMMY70(0x5901, new MetaInfo()), 
+		DUMMY71(0xff02, new MetaInfo()), DUMMY72(0xff16, new MetaInfo()),
+		DUMMY73(0xfff2, new MetaInfo()), DUMMY74(0xff3a, new MetaInfo()), 
+		DUMMY75(0xfff4, new MetaInfo()), DUMMY76(0xffd6, new MetaInfo()),
+		DUMMY77(0xff38, new MetaInfo()), DUMMY78(0xff35, new MetaInfo()),
+		DUMMY79(0xfffb, new MetaInfo()), DUMMY80(0xfff9, new MetaInfo()),
+		DUMMY81(0xfff8, new MetaInfo()), DUMMY82(0xff29, new MetaInfo()),
+		DUMMY83(0xffdc, new MetaInfo()), DUMMY84(0xff39, new MetaInfo()),
+		DUMMY85(0x5900, new MetaInfo()), DUMMY86(0x5a00, new MetaInfo()),
+		DUMMY87(0xfe31, new MetaInfo()), DUMMY88(0xfe68, new MetaInfo()),
+		DUMMY89(0xfeac, new MetaInfo()), DUMMY90(0xfed9, new MetaInfo()),
+		DUMMY91(0xfe9d, new MetaInfo()), DUMMY92(0x5b7e, new MetaInfo()),
+		DUMMY93(0x5b32, new MetaInfo()), DUMMY94(0x5aec, new MetaInfo()),
+		DUMMY95(0x5706, new MetaInfo()), DUMMY96(0x5ae0, new MetaInfo()),
+		DUMMY97(0xff1e, new MetaInfo()), DUMMY98(0x5b12, new MetaInfo()),
+		DUMMY99(0xffab, new MetaInfo()), DUMMY100(0xff40, new MetaInfo()),
+		DUMMY101(0x5ad0, new MetaInfo()), DUMMY102(0xff4a, new MetaInfo()),
+		DUMMY103(0x59d1, new MetaInfo()), DUMMY104(0x5902, new MetaInfo()),
+		DUMMY105(0x59d0, new MetaInfo()), DUMMY106(0x5a50, new MetaInfo()),
+		DUMMY107(0x5a04, new MetaInfo()), DUMMY108(0xffa0, new MetaInfo()),
+		DUMMY109(0x590d, new MetaInfo()), DUMMY110(0x5b01, new MetaInfo()),
+		DUMMY111(0x5bdd, new MetaInfo()), DUMMY112(0x59f8, new MetaInfo()),
+		DUMMY113(0xff07, new MetaInfo()), DUMMY114(0x5bf9, new MetaInfo()),
+		DUMMY115(0xfd00, new MetaInfo()), DUMMY116(0x57fd, new MetaInfo()),
+		DUMMY117(0x5afd, new MetaInfo()), DUMMY118(0x5a4c, new MetaInfo()),
+		DUMMY119(0x5a52, new MetaInfo()), DUMMY120(0x5a53, new MetaInfo()),
+		DUMMY121(0x5a43, new MetaInfo()), DUMMY122(0x5a45, new MetaInfo()),
+		DUMMY123(0x5a44, new MetaInfo()), DUMMY124(0x5a41, new MetaInfo()),
 		
 		PUSHL(0xdd, new MetaInfo(OT.l)), 
 		PUSHAB(0x9f, new MetaInfo(OT.b)), PUSHAW(0x3f, new MetaInfo(OT.w)),
@@ -197,7 +224,8 @@ public class V32Disassm {
 		MOVZBW(0x9b, new MetaInfo(OT.b, OT.w)), MOVZBL(0x9a, new MetaInfo(OT.b, OT.l)), 
 		MOVZWL(0x3c, new MetaInfo(OT.w, OT.l)), MTPR(0xda, new MetaInfo(OT.l, OT.l)),
 		PUSHR(0xbb, new MetaInfo(OT.w)), SBWC(0xd9, new MetaInfo(OT.l, OT.l)),
-		XFC(0xfc, new MetaInfo()), MATCHC(0x39, new MetaInfo(OT.w, OT.b, OT.w, OT.b));
+		XFC(0xfc, new MetaInfo()), MATCHC(0x39, new MetaInfo(OT.w, OT.b, OT.w, OT.b)),
+		INSQTI(0x5d, new MetaInfo(OT.b, OT.q)), REMQTI(0x5f, new MetaInfo(OT.q, OT.l));
 		                                        
 		public final int mne;		
 		public final String opname;
@@ -275,6 +303,11 @@ public class V32Disassm {
 			opinfo.opsub.type = Type.Abs;
 			opinfo.opsub.arg = memory.fetch4().ival;
 			return opinfo.opsub;
+		}
+		case 0xa: { // byte relative
+			opinfo.opsub.type = Type.ByteRel;
+			opinfo.opsub.arg = memory.fetch().bval + memory.getCurrentPc();
+			return opinfo.opsub;			
 		}
 		case 0xc: { // word relative
 			opinfo.opsub.type = Type.WordRel;
