@@ -198,6 +198,7 @@ public class FSystem {
 		if (!f.exists()) {
 			try {
 				f.createNewFile();
+				doChmod(f.getAbsolutePath(), mode);															
 			} catch (Exception e) {
 				e.printStackTrace();
 				return fd;
@@ -205,6 +206,15 @@ public class FSystem {
 		}	
 		fd = open(fileName, 1);
 		return fd;
+	}
+	
+	private static void doChmod(final String path, int mode) {
+		String modes = "";
+		for (; mode != 0; mode /= 8) {
+			char c = (char)((mode % 8) + 0x30);			
+			modes = c + modes;
+		}
+		RuntimeUtil.exec("chmod", modes, path);
 	}
 	
 	public static long lseek(int fd, int offset, int mode) {

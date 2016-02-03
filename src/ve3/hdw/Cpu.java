@@ -829,7 +829,7 @@ public class Cpu {
 		} 
 
 		//for (int i = 0; i < 71000; ++i, ++stepCount) {					
-		for (int i = 0; i < 40000; ++i, ++stepCount) {			
+		for (int i = 0; i < 200; ++i, ++stepCount) {			
 			run();			
 			//memory.dump(0x611, 1);
 		}
