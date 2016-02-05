@@ -419,8 +419,8 @@ public class Cpu {
 			opinfo.opsub.type = Type.LongDisp;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
 			opinfo.opsub.arg = fetch4().ival;
-			System.out.println(type + " not implemented yet in resolveDisp");
-			System.exit(1);
+			opinfo.opsub.addr = (long)reg[opinfo.opsub.operand] + (long)opinfo.opsub.arg;
+			//System.out.printf("arg = %x\n", opinfo.opsub.addr);			
 			return opinfo.opsub;
 		}
 		case 0x0f: { // Long Displacement Deferred
@@ -716,6 +716,10 @@ public class Cpu {
 			memory.writeInt((int)addr, value);
 			break;
 		}
+		case LongDisp: {
+			memory.writeInt((int)addr, value);
+			break;
+		}
 		default: {
 			System.out.printf("addr = 0x%x, value = 0x%x\n", addr, value);
 			System.out.println("unrecognized type in storeInt: " + type);
@@ -829,7 +833,7 @@ public class Cpu {
 		} 
 
 		//for (int i = 0; i < 71000; ++i, ++stepCount) {					
-		for (int i = 0; i < 200; ++i, ++stepCount) {			
+		for (int i = 0; i < 54735; ++i, ++stepCount) {			
 			run();			
 			//memory.dump(0x611, 1);
 		}
@@ -1904,6 +1908,13 @@ public class Cpu {
 			storeInt(opinfo.getType3(), opinfo.getAddr3(), val32);
 			//System.out.printf("val64 = %x, val32 = %x\n", val64, val32);
 			setNZVC(val32 < 0, val32 == 0, val64 != val32, false);			
+			break;
+		}
+		case 0xd2: { // mcoml
+			int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			val32 = ~src;			
+			storeInt(opinfo.getType2(), opinfo.getAddr2(), val32);
+			setNZVC(val32 < 0, val32 == 0, false, isC());						
 			break;
 		}
 		default: {
