@@ -617,6 +617,22 @@ public class Cpu {
 		return 0;
 	}
 	
+	private void storeShort(Type type, long addr, short value) {
+		switch(type) {
+		case LongRel: {
+			memory.writeShort((int)addr, value);
+			break;
+		}
+		default: {
+			System.out.printf("addr = 0x%x, value = 0x%x\n", addr, value);
+			System.out.println("unrecognized type in storeShort: " + type);
+			System.out.printf("reg[pc] = %x, stepCount = %d\n", reg[pc], stepCount);
+			System.exit(1);
+		}
+		}
+		
+	}
+	
 	private void storeByte(Type type, long addr, byte value) {
 		switch (type) {
 		case Register: {
@@ -833,7 +849,7 @@ public class Cpu {
 		} 
 
 		//for (int i = 0; i < 71000; ++i, ++stepCount) {					
-		for (int i = 0; i < 54735; ++i, ++stepCount) {			
+		for (int i = 0; i < 56098; ++i, ++stepCount) {			
 			run();			
 			//memory.dump(0x611, 1);
 		}
@@ -1430,6 +1446,14 @@ public class Cpu {
 			//System.exit(1);
 			break;
 		}
+		case 0xf7: { // cvtlw
+			int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			val16 = (short)src;
+			storeShort(opinfo.getType2(), opinfo.getAddr2(), val16);
+			//memory.dump((int)opinfo.getAddr2(), 4);
+			setNZVC(val16 < 0, val16 == 0, src != val16, false);						
+			break;
+		}
 		case 0x88: { //bisb2
 			int laddr = 0;
 			Type ltype;
@@ -1915,6 +1939,19 @@ public class Cpu {
 			val32 = ~src;			
 			storeInt(opinfo.getType2(), opinfo.getAddr2(), val32);
 			setNZVC(val32 < 0, val32 == 0, false, isC());						
+			break;
+		}
+		case 0xf2: { // aoblss
+			Type ltype;
+			long laddr;
+			long limit = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1()) & 0xffffffffL;
+			long index = getInt(ltype = opinfo.getType2(), opinfo.getArg2(), laddr = opinfo.getAddr2()) & 0xffffffffL;
+			storeInt(ltype, laddr, (int)++index);
+			if (index < limit) {
+				setPc((int)opinfo.getAddr3());				
+			}
+			val32 = (int)index;
+			setNZVC(val32 < 0, val32 == 0, index != val32, isC());			
 			break;
 		}
 		default: {
