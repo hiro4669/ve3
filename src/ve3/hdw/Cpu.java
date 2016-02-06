@@ -849,8 +849,9 @@ public class Cpu {
 			log.println(callStack.push(symTable.get(reg[pc] - 2)));			
 		} 
 
-		//for (int i = 0; i < 71000; ++i, ++stepCount) {					
-		for (int i = 0; i < 57640; ++i, ++stepCount) {
+		//for (int i = 0; i < 71000; ++i, ++stepCount) {
+		//for (int i = 0; i < 200000; ++i, ++stepCount) {
+		for (int i = 0; i < 57640; ++i, ++stepCount) { // ccom
 			//FSystem.check();
 			run();			
 			//memory.dump(0x611, 1);

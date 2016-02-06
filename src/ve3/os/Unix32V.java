@@ -150,7 +150,8 @@ public class Unix32V {
 			*/
 			
 			//memory.dump(addr, 10);			
-			int rlen = FSystem.read(fd, rawmem, addr, len);			
+			//int rlen = FSystem.read(fd, rawmem, addr, len);			
+			int rlen = VFSystem.read(fd, rawmem, addr, len);			
 			//memory.dump(addr, 10);
 			
 			if (debug) {
@@ -185,7 +186,8 @@ public class Unix32V {
 			}
 			
 			//System.out.write(rawmem, off, len);
-			int rlen = FSystem.write(rawmem, dst, off, len);
+			//int rlen = FSystem.write(rawmem, dst, off, len);
+			int rlen = VFSystem.write(rawmem, dst, off, len);
 			
 			if (debug) {
 				System.out.printf(" => %d>\n", rlen);
@@ -215,7 +217,8 @@ public class Unix32V {
 
 			
 			
-			int fd = FSystem.open(newPath, mode);
+			//int fd = FSystem.open(newPath, mode);
+			int fd = VFSystem.open(newPath, mode);
 			//System.out.println("fnum = " + fnum);
 			
 			if (fd == -1) {
@@ -242,7 +245,8 @@ public class Unix32V {
 			
 			//System.out.println("argnum = " + argnum);
 			//System.out.println("fd     = " + fd);
-			int r = FSystem.close(fd);
+			//int r = FSystem.close(fd);
+			int r = VFSystem.close(fd);
 			
 			
 			if (debug) {
@@ -263,7 +267,8 @@ public class Unix32V {
 			String fileName = new String(memory.rawRead(filep, (pos - filep)));
 			//System.out.println("fileName = " + fileName);
 			
-			int fd = FSystem.creat(fileName, mode);
+			//int fd = FSystem.creat(fileName, mode);
+			int fd = VFSystem.creat(fileName, mode);
 
 			if (fd == -1) {
 				reg[Cpu.r0] = fd;
@@ -303,7 +308,8 @@ public class Unix32V {
 			String fileName = new String(memory.rawRead(filep, (pos - filep)));
 			//System.out.println("fileName = " + fileName);			
 			Stat st = new Stat();
-			FSystem.stat(fileName, st);
+			//FSystem.stat(fileName, st);
+			VFSystem.stat(fileName, st);
 			
 			/*
 			System.out.printf("dev    = %x\n", (short)(st.dev >> 16));
@@ -353,7 +359,8 @@ public class Unix32V {
 			int off = memory.readInt(reg[Cpu.ap] + 8);
 			int mode = memory.readInt(reg[Cpu.ap] + 12);
 			
-			long noff = FSystem.lseek(fd, off, mode);
+			//long noff = FSystem.lseek(fd, off, mode);
+			long noff = VFSystem.lseek(fd, off, mode);
 			
 			if (debug) {
 				System.out.printf("<lseek(%x, 0x%x, %d) = %x>\n", fd, off, mode, noff);
