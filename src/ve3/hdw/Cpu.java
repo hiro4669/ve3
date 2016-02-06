@@ -10,6 +10,7 @@ import ve3.disassm.Dump;
 import ve3.disassm.V32Disassm;
 import ve3.disassm.V32Disassm.OT;
 import ve3.disassm.V32Disassm.Ope;
+import ve3.os.FSystem;
 import ve3.os.MetaInfo;
 import ve3.os.OpInfo;
 import ve3.os.OpInfo.OpInfoSub;
@@ -849,7 +850,8 @@ public class Cpu {
 		} 
 
 		//for (int i = 0; i < 71000; ++i, ++stepCount) {					
-		for (int i = 0; i < 56098; ++i, ++stepCount) {			
+		for (int i = 0; i < 57640; ++i, ++stepCount) {
+			//FSystem.check();
 			run();			
 			//memory.dump(0x611, 1);
 		}
@@ -1019,6 +1021,13 @@ public class Cpu {
 			//System.out.printf("src = %x, addr = %x\n", src, opinfo.getAddr1());
 			val8 = (byte)(src - 0);
 			setNZVC(val8 < 0, val8 == 0, false, false);			
+			break;
+		}
+		case 0xb5: { // tstw
+			short src = getShort(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());			
+			//System.out.printf("src = %x, addr = %x\n", src, opinfo.getAddr1());
+			val16 = (short)(src - 0);
+			setNZVC(val16 < 0, val16 == 0, false, false);			
 			break;
 		}
 		case 0xd5: { // tstl
@@ -1455,31 +1464,44 @@ public class Cpu {
 			break;
 		}
 		case 0x88: { //bisb2
-			int laddr = 0;
+			long laddr = 0;
 			Type ltype;
 			byte mask = getByte(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
-			byte dst = getByte(ltype = opinfo.getType2(), opinfo.getArg2(), laddr = (int)opinfo.getAddr2());
+			byte dst = getByte(ltype = opinfo.getType2(), opinfo.getArg2(), laddr = opinfo.getAddr2());
 			//System.out.printf("addr2 = %x\n", laddr);
 			//System.out.printf("mask = %x, dst = %x\n", mask, dst);
 			//memory.dump(laddr, 4);
-			val32 = (dst |= mask);
+			dst |= mask;
 			//System.out.printf("mask = %x, dst = %x\n", mask, dst);
 			storeByte(ltype, laddr, dst);
 			//memory.dump(0x620, 4);
-			setNZVC(val32 < 0, val32 == 0, false, isC());			
+			//setNZVC(val32 < 0, val32 == 0, false, isC());			
+			setNZVC(dst < 0, dst == 0, false, isC());
 			break;			
 		}
+		case 0xa8: { // bisw2
+			long laddr = 0;
+			Type ltype;
+			short mask = getShort(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			short dst  = getShort(ltype = opinfo.getType2(), opinfo.getArg2(), laddr = opinfo.getAddr2());
+			dst |= mask;
+			//System.out.printf("mask = %x, dst = %x, laddr = %x\n", mask, dst, laddr);
+			//memory.dump((int)laddr, 4);
+			storeShort(ltype, laddr, dst);
+			//memory.dump((int)laddr, 4);
+			setNZVC(dst < 0, dst == 0, false, isC());			
+			break;
+		}
 		case 0xc8: { // bisl2
-			int laddr = 0;
+			long laddr = 0;
 			Type ltype;
 			int mask = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
-			int dst  = getInt(ltype = opinfo.getType2(), opinfo.getArg2(), laddr = (int)opinfo.getAddr2());
+			int dst  = getInt(ltype = opinfo.getType2(), opinfo.getArg2(), laddr = opinfo.getAddr2());
 			//System.out.printf("mask = %x, dst = %x\n", mask, dst);
 			dst |= mask;
 			storeInt(ltype, laddr, dst);
 			setNZVC(dst < 0, dst == 0, false, isC());			
-			break;
-			
+			break;			
 		}
 		case 0xc9: { // bisl3
 			int mask = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
@@ -1952,6 +1974,19 @@ public class Cpu {
 			}
 			val32 = (int)index;
 			setNZVC(val32 < 0, val32 == 0, index != val32, isC());			
+			break;
+		}
+		case 0xf3: {
+			Type ltype;
+			long laddr;
+			long limit = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1()) & 0xffffffffL;
+			long index = getInt(ltype = opinfo.getType2(), opinfo.getArg2(), laddr = opinfo.getAddr2()) & 0xffffffffL;
+			storeInt(ltype, laddr, (int)++index);
+			if (index <= limit) {
+				setPc((int)opinfo.getAddr3());				
+			}
+			val32 = (int)index;
+			setNZVC(val32 < 0, val32 == 0, index != val32, isC());	
 			break;
 		}
 		default: {
