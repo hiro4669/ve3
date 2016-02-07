@@ -768,6 +768,10 @@ public class Cpu {
 			memory.writeInt((int)addr, value);
 			break;
 		}
+		case AutoInc: {
+			memory.writeInt((int)addr, value);
+			break;
+		}
 		default: {
 			System.out.printf("addr = 0x%x, value = 0x%x\n", addr, value);
 			System.out.println("unrecognized type in storeInt: " + type);
@@ -882,7 +886,7 @@ public class Cpu {
 
 		//for (int i = 0; i < 71000; ++i, ++stepCount) {
 		//for (int i = 0; i < 200000; ++i, ++stepCount) {
-		for (int i = 0; i < 100000; ++i, ++stepCount) { // ccom
+		for (int i = 0; i < 120000; ++i, ++stepCount) { // ccom
 			//FSystem.check();
 			run();			
 			//memory.dump(0x611, 1);
