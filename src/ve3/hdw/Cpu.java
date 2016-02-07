@@ -620,8 +620,20 @@ public class Cpu {
 	
 	private void storeShort(Type type, long addr, short value) {
 		switch(type) {
+		case Register: {
+			reg[(int)addr] = (reg[(int)addr] & 0xffff0000) | (value & 0xffff);
+			break;
+		}
+		case RegDefer: {
+			memory.writeShort((int)addr, value);
+			break;
+		}		
 		case LongRel: {
 			memory.writeShort((int)addr, value);
+			break;
+		}
+		case WordDisp: {			
+			memory.writeShort((int)addr, value);			
 			break;
 		}
 		default: {
@@ -851,7 +863,7 @@ public class Cpu {
 
 		//for (int i = 0; i < 71000; ++i, ++stepCount) {
 		//for (int i = 0; i < 200000; ++i, ++stepCount) {
-		for (int i = 0; i < 57640; ++i, ++stepCount) { // ccom
+		for (int i = 0; i < 60403; ++i, ++stepCount) { // ccom
 			//FSystem.check();
 			run();			
 			//memory.dump(0x611, 1);
@@ -920,6 +932,12 @@ public class Cpu {
 		case 0: { // Halt
 			break;
 		}
+		case 0xb0: { // movw
+			short src = getShort(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			storeShort(opinfo.getType2(), opinfo.getAddr2(), src);
+			setNZVC(src < 0, src == 0, false, isC());			
+			break;
+		}
 		case 0xd0: { // movl
 			int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
 			//System.out.printf("src = %x\n", src);
@@ -968,17 +986,25 @@ public class Cpu {
 			setNZVC(val32 < 0, val32 == 0, val64 != val32, (min & 0xffffffffL) < (src & 0xffffffffL));						
 			break;
 		}
+		case 0xb1: { // cmpw
+			short src1 = getShort(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			short src2 = getShort(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+			//System.out.printf("src1 = %x, src2 = %x\n", src1, src2);
+			//System.out.printf("src1 = %d, src2 = %d\n", src1, src2);
+			setNZVC(src1 < src2, src1 == src2, false, (src1 & 0xffff) < (src2 & 0xffff));			
+			break;
+		}
 		case 0xd1: { // cmpl
 			int src1 = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
 			int src2 = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
-			val64 = (long)src1 - (long)src2;
-			val32 = (int)val64;
+			//val64 = (long)src1 - (long)src2;
+			//val32 = (int)val64;
 			/*
 			System.out.println("type2 = " + opinfo.getType2());
 			memory.dump((int)opinfo.getAddr2(), 4);
 			System.out.printf("src1 = %x, src2 = %x\n", src1, src2);
 			*/
-			setNZVC(val32 < 0, val32 == 0, false, (src1 & 0xffffffffL) < (src2 & 0xffffffffL));
+			setNZVC(src1 < src2, src1 == src2, false, (src1 & 0xffffffffL) < (src2 & 0xffffffffL));
 			break;
 			
 		}
@@ -986,12 +1012,11 @@ public class Cpu {
 			byte src1 = getByte(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
 			byte src2 = getByte(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
 			//System.out.printf("src1 = %x, src2 = %x\n", src1, src2);
-			//memory.dump((int)opinfo.getAddr1(), 4);
-			val8 = (byte)(src1 - src2);
+			//val8 = (byte)(src1 - src2);
 			//val32 = (int)src1 - (int)src2;
 			//val8 = (byte)val32;
 			
-			setNZVC(val8 < 0, val8 == 0, false, (src1 & 0xff) < (src2 & 0xff));			
+			setNZVC(src1 < src2, src1 == src2, false, (src1 & 0xff) < (src2 & 0xff));			
 			break;
 		}
 		case 0x9e: { // movab
@@ -1271,8 +1296,15 @@ public class Cpu {
 			setNZVC(false, true, false, isC());				
 			break;
 		}
+		case 0xb4: { // clrw
+			storeShort(opinfo.getType1(), opinfo.getAddr1(), (short)0);
+			setNZVC(false, true, false, isC());
+			break;
+			
+		}
 		case 0xd4: { // clrl(f)
 			storeInt(opinfo.getType1(), opinfo.getAddr1(), 0);
+			
 			setNZVC(false, true, false, isC());			
 			break;			
 		}
