@@ -709,6 +709,10 @@ public class Cpu {
 			reg[(int)(addr & 0xff)] = value;
 			break;
 		}
+		case ByteDisp: {
+			memory.writeInt((int)addr, value);
+			break;
+		}
 		default: {
 			System.out.printf("addr = 0x%x, value = 0x%x\n", addr, value);
 			System.out.println("unrecognized type in storeIntV: " + type);
@@ -878,7 +882,7 @@ public class Cpu {
 
 		//for (int i = 0; i < 71000; ++i, ++stepCount) {
 		//for (int i = 0; i < 200000; ++i, ++stepCount) {
-		for (int i = 0; i < 99566; ++i, ++stepCount) { // ccom
+		for (int i = 0; i < 100000; ++i, ++stepCount) { // ccom
 			//FSystem.check();
 			run();			
 			//memory.dump(0x611, 1);
@@ -1446,6 +1450,28 @@ public class Cpu {
 			if (((base >>= pos) & 1) == 0) {
 				setPc(addr);
 			}
+			break;
+		}
+		case 0xe5: { // bbcc
+			int pos = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int base = getIntV(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2(), 0, 0);
+			int addr = (int)opinfo.getAddr3();
+			//System.out.printf("pos = %x, base = %x, addr = %x\n", pos, base, addr);
+			int newstate = (1 << pos);
+			
+			if (pos > 31) {
+				System.err.println("Fault Happen in BBCC");
+				System.err.printf("pos need to be below 32 but %d\n", pos);
+				System.exit(1);
+			}	
+			//System.out.printf("newstate = %x\n", newstate);
+			
+			val32 = (base & ~newstate);
+			//System.out.printf("val32 = %x\n", val32);
+			storeIntV(opinfo.getType2(), opinfo.getAddr2(), val32, 0);
+			if (((base >> pos) & 1) == 0) {
+				setPc(addr);
+			}						
 			break;
 		}
 		case 0xe8: { // blbs
