@@ -608,6 +608,9 @@ public class Cpu {
 		case WordDisp: {
 			return memory.readInt((int)addr);			
 		}
+		case LongDisp: {
+			return memory.readInt((int)addr);
+		}
 		default: {
 			System.out.println("unrecognized type in getInt: " + type);
 			System.out.printf("reg[pc] = %x, stepCount = %d\n", reg[pc], stepCount);
@@ -863,7 +866,7 @@ public class Cpu {
 
 		//for (int i = 0; i < 71000; ++i, ++stepCount) {
 		//for (int i = 0; i < 200000; ++i, ++stepCount) {
-		for (int i = 0; i < 60403; ++i, ++stepCount) { // ccom
+		for (int i = 0; i < 65000; ++i, ++stepCount) { // ccom
 			//FSystem.check();
 			run();			
 			//memory.dump(0x611, 1);
