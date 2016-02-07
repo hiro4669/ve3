@@ -139,6 +139,7 @@ public class OpInfo {
 	}
 	public long getAddr1() {
 		//return addr1;
+		//System.out.printf("iaddr1 = %x, addr1 = %x\n", iaddr1, addr1);
 		return iaddr1 + addr1;
 	}
 	public void setPos1(long pos1) {

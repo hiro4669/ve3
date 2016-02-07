@@ -278,7 +278,7 @@ public class Cpu {
 			//System.out.printf("index reg[%d] = %x\n", opinfo.opsub.operand, regaddr);
 			switch (optype) {
 			case b: 
-			case vb: {
+			case vb: {				
 				break;
 			}
 			case w: {
@@ -610,7 +610,7 @@ public class Cpu {
 		}
 		case LongDisp: {
 			return memory.readInt((int)addr);
-		}
+		}		
 		default: {
 			System.out.println("unrecognized type in getInt: " + type);
 			System.out.printf("reg[pc] = %x, stepCount = %d\n", reg[pc], stepCount);
@@ -637,6 +637,14 @@ public class Cpu {
 		}
 		case WordDisp: {			
 			memory.writeShort((int)addr, value);			
+			break;
+		}		
+		case ByteDisp: {
+			memory.writeShort((int)addr, value);
+			break;
+		}
+		case LongDisp: {
+			memory.writeShort((int)addr, value);
 			break;
 		}
 		default: {
@@ -749,6 +757,10 @@ public class Cpu {
 			break;
 		}
 		case LongDisp: {
+			memory.writeInt((int)addr, value);
+			break;
+		}
+		case WordDisp: {
 			memory.writeInt((int)addr, value);
 			break;
 		}
@@ -866,7 +878,7 @@ public class Cpu {
 
 		//for (int i = 0; i < 71000; ++i, ++stepCount) {
 		//for (int i = 0; i < 200000; ++i, ++stepCount) {
-		for (int i = 0; i < 65000; ++i, ++stepCount) { // ccom
+		for (int i = 0; i < 99566; ++i, ++stepCount) { // ccom
 			//FSystem.check();
 			run();			
 			//memory.dump(0x611, 1);
@@ -1347,6 +1359,12 @@ public class Cpu {
 			System.out.println(new String(logOut.toByteArray()));
 			System.exit(1);
 			*/
+			break;
+		}
+		case 0x9f: { // pushab
+			int val32 = (int)opinfo.getAddr1();			
+			pushInt(val32);
+			setNZVC(val32 < 0, val32 == 0, false, isC());
 			break;
 		}
 		case 0xdf: { // pushal
