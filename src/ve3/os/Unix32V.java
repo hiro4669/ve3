@@ -3,6 +3,7 @@ package ve3.os;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import ve3.hdw.Cpu;
 import ve3.hdw.Memory;
@@ -18,6 +19,7 @@ public class Unix32V {
 	
 	private long sigp;
 	private Map<Integer, Long> sigmap;
+	private int pid;
 	
 	private boolean debug;
 	
@@ -31,6 +33,7 @@ public class Unix32V {
 		this.end = memory.getEOH();
 		
 		sigmap = new HashMap<Integer, Long>();
+		pid = 0;
 	}
 	
 	public void setDebug(boolean debug) {
@@ -64,6 +67,7 @@ public class Unix32V {
 	
 	private String convertPath(final String path) {
 		if (path.startsWith("/tmp")) {
+			System.out.println("yesyesyes: " + path);
 			return path;
 		}
 		
@@ -378,6 +382,22 @@ public class Unix32V {
 			cpu.clearCarry();			
 			break;
 			
+		}
+		case 0x14: { // getpid
+			int argnum = memory.readInt(reg[Cpu.ap]);
+			System.out.println("argnum = " + argnum);
+			if (pid == 0) {
+				pid = (new Random().nextInt(0x3fffffff)) >> 16;
+				//System.out.println("pid = " + pid);				
+			}
+			
+			if (debug) {
+				System.out.printf("<getpid() = %d>\n", pid);
+			}
+			
+			reg[Cpu.r0] = pid;
+			cpu.clearCarry();			
+			break;
 		}
 		case 0x30: { // signal
 			int argnum = memory.readInt(reg[Cpu.ap]);
