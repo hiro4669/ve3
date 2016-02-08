@@ -16,6 +16,9 @@ public class Unix32V {
 	private long end;
 	private final String vaxRoot;
 	
+	private long sigp;
+	private Map<Integer, Long> sigmap;
+	
 	private boolean debug;
 	
 	public Unix32V(final Cpu cpu, final Memory memory, final String vaxRoot) {
@@ -26,6 +29,8 @@ public class Unix32V {
 		this.rawmem = memory.getRawMemory();
 		this.debug = false;
 		this.end = memory.getEOH();
+		
+		sigmap = new HashMap<Integer, Long>();
 	}
 	
 	public void setDebug(boolean debug) {
@@ -231,8 +236,8 @@ public class Unix32V {
 			
 			if (debug) {
 				System.out.printf("<open(0x%x, %d) => %d>\n", filep, mode, fd);
-				//System.out.println("fileName = " + fileName);
-				//System.out.println("convert path = " + newPath);
+				System.out.println("fileName = " + fileName);
+				System.out.println("convert path = " + newPath);
 			}
 			
 						
@@ -288,10 +293,14 @@ public class Unix32V {
 			int argnum = memory.readInt(reg[Cpu.ap]);
 			int limit = memory.readInt(reg[Cpu.ap] + 4);
 			int size = (int)(limit - end);
+			
+			//System.out.printf("limit = %x, end = %x\n", limit, end);
+			
 			end = limit;
 			
 			if (debug) {
 				System.out.printf("<sbrk(%x) => 0x%x>\n", size, size);
+			
 			}
 			reg[Cpu.r0] = (int)size;
 			cpu.clearCarry();
@@ -369,6 +378,26 @@ public class Unix32V {
 			cpu.clearCarry();			
 			break;
 			
+		}
+		case 0x30: { // signal
+			int argnum = memory.readInt(reg[Cpu.ap]);
+			int type = memory.readInt(reg[Cpu.ap] + 4);
+			int addr = memory.readInt(reg[Cpu.ap] + 8);
+			long raddr = 0;
+			//System.out.printf("argnum = %x, type = %x, addr = %x\n", argnum, type, addr);
+			if (sigmap.containsKey(type)) {
+				raddr = sigmap.get(type);			
+			} 
+			sigmap.put(type, addr & 0xffffffffL);
+			
+			if (debug) {
+				System.out.printf("<signal(%x, 0x%x) = 0x%x>\n", type, addr, raddr);
+			}
+			
+			reg[Cpu.r0] = (int)raddr;
+			cpu.clearCarry();			
+			//System.exit(1);
+			break;
 		}
 		case 0x36: { // ioctl
 			int argnum = memory.readInt(reg[Cpu.ap]);

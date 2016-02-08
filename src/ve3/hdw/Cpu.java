@@ -886,7 +886,7 @@ public class Cpu {
 
 		//for (int i = 0; i < 71000; ++i, ++stepCount) {
 		//for (int i = 0; i < 200000; ++i, ++stepCount) {
-		for (int i = 0; i < 120000; ++i, ++stepCount) { // ccom
+		for (int i = 0; i < 35768; ++i, ++stepCount) { // as
 			//FSystem.check();
 			run();			
 			//memory.dump(0x611, 1);
