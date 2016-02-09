@@ -1,5 +1,7 @@
 package ve3.os;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +35,8 @@ public class Unix32V {
 		this.end = memory.getEOH();
 		
 		sigmap = new HashMap<Integer, Long>();
-		pid = 0;
+		//pid = 0;
+		pid = 10000; // for test
 	}
 	
 	public void setDebug(boolean debug) {
@@ -66,8 +69,7 @@ public class Unix32V {
 	}
 	
 	private String convertPath(final String path) {
-		if (path.startsWith("/tmp")) {
-			System.out.println("yesyesyes: " + path);
+		if (path.startsWith("/tmp")) {			
 			return path;
 		}
 		
@@ -384,8 +386,7 @@ public class Unix32V {
 			
 		}
 		case 0x14: { // getpid
-			int argnum = memory.readInt(reg[Cpu.ap]);
-			System.out.println("argnum = " + argnum);
+			int argnum = memory.readInt(reg[Cpu.ap]);			
 			if (pid == 0) {
 				pid = (new Random().nextInt(0x3fffffff)) >> 16;
 				//System.out.println("pid = " + pid);				
@@ -397,6 +398,45 @@ public class Unix32V {
 			
 			reg[Cpu.r0] = pid;
 			cpu.clearCarry();			
+			break;
+		}
+		case 0x21: { // access
+			int argnum = memory.readInt(reg[Cpu.ap]);
+			int filep = memory.readInt(reg[Cpu.ap] + 4);
+			int mode = memory.readInt(reg[Cpu.ap] + 8);
+						
+			int pos = memory.seekZero(filep);
+			String fileName = new String(memory.rawRead(filep, (pos - filep)));
+			String newPath = convertPath(fileName);
+			
+			int r;						
+			switch (mode) {
+			case 0:
+			case 1:
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+			case 7: {
+				r = Files.exists(Paths.get(newPath)) == true ? 0 : -1;
+				break;
+			}				
+			default: { // 
+				System.err.println("unsupported mode in access");
+				throw new RuntimeException();				
+			}				
+			}
+			
+			if (debug) {
+				System.out.printf("<access(0x%x, %d) = %d>\n", filep, mode, r);
+			}
+						
+			if ((reg[Cpu.r0] = r) == 0) {
+				cpu.clearCarry();
+			} else {
+				cpu.setCarry();
+			}					
 			break;
 		}
 		case 0x30: { // signal
