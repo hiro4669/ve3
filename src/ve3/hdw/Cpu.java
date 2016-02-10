@@ -326,12 +326,14 @@ public class Cpu {
 				reg[opinfo.opsub.operand] -= 2;
 				break;
 			}
+			case f:
 			case l: { 
 				reg[opinfo.opsub.operand] -= 4;
 				break;
 			}			
 			default: {
-				System.out.println("unsupported optype in AutoDecrement in resolveDisp");
+				System.out.println("unsupported optype in AutoDecrement in resolveDisp : " + optype);
+				System.out.printf("reg[pc] = %x, stepCount = %d\n", reg[pc], stepCount);
 				System.exit(1);
 			}
 			}
@@ -353,6 +355,7 @@ public class Cpu {
 				reg[opinfo.opsub.operand] += 2;
 				break;
 			}
+			case f:
 			case l: {
 				reg[opinfo.opsub.operand] += 4;
 				break;
@@ -693,6 +696,10 @@ public class Cpu {
 			memory.writeByte((int)addr, value);
 			break;
 		}
+		case LongRelDefer: {
+			memory.writeByte((int)addr, value);
+			break;
+		}
 		default: {
 			System.out.printf("addr = 0x%x, value = 0x%x\n", addr, value);
 			System.out.println("unrecognized type in storeByte: " + type);
@@ -886,7 +893,7 @@ public class Cpu {
 
 		//for (int i = 0; i < 71000; ++i, ++stepCount) {
 		//for (int i = 0; i < 200000; ++i, ++stepCount) {
-		for (int i = 0; i < 35865; ++i, ++stepCount) { // as
+		for (int i = 0; i < 42287; ++i, ++stepCount) { // as
 			//FSystem.check();
 			run();			
 			//memory.dump(0x611, 1);
@@ -1147,7 +1154,7 @@ public class Cpu {
 			}
 			break;			
 		}
-		case 0x1f: {
+		case 0x1f: { // blssu
 			if (isC()) {
 				int src = (int)opinfo.getAddr1();
 //				System.out.printf("pc = %x\n", src);
@@ -1336,6 +1343,16 @@ public class Cpu {
 			setNZVC(false, true, false, isC());
 			break;
 		}
+		case 0xb6: { // incw
+			long laddr;
+			Type ltype;
+			short src = getShort(ltype = opinfo.getType1(), opinfo.getArg1(), laddr = opinfo.getAddr1());
+			val32 = (int)src + 1;			
+			val16 = (short)val32;
+			storeShort(ltype, laddr, val16);			
+			setNZVC(val16 < 0, val16 == 0, val32 != val16, (src & 0xffff) + 1 >= 0x10000);
+			break;
+		}
 		case 0xd6: { // incl
 			long laddr;
 			Type ltype;
@@ -1344,7 +1361,8 @@ public class Cpu {
 			val64 = (long)src + 1;
 			val32 = (int)val64;
 			storeInt(ltype, laddr, val32);
-			setNZVC(val32 < 0, val32 == 0, val64 != val32, val64 >= (long)0x100000000L);			
+			setNZVC(val32 < 0, val32 == 0, val64 != val32, (src & 0xffffffffL) + 1 >= 0x100000000L);			
+			//setNZVC(val32 < 0, val32 == 0, val64 != val32, val64 >= (long)0x100000000L);			
 			break;
 		}
 		case 0xd7: { // decl
@@ -1518,7 +1536,15 @@ public class Cpu {
 			storeInt(opinfo.getType2(), opinfo.getAddr2(), val32);
 			//System.out.printf("addr2 = %x\n", opinfo.getAddr2());
 			//memory.dump((int)opinfo.getAddr2(), 4);
-			setNZVC(val32 < 0, val32 == 0, false, false);			
+			setNZVC(val32 < 0, val32 == 0, src != val32, false); // overflow never happens			
+			break;
+		}
+		case 0x33: { // cvtwb
+			short src = getShort(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());			
+			byte dst = (byte)src;
+			//System.out.printf("src = %x, dst = %x\n", src, dst);
+			storeByte(opinfo.getType2(), opinfo.getAddr2(), dst);
+			setNZVC(dst < 0, dst == 0, src != dst, false);						
 			break;
 		}
 		case 0xf6: { // cvtlb
@@ -1602,6 +1628,16 @@ public class Cpu {
 			storeInt(opinfo.getType3(), opinfo.getAddr3(), val32);
 			//memory.dump((int)opinfo.getAddr3(), 4);
 			setNZVC(val32 < 0, val32 == 0, false, isC());						
+			break;
+		}
+		case 0xae: { // mnegw
+			short src = getShort(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			val32 = src * -1;
+			val16 = (short)val32;
+			//System.out.printf("src = %x, val32 = %x, val16 = %x\n", src, val32, val16);
+			storeShort(opinfo.getType2(), opinfo.getAddr2(), val16);
+			setNZVC(val16 < 0, val16 == 0, val32 != val16, val16 != 0);
+			
 			break;
 		}
 		case 0xce: { // mnegl
@@ -1746,6 +1782,7 @@ public class Cpu {
 			//memory.dump((int)opinfo.getAddr1(), 4);
 			val32 = (int)(src & 0xffff);
 			storeInt(opinfo.getType2(), opinfo.getAddr2(), val32);
+			setNZVC(false, val32 == 0, false, isC());
 			break;
 		}		
 		case 0xee: { // extv
@@ -2060,7 +2097,7 @@ public class Cpu {
 			setNZVC(val32 < 0, val32 == 0, index != val32, isC());			
 			break;
 		}
-		case 0xf3: {
+		case 0xf3: { // aobleq
 			Type ltype;
 			long laddr;
 			long limit = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1()) & 0xffffffffL;
