@@ -893,7 +893,7 @@ public class Cpu {
 
 		//for (int i = 0; i < 71000; ++i, ++stepCount) {
 		//for (int i = 0; i < 200000; ++i, ++stepCount) {
-		for (int i = 0; i < 42287; ++i, ++stepCount) { // as
+		for (int i = 0; i < 86810; ++i, ++stepCount) { // as
 			//FSystem.check();
 			run();			
 			//memory.dump(0x611, 1);
@@ -1347,6 +1347,8 @@ public class Cpu {
 			long laddr;
 			Type ltype;
 			short src = getShort(ltype = opinfo.getType1(), opinfo.getArg1(), laddr = opinfo.getAddr1());
+			
+			//System.out.printf("src = %x\n", src);
 			val32 = (int)src + 1;			
 			val16 = (short)val32;
 			storeShort(ltype, laddr, val16);			
@@ -1527,6 +1529,15 @@ public class Cpu {
 			setNZVC(val32 < 0, val32 == 0, false, false); // V is always false beccause
 			//memory.dump((int)opinfo.getAddr2(), 4);     // small will be converted to large
 			
+			break;
+		}
+		case 0x99: { // cvtbw
+			byte src = getByte(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			val16 = src;	// signed convert
+			//System.out.printf("src = %x\n", src);
+			storeShort(opinfo.getType2(), opinfo.getAddr2(), val16);
+			setNZVC(val16 < 0, val16 == 0, false, false);
+			//System.exit(1);
 			break;
 		}
 		case 0x32: { // cvtwl
