@@ -276,10 +276,11 @@ public class Unix32V {
 			//System.out.printf("argnum = %d, filep = %x, mode = %o\n", argnum, filep, mode);
 			int pos = memory.seekZero(filep);
 			String fileName = new String(memory.rawRead(filep, (pos - filep)));
+			String newPath = convertPath(fileName);
 			//System.out.println("fileName = " + fileName);
 			
 			//int fd = FSystem.creat(fileName, mode);
-			int fd = VFSystem.creat(fileName, mode);
+			int fd = VFSystem.creat(newPath, mode);
 
 			if (fd == -1) {
 				reg[Cpu.r0] = fd;
@@ -293,6 +294,35 @@ public class Unix32V {
 				System.out.printf("<creat(0x%x, %04o) => %d>\n", filep, mode, fd);
 			}
 			
+			break;
+		}
+		case 0xa: { // unlink
+			int argnum = memory.readInt(reg[Cpu.ap]);
+			int filep = memory.readInt(reg[Cpu.ap] + 4);
+			int pos = memory.seekZero(filep);
+			String fileName = new String(memory.rawRead(filep, (pos - filep)));			
+			String newPath = convertPath(fileName);
+			int r = 0;
+			if (Files.exists(Paths.get(newPath)) == true) {
+				try {
+					Files.delete(Paths.get(newPath));
+				} catch (Exception e) {
+					r = -1;
+					e.printStackTrace();
+				}
+			}
+			
+			reg[Cpu.r0] = r;
+			if (r == 0) {
+				cpu.clearCarry();
+			} else {
+				cpu.setCarry();
+			}
+			
+			if (debug) {
+				System.out.printf("<unlink(0x%x) => %d>\n", filep, r);
+			}
+						
 			break;
 		}
 		case 0x11: { // sbrk
