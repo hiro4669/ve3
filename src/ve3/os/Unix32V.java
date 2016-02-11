@@ -323,6 +323,7 @@ public class Unix32V {
 			
 			if (debug) {
 				System.out.printf("<unlink(0x%x) => %d>\n", filep, r);
+				System.out.println("fileName = " + newPath);
 			}
 						
 			break;
