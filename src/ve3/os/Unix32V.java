@@ -292,6 +292,8 @@ public class Unix32V {
 			
 			if (debug) {
 				System.out.printf("<creat(0x%x, %04o) => %d>\n", filep, mode, fd);
+				System.out.println("fileName = " + newPath);
+				System.out.println("mode = " + mode);
 			}
 			
 			break;
@@ -324,6 +326,32 @@ public class Unix32V {
 			}
 						
 			break;
+		}
+		case 0xf: { // chmod
+			int argnum = memory.readInt(reg[Cpu.ap]);			
+			int filep = memory.readInt(reg[Cpu.ap] + 4);
+			int mode = memory.readInt(reg[Cpu.ap] + 8);
+			//System.out.printf("argnum = %d, filep = %x, mode = %o\n", argnum, filep, mode);
+			int pos = memory.seekZero(filep);
+			String fileName = new String(memory.rawRead(filep, (pos - filep)));
+			String newPath = convertPath(fileName);
+			int r = FSystem.chmod(newPath, mode);
+			
+			if (debug) {
+				System.out.printf("<creat(0x%x, %04o) => %d>\n", filep, mode, r);
+				System.out.println("fileName = " + newPath);
+				System.out.println("mode = " + mode);				
+			}
+			
+			reg[Cpu.r0] = r;
+			if (r == 0) {
+				cpu.clearCarry();
+			} else {
+				cpu.setCarry();
+			}
+						
+			break;
+			
 		}
 		case 0x11: { // sbrk
 			int argnum = memory.readInt(reg[Cpu.ap]);

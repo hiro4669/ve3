@@ -92,6 +92,9 @@ public class V32Disassm {
 		DUMMY119(0x5a52, new MetaInfo()), DUMMY120(0x5a53, new MetaInfo()),
 		DUMMY121(0x5a43, new MetaInfo()), DUMMY122(0x5a45, new MetaInfo()),
 		DUMMY123(0x5a44, new MetaInfo()), DUMMY124(0x5a41, new MetaInfo()),
+		DUMMY125(0x5b31, new MetaInfo()), DUMMY126(0x5a8f, new MetaInfo()),
+		DUMMY127(0xffe3, new MetaInfo()), DUMMY128(0xffef, new MetaInfo()),
+		DUMMY129(0xff93, new MetaInfo()),
 		
 		PUSHL(0xdd, new MetaInfo(OT.l)), 
 		PUSHAB(0x9f, new MetaInfo(OT.b)), PUSHAW(0x3f, new MetaInfo(OT.w)),

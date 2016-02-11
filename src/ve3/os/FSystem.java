@@ -208,6 +208,15 @@ public class FSystem {
 		return fd;
 	}
 	
+	public static int chmod(String fileName, int mode) {
+		File f = new File(fileName);
+		if (f.exists()) {
+			doChmod(f.getAbsolutePath(), mode);
+			return 0;
+		} 
+		return -1;		
+	}
+	
 	private static void doChmod(final String path, int mode) {
 		String modes = "";
 		for (; mode != 0; mode /= 8) {
