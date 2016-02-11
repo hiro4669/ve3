@@ -2,6 +2,7 @@ package ve3.os;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -127,6 +128,16 @@ public class VFSystem {
 		}
 		
 		return vf.lseek(offset, mode);
+	}
+	
+	public static int link(File of, File nf) {
+		try {
+			Files.createLink(nf.toPath(), of.toPath());
+		} catch (Exception e) {
+			e.printStackTrace();
+			return -1;
+		}
+		return 0;
 	}
 	
 	public static int stat(String fileName, Stat st) {

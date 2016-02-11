@@ -1,5 +1,6 @@
 package ve3.os;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -298,6 +299,27 @@ public class Unix32V {
 			
 			break;
 		}
+		case 0x9: { // link
+			int argnum = memory.readInt(reg[Cpu.ap]);
+			int fp1 = memory.readInt(reg[Cpu.ap] + 4);
+			int fp2 = memory.readInt(reg[Cpu.ap] + 8);
+			int pos = memory.seekZero(fp1);
+			String orgFile = new String(memory.rawRead(fp1, (pos - fp1)));
+			pos = memory.seekZero(fp2);
+			String newFile = new String(memory.rawRead(fp2, (pos - fp2)));
+			
+			File of = new File(convertPath(orgFile));
+			File nf = new File(convertPath(newFile));
+			
+			int r = VFSystem.link(of, nf);
+			if (debug) {
+				System.out.printf("<link(0x%x, 0x%x) => %d>\n", fp1, fp2, r);
+				System.out.println("orgFile = " + orgFile);
+				System.out.println("newFile = " + newFile);
+			}						
+			//System.exit(1);
+			break;
+		}
 		case 0xa: { // unlink
 			int argnum = memory.readInt(reg[Cpu.ap]);
 			int filep = memory.readInt(reg[Cpu.ap] + 4);
@@ -305,12 +327,17 @@ public class Unix32V {
 			String fileName = new String(memory.rawRead(filep, (pos - filep)));			
 			String newPath = convertPath(fileName);
 			int r = 0;
+			
 			if (Files.exists(Paths.get(newPath)) == true) {
 				try {
 					Files.delete(Paths.get(newPath));
 				} catch (Exception e) {
 					r = -1;
-					e.printStackTrace();
+					//System.out.println("hogehoge");
+					//System.out.println("file = " + fileName);
+					//System.out.println("newPath = " + newPath);
+					//e.printStackTrace();
+					//System.exit(1);
 				}
 			}
 			
