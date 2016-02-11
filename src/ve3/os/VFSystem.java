@@ -1,5 +1,6 @@
 package ve3.os;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
@@ -71,6 +72,15 @@ public class VFSystem {
 			return -1;
 		}				
 		return fd;
+	}
+	
+	public static int chmod(String fileName, int mode) {
+		File f = new File(fileName);
+		if (f.exists()) {
+			doChmod(f.getAbsolutePath(), mode);
+			return 0;
+		} 
+		return -1;		
 	}
 	
 	public static int write(byte[] src, int fd, int off, int len) {

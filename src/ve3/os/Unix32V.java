@@ -336,7 +336,7 @@ public class Unix32V {
 			int pos = memory.seekZero(filep);
 			String fileName = new String(memory.rawRead(filep, (pos - filep)));
 			String newPath = convertPath(fileName);
-			int r = FSystem.chmod(newPath, mode);
+			int r = VFSystem.chmod(newPath, mode);
 			
 			if (debug) {
 				System.out.printf("<creat(0x%x, %04o) => %d>\n", filep, mode, r);
