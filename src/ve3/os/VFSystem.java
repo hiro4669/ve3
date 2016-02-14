@@ -10,23 +10,23 @@ import ve3.util.RuntimeUtil;
 
 public class VFSystem {
 	
-	private static Map<Integer, VFile> nodeMap;
-
-	static {				
+	private Map<Integer, VFile> nodeMap;
+	
+	public VFSystem() {
 		nodeMap = new HashMap<Integer, VFile>();
 		nodeMap.put(0, new VFile(System.in));
 		nodeMap.put(1, new VFile(System.out));
 		nodeMap.put(2, new VFile(System.err));	
 	}
 	
-	public static final int getAvailable() {
+	public final int getAvailable() {
 		int fnum = 0;
 		for (;; ++fnum) {
 			if (!nodeMap.containsKey(fnum)) return fnum;
 		}
 	}
 	
-	public static int open(String fname, int mode) {
+	public int open(String fname, int mode) {
 		String smode = "r";
 		switch (mode) {
 		case 0: {
@@ -59,7 +59,7 @@ public class VFSystem {
 		}		
 	}
 	
-	public static int creat(String fname, int mode) {
+	public int creat(String fname, int mode) {
 		int fd = -1;		
 		try {
 			VFile vf = new VFile(fname);		
@@ -75,7 +75,7 @@ public class VFSystem {
 		return fd;
 	}
 	
-	public static int chmod(String fileName, int mode) {
+	public int chmod(String fileName, int mode) {
 		File f = new File(fileName);
 		if (f.exists()) {
 			doChmod(f.getAbsolutePath(), mode);
@@ -84,7 +84,7 @@ public class VFSystem {
 		return -1;		
 	}
 	
-	public static int write(byte[] src, int fd, int off, int len) {
+	public int write(byte[] src, int fd, int off, int len) {
 		VFile vf = nodeMap.get(fd);
 		if (vf == null) {
 			System.err.println("Cannot find target file " + fd);
@@ -93,7 +93,7 @@ public class VFSystem {
 		return vf.write(src, off, len);
 	}
 	
-	public static int read(int fd, byte[] dst, int off, int len) {
+	public int read(int fd, byte[] dst, int off, int len) {
 		VFile vf = nodeMap.get(fd);
 		if (vf == null) {
 			System.err.println("Cannot find target file " + fd);
@@ -103,7 +103,7 @@ public class VFSystem {
 		return vf.read(dst, off, len);
 	}
 	
-	private static void doChmod(final String path, int mode) {
+	private void doChmod(final String path, int mode) {
 		String modes = "";
 		for (; mode != 0; mode /= 8) {
 			char c = (char)((mode % 8) + 0x30);			
@@ -112,7 +112,7 @@ public class VFSystem {
 		RuntimeUtil.exec("chmod", modes, path);
 	}
 	
-	public static int close(int fd) {
+	public int close(int fd) {
 		VFile vf = nodeMap.remove(fd);
 		if (vf == null) {
 			System.err.println("Cannot find target file " + fd);
@@ -120,7 +120,7 @@ public class VFSystem {
 		return vf.close();
 	}
 	
-	public static long lseek(int fd, int offset, int mode) {
+	public long lseek(int fd, int offset, int mode) {
 		VFile vf = nodeMap.get(fd);
 		if (vf == null) {
 			System.err.println("Cannot find target file " + fd);
@@ -130,7 +130,7 @@ public class VFSystem {
 		return vf.lseek(offset, mode);
 	}
 	
-	public static int link(File of, File nf) {
+	public int link(File of, File nf) {
 		try {
 			Files.createLink(nf.toPath(), of.toPath());
 		} catch (Exception e) {
@@ -140,7 +140,7 @@ public class VFSystem {
 		return 0;
 	}
 	
-	public static int stat(String fileName, Stat st) {
+	public int stat(String fileName, Stat st) {
 		String ret = RuntimeUtil.exec("stat", "-f d=%d i=%i p=%p l=%l u=%u g=%g s=%z r=%r a=%a m=%m c=%c", fileName).trim();
 		String[] rets = ret.split(" ");
 		for (String s : rets) {

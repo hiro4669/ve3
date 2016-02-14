@@ -13,20 +13,27 @@ import ve3.hdw.Memory;
 
 public class Unix32V {
 	
-	private final Memory memory;
+	private Memory memory;
 	private byte[] rawmem;
-	private final Cpu cpu;
+	private Cpu cpu;
 	private int[] reg;
 	private long end;
-	private final String vaxRoot;
+	private String vaxRoot;
 	
 	private long sigp;
 	private Map<Integer, Long> sigmap;
 	private int pid;
 	
 	private boolean debug;
+	private VFSystem vfs;
 	
-	public Unix32V(final Cpu cpu, final Memory memory, final String vaxRoot) {
+	public Unix32V() {
+		this.debug = false;
+		sigmap = new HashMap<Integer, Long>();
+		vfs = new VFSystem();
+	}
+	/*
+	public Unix32V(Cpu cpu, Memory memory, String vaxRoot) {
 		this.cpu = cpu;
 		this.vaxRoot = vaxRoot;
 		this.reg = cpu.getRegister();
@@ -36,8 +43,25 @@ public class Unix32V {
 		this.end = memory.getEOH();
 		
 		sigmap = new HashMap<Integer, Long>();
+		vfs = new VFSystem();
 		//pid = 0;
 		//pid = 10000; // for test
+	}
+	*/
+	
+	public void setCpu(Cpu cpu) {
+		this.cpu = cpu;
+		this.reg = cpu.getRegister();
+	}
+	
+	public void setMemory(Memory memory) {
+		this.memory = memory;
+		this.rawmem = memory.getRawMemory();
+		this.end = memory.getEOH();
+	}
+	
+	public void setVaxRoot(String vaxRoot) {
+		this.vaxRoot = vaxRoot;
 	}
 	
 	public void setDebug(boolean debug) {
@@ -170,7 +194,7 @@ public class Unix32V {
 			
 			//memory.dump(addr, 10);			
 			//int rlen = FSystem.read(fd, rawmem, addr, len);			
-			int rlen = VFSystem.read(fd, rawmem, addr, len);			
+			int rlen = vfs.read(fd, rawmem, addr, len);			
 			//memory.dump(addr, 10);
 			
 			if (debug) {
@@ -206,7 +230,7 @@ public class Unix32V {
 			
 			//System.out.write(rawmem, off, len);
 			//int rlen = FSystem.write(rawmem, dst, off, len);
-			int rlen = VFSystem.write(rawmem, dst, off, len);
+			int rlen = vfs.write(rawmem, dst, off, len);
 			
 			if (debug) {
 				System.out.printf(" => %d>\n", rlen);
@@ -237,7 +261,7 @@ public class Unix32V {
 			
 			
 			//int fd = FSystem.open(newPath, mode);
-			int fd = VFSystem.open(newPath, mode);
+			int fd = vfs.open(newPath, mode);
 			//System.out.println("fnum = " + fnum);
 			
 			if (fd == -1) {
@@ -265,7 +289,7 @@ public class Unix32V {
 			//System.out.println("argnum = " + argnum);
 			//System.out.println("fd     = " + fd);
 			//int r = FSystem.close(fd);
-			int r = VFSystem.close(fd);
+			int r = vfs.close(fd);
 			
 			
 			if (debug) {
@@ -288,7 +312,7 @@ public class Unix32V {
 			//System.out.println("fileName = " + fileName);
 			
 			//int fd = FSystem.creat(fileName, mode);
-			int fd = VFSystem.creat(newPath, mode);
+			int fd = vfs.creat(newPath, mode);
 
 			if (fd == -1) {
 				reg[Cpu.r0] = fd;
@@ -318,7 +342,7 @@ public class Unix32V {
 			File of = new File(convertPath(orgFile));
 			File nf = new File(convertPath(newFile));
 			
-			int r = VFSystem.link(of, nf);
+			int r = vfs.link(of, nf);
 			if (debug) {
 				System.out.printf("<link(0x%x, 0x%x) => %d>\n", fp1, fp2, r);
 				System.out.println("orgFile = " + orgFile);
@@ -370,7 +394,7 @@ public class Unix32V {
 			int pos = memory.seekZero(filep);
 			String fileName = new String(memory.rawRead(filep, (pos - filep)));
 			String newPath = convertPath(fileName);
-			int r = VFSystem.chmod(newPath, mode);
+			int r = vfs.chmod(newPath, mode);
 			
 			if (debug) {
 				System.out.printf("<creat(0x%x, %04o) => %d>\n", filep, mode, r);
@@ -417,7 +441,7 @@ public class Unix32V {
 			//System.out.println("fileName = " + fileName);			
 			Stat st = new Stat();
 			//FSystem.stat(fileName, st);
-			VFSystem.stat(fileName, st);
+			vfs.stat(fileName, st);
 			
 			/*
 			System.out.printf("dev    = %x\n", (short)(st.dev >> 16));
@@ -468,7 +492,7 @@ public class Unix32V {
 			int mode = memory.readInt(reg[Cpu.ap] + 12);
 			
 			//long noff = FSystem.lseek(fd, off, mode);
-			long noff = VFSystem.lseek(fd, off, mode);
+			long noff = vfs.lseek(fd, off, mode);
 			
 			if (debug) {
 				System.out.printf("<lseek(%x, 0x%x, %d) = %x>\n", fd, off, mode, noff);

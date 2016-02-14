@@ -122,7 +122,11 @@ public class Context {
 		offset = memory.load(rawdata, 0x20+tsize, offset, dsize);		
 		
 		cpu = new Cpu(memory);
-		os = new Unix32V(cpu, memory, vaxRoot);
+		//os = new Unix32V(cpu, memory, vaxRoot);
+		os = new Unix32V();
+		os.setCpu(cpu);
+		os.setMemory(memory);
+		os.setVaxRoot(vaxRoot);
 		//os.setPid(new Random().nextInt(0x3fffffff) >> 16);
 		os.setPid(10000); // for test
 		cpu.setOs(os);
