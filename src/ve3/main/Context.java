@@ -70,7 +70,8 @@ public class Context {
 	private void initImode() {
 		memory = new ConcrateMemory(0x100000);
 		memory.load(rawdata, 0, rawdata.length);
-		cpu = new Cpu(memory);
+		cpu = new Cpu();
+		cpu.setMemory(memory);
 		
 	}
 	
@@ -121,7 +122,8 @@ public class Context {
 		// load data
 		offset = memory.load(rawdata, 0x20+tsize, offset, dsize);		
 		
-		cpu = new Cpu(memory);
+		cpu = new Cpu();
+		cpu.setMemory(memory);
 		//os = new Unix32V(cpu, memory, vaxRoot);
 		os = new Unix32V();
 		os.setCpu(cpu);

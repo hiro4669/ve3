@@ -11,7 +11,7 @@ import java.util.Random;
 import ve3.hdw.Cpu;
 import ve3.hdw.Memory;
 
-public class Unix32V {
+public class Unix32V implements Cloneable {
 	
 	private Memory memory;
 	private byte[] rawmem;
@@ -605,4 +605,25 @@ public class Unix32V {
 	}
 	
 
+	@Override
+	public Unix32V clone() {
+		Unix32V v32 = null;
+		
+		try {
+			v32 = (Unix32V)super.clone();
+			v32.cpu = null;
+			v32.memory = null;
+			v32.reg = null;
+			v32.rawmem = null;
+			v32.sigmap = new HashMap<Integer, Long>();
+			for (Map.Entry<Integer, Long> e : this.sigmap.entrySet()) {
+				sigmap.put(e.getKey(), e.getValue());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException();
+		}
+		
+		return v32;
+	}
 }

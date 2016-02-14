@@ -3,6 +3,7 @@ package ve3.hdw;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
@@ -18,7 +19,7 @@ import ve3.os.OpInfo.Type;
 import ve3.os.Unix32V;
 import ve3.util.BCDUtil;
 
-public class Cpu {
+public class Cpu implements Cloneable {
 	
 	public static final int r0  = 0; 
 	public static final int r1  = 1; 
@@ -49,13 +50,13 @@ public class Cpu {
 	private OpInfo opinfo;
 	
 	private Unix32V os;
-	private final ByteArrayOutputStream logOut;
-	private final PrintStream log;
-	private final ByteArrayOutputStream symOut;
-	private final PrintStream sym;
+	private ByteArrayOutputStream logOut;
+	private PrintStream log;
+	//private ByteArrayOutputStream symOut;
+	//private PrintStream sym;
 	
 	private boolean debug;
-	private byte[] space = "  ".getBytes();
+	private final byte[] space = "  ".getBytes();
 	
 	// for computation (e.g., carry, ov flags)
 	private long  val64;
@@ -79,14 +80,13 @@ public class Cpu {
 	public Cpu() {
 		logOut = new ByteArrayOutputStream();
 		log = new PrintStream(logOut);
-		symOut = new ByteArrayOutputStream();
-		sym = new PrintStream(symOut);
+		//symOut = new ByteArrayOutputStream();
+		//sym = new PrintStream(symOut);
 		init();
 	}
-	
-	public Cpu(Memory memory) {
-		this();
-		this.memory = memory;		
+			
+	public void setMemory(Memory memory) {
+		this.memory = memory;
 	}
 	
 	public void init() {
@@ -2135,6 +2135,39 @@ public class Cpu {
 		
 	}
 	
+	@Override
+	public Cpu clone() {
+		Cpu cpu = null;
+		try {
+			cpu = (Cpu)super.clone();
+			cpu.reg = new int[16];
+			for (int i = 0; i < cpu.reg.length; ++i) {
+				cpu.reg[i] = this.reg[i];
+			}
+			cpu.memory = null;
+			cpu.opinfo = new OpInfo();
+			cpu.os = null;
+			cpu.logOut = new ByteArrayOutputStream();
+			cpu.logOut.write(this.logOut.toByteArray());
+			cpu.log = new PrintStream(cpu.logOut);
+			cpu.symTable = new HashMap<Integer, String>();
+			for (Map.Entry<Integer, String> e : this.symTable.entrySet()) {
+				cpu.symTable.put(e.getKey(), e.getValue());
+			}
+			cpu.callStack = new Stack<String>();
+			for (int i = 0; i < this.callStack.size(); ++i) {
+				cpu.callStack.push(this.callStack.get(i));
+			}
+			
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException();
+		}		
+		
+		return cpu;
+	}
+	
 	private void executeFloat(NibbleReader nr, int count) {
 		//System.out.printf("count = %d, addr = %x\n", count, reg[r5]);		
 		for (int i = 0; i < count; ++i) {
@@ -2265,7 +2298,8 @@ public class Cpu {
 			case 0x9d:
 			case 0x9e:
 			case 0x9f: { // EO$MOVE
-				executeFloat(nr, pattern & 0xf);
+				//executeFloat(nr, pattern & 0xf);
+				executeMove(nr, pattern & 0xf);
 				break;
 			}
 			case 0xa1: 
