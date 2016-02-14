@@ -37,11 +37,18 @@ public class Unix32V {
 		
 		sigmap = new HashMap<Integer, Long>();
 		//pid = 0;
-		pid = 10000; // for test
+		//pid = 10000; // for test
 	}
 	
 	public void setDebug(boolean debug) {
 		this.debug = debug;
+	}
+	
+	public void setPid(int pid) {
+		this.pid = pid;
+	}
+	public int getPid() {
+		return pid;
 	}
 	
 	public Map<Integer, String> createSymbolTable(int offset, byte[] rawdata) {

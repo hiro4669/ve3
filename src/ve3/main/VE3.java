@@ -77,7 +77,13 @@ public class VE3 {
 				Context ctx = new Context(rawdata);
 				ctx.startIMode();
 			} else {
-				Context ctx = new Context(rawdata, argList, vaxRoot);
+				//Context ctx = new Context(rawdata, argList, vaxRoot);
+				Context ctx = new Context();
+				ctx.setRawData(rawdata);
+				ctx.setArgList(argList);
+				ctx.setVaxRoot(vaxRoot);
+				ctx.init();
+				
 				ctx.setDebug(debug);				
 				ctx.setSysDebug(sysdbg | debug);				
 				ctx.start();

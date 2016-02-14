@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import ve3.hdw.ConcrateMemory;
 import ve3.hdw.Cpu;
@@ -20,8 +21,14 @@ public class Context {
 	private int dsize;
 	private int bsize;
 	private boolean debug;
+	private boolean sysdebug;
 	private boolean imode;
 	private String vaxRoot;
+	private List<String> argList;
+	private Context parent;
+	
+	public Context() {		
+	}
 	
 	public Context(byte[] rawdata) {
 		this.rawdata = rawdata;
@@ -29,19 +36,35 @@ public class Context {
 		debug = true;
 		initImode();
 		cpu.setDebug(debug);
-		
+		parent = null;		
 	}
 		
 	public Context(byte[] rawdata, List<String> argList, String vaxRoot) {
 		this.rawdata = rawdata;
 		this.vaxRoot = vaxRoot;
+		this.argList = argList;
 		init();
-		List<String> envList = new ArrayList<String>();
-		envList.add("PATH=/usr/local/bin");
-		
-		os.processArgs(argList, envList); // when call test, comment out
-		cpu.setPc(2);
-		cpu.setSymTable(os.createSymbolTable(tsize + dsize + 32, rawdata)); // create and set
+		parent = null;		
+	}
+	
+	public void setRawData(byte[] rawdata) {
+		this.rawdata = rawdata;
+	}
+	public byte[] getRawData() {
+		return rawdata;
+	}
+	
+	public void setVaxRoot(String vaxRoot) {
+		this.vaxRoot = vaxRoot;
+	}	
+	public String getVaxRoot() {
+		return vaxRoot;
+	}
+	public void setArgList(List<String> argList) {
+		this.argList = argList;
+	}
+	public List<String> getArgList() {
+		return argList;
 	}
 	
 	private void initImode() {
@@ -78,12 +101,11 @@ public class Context {
 		}		
 	}
 		
-	private void init() {
+	public void init() {
 		tsize = readInt(rawdata, 4);
 		dsize = readInt(rawdata, 8);
 		bsize = readInt(rawdata, 12);
-		
-		
+				
 		System.out.printf("tsize = 0x%x\n", tsize);
 		System.out.printf("dsize = 0x%x\n", dsize);
 		System.out.printf("bsize = 0x%x\n", bsize);
@@ -101,6 +123,8 @@ public class Context {
 		
 		cpu = new Cpu(memory);
 		os = new Unix32V(cpu, memory, vaxRoot);
+		//os.setPid(new Random().nextInt(0x3fffffff) >> 16);
+		os.setPid(10000); // for test
 		cpu.setOs(os);
 		
 		//memory.dump(offset, 4);
@@ -116,16 +140,29 @@ public class Context {
 		debug = false;
 		//System.out.println(offset);
 		//memory.dump();
+		
+		List<String> envList = new ArrayList<String>();
+		envList.add("PATH=/usr/local/bin");
+		
+		os.processArgs(argList, envList); // when call test, comment out
+		cpu.setPc(2);
+		cpu.setSymTable(os.createSymbolTable(tsize + dsize + 32, rawdata)); // create and set
 	}
 	
-	public void setSysDebug(boolean sysdbg) {
-		os.setDebug(sysdbg);
+	public void setSysDebug(boolean sysdbg) {		
+		os.setDebug(this.sysdebug = sysdbg);
 		//cpu.setDebug(false);
+	}
+	public boolean getSysDebug() {
+		return sysdebug;
 	}
 			
 	public void setDebug(boolean debug) {		
 		os.setDebug(this.debug = debug);
 		cpu.setDebug(debug);
+	}
+	public boolean getDebug() {
+		return debug;
 	}
 	
 	public void start() {
