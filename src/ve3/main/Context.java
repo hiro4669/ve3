@@ -11,7 +11,7 @@ import ve3.hdw.Cpu;
 import ve3.hdw.Memory;
 import ve3.os.Unix32V;
 
-public class Context {
+public class Context implements Cloneable {
 	
 	private Cpu cpu;
 	private Memory memory;
@@ -179,6 +179,45 @@ public class Context {
 	private int readInt(byte[] rawdata, int offset) {
 		return rawdata[offset] & 0xff | (rawdata[offset+1] & 0xff) << 8
 				| (rawdata[offset+2] & 0xff) << 16 | (rawdata[offset+3] & 0xff) << 24;
+	}
+	
+	@Override
+	public Context clone() {
+		Context cctx = null;
+		
+		try {
+			cctx = (Context)super.clone();
+			Cpu ccpu = this.cpu.clone();
+			Memory cmemory = this.memory.clone();
+			Unix32V cos = this.os.clone();
+			
+			cctx.cpu = ccpu;
+			cctx.memory = cmemory;
+			cctx.os = cos;
+			
+			ccpu.setMemory(cmemory);
+			cos.setContext(cctx);
+			cos.setCpu(ccpu);
+			cos.setMemory(cmemory);
+			ccpu.setOs(cos);
+			
+			cctx.rawdata = new byte[this.rawdata.length];		
+			System.arraycopy(this.rawdata, 0, cctx.rawdata, 0, cctx.rawdata.length);
+			cctx.argList = new ArrayList<String>();
+			for (String s : this.argList) {
+				cctx.argList.add(s);
+			}
+			cctx.parent = this;
+			
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException();
+		}
+		
+		
+		
+		return cctx;
 	}
 
 }

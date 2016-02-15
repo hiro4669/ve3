@@ -33,6 +33,7 @@ public interface Memory extends Cloneable {
 	public int getPrevPc();
 	
 	public void dump(int offset, int len);
-	public int seekZero(int offset);
+	public int seekZero(int offset);	
+	public Memory clone();
 
 }
