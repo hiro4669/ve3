@@ -241,5 +241,26 @@ public class ConcrateMemory implements Memory {
 		buf.reset();
 		return rawdata;	
 	}
+	
+	@Override
+	public Memory clone() {
+		ConcrateMemory m = null;
+		
+		try {
+			m = (ConcrateMemory)super.clone();
+			m.memory = new byte[this.memory.length];
+			System.arraycopy(this.memory, 0, m.memory, 0, m.memory.length);
+			m.buf = new ByteArrayOutputStream();
+			m.buf.write(this.buf.toByteArray());
+			m.rawout = new PrintStream(m.buf);
+			m.mval = new MVal();			
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException();
+		}
+		
+		
+		return m;
+	}
 
 }

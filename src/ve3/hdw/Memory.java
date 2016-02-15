@@ -1,6 +1,6 @@
 package ve3.hdw;
 
-public interface Memory {
+public interface Memory extends Cloneable {
 	public byte[] getRawMemory();
 	public int load(byte[] rawdata, int offset, int size); // for only initial text loading
 	public int load(byte[] rawdata, int roffset, int moffset, int size); // for only initial memory loading
