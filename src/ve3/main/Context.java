@@ -126,6 +126,7 @@ public class Context {
 		cpu.setMemory(memory);
 		//os = new Unix32V(cpu, memory, vaxRoot);
 		os = new Unix32V();
+		os.setContext(this);
 		os.setCpu(cpu);
 		os.setMemory(memory);
 		os.setVaxRoot(vaxRoot);

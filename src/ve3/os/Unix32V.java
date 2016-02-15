@@ -10,9 +10,11 @@ import java.util.Random;
 
 import ve3.hdw.Cpu;
 import ve3.hdw.Memory;
+import ve3.main.Context;
 
 public class Unix32V implements Cloneable {
 	
+	private Context ctx;
 	private Memory memory;
 	private byte[] rawmem;
 	private Cpu cpu;
@@ -48,6 +50,13 @@ public class Unix32V implements Cloneable {
 		//pid = 10000; // for test
 	}
 	*/
+	
+	public void setContext(Context ctx) {
+		this.ctx = ctx;
+	}	
+	public Context getContext() {
+		return ctx;
+	}
 	
 	public void setCpu(Cpu cpu) {
 		this.cpu = cpu;
