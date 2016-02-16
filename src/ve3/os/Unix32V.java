@@ -30,12 +30,14 @@ public class Unix32V implements Cloneable {
 	private VFSystem vfs;
 	
 	private Context childCtx;
+	private boolean share_fs; // if child process share VFSystem or not
 	
 	public Unix32V() {
 		this.debug = false;
 		sigmap = new HashMap<Integer, Long>();
 		vfs = new VFSystem();
 		childCtx = null;
+		share_fs = false;
 	}
 	/*
 	public Unix32V(Cpu cpu, Memory memory, String vaxRoot) {
@@ -59,6 +61,10 @@ public class Unix32V implements Cloneable {
 	}	
 	public Context getContext() {
 		return ctx;
+	}
+	
+	public void setShareFs(boolean share_fs) {
+		this.share_fs = share_fs;
 	}
 	
 	public void setCpu(Cpu cpu) {
@@ -328,7 +334,7 @@ public class Unix32V implements Cloneable {
 			//int r = FSystem.close(fd);
 			
 			int r = 0;
-			if (!ctx.hasParent()) {
+			if (!share_fs) {
 				r = vfs.close(fd);	
 				
 				//System.out.println("real close");

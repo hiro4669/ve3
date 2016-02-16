@@ -208,6 +208,7 @@ public class Context implements Cloneable {
 									
 			//cos.setPid(new Random().nextInt(0x3fffffff) >> 16);
 			cos.setPid(cctx.pid = 12000); // for test
+			cos.setShareFs(true); // Share VFSystem with parent
 			
 			
 			ccpu.setMemory(cmemory);
