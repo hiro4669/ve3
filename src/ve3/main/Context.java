@@ -26,6 +26,7 @@ public class Context implements Cloneable {
 	private String vaxRoot;
 	private List<String> argList;
 	private Context parent;
+	private int pid;
 	
 	public Context() {		
 	}
@@ -47,6 +48,10 @@ public class Context implements Cloneable {
 		parent = null;		
 	}
 	
+	public int getPid() {
+		return pid;
+	}
+	
 	public void setRawData(byte[] rawdata) {
 		this.rawdata = rawdata;
 	}
@@ -65,6 +70,10 @@ public class Context implements Cloneable {
 	}
 	public List<String> getArgList() {
 		return argList;
+	}
+	
+	public boolean hasParent() {
+		return (parent != null);
 	}
 	
 	private void initImode() {
@@ -124,6 +133,8 @@ public class Context implements Cloneable {
 		
 		cpu = new Cpu();
 		cpu.setMemory(memory);
+		cpu.setContext(this);
+		
 		//os = new Unix32V(cpu, memory, vaxRoot);
 		os = new Unix32V();
 		os.setContext(this);
@@ -131,7 +142,7 @@ public class Context implements Cloneable {
 		os.setMemory(memory);
 		os.setVaxRoot(vaxRoot);
 		//os.setPid(new Random().nextInt(0x3fffffff) >> 16);
-		os.setPid(10000); // for test
+		os.setPid(this.pid = 10000); // for test
 		cpu.setOs(os);
 		
 		//memory.dump(offset, 4);
@@ -190,12 +201,17 @@ public class Context implements Cloneable {
 			Cpu ccpu = this.cpu.clone();
 			Memory cmemory = this.memory.clone();
 			Unix32V cos = this.os.clone();
-			
+						
 			cctx.cpu = ccpu;
 			cctx.memory = cmemory;
 			cctx.os = cos;
+									
+			//cos.setPid(new Random().nextInt(0x3fffffff) >> 16);
+			cos.setPid(cctx.pid = 12000); // for test
+			
 			
 			ccpu.setMemory(cmemory);
+			ccpu.setContext(cctx);
 			cos.setContext(cctx);
 			cos.setCpu(ccpu);
 			cos.setMemory(cmemory);

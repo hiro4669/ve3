@@ -11,6 +11,7 @@ import ve3.disassm.Dump;
 import ve3.disassm.V32Disassm;
 import ve3.disassm.V32Disassm.OT;
 import ve3.disassm.V32Disassm.Ope;
+import ve3.main.Context;
 import ve3.os.FSystem;
 import ve3.os.MetaInfo;
 import ve3.os.OpInfo;
@@ -54,6 +55,7 @@ public class Cpu implements Cloneable {
 	private PrintStream log;
 	//private ByteArrayOutputStream symOut;
 	//private PrintStream sym;
+	private Context ctx;
 	
 	private boolean debug;
 	private final byte[] space = "  ".getBytes();
@@ -67,7 +69,7 @@ public class Cpu implements Cloneable {
 	// for debug
 	private Map<Integer, String> symTable;
 	private Stack<String> callStack;
-	private int stepCount = 0;
+	public int stepCount = 0; // public for temporary
 	
 	public static Ope[] table = new Ope[0xfffff];
 	
@@ -117,6 +119,10 @@ public class Cpu implements Cloneable {
 	
 	public void setOs(Unix32V os) {
 		this.os = os;
+	}
+	
+	public void setContext(Context ctx) {
+		this.ctx = ctx;
 	}
 	
 	public int[] getRegister() {
@@ -882,7 +888,8 @@ public class Cpu implements Cloneable {
 	}
 			
 	public void start() {
-		if (debug) {
+		//if (debug) {
+		if (debug && !ctx.hasParent()) {			
 			showHeader();
 		}
 		//memory.dump(0xc00, 16);		
@@ -890,12 +897,17 @@ public class Cpu implements Cloneable {
 		if (symTable != null && symTable.containsKey(reg[pc] - 2)) {
 			log.println(callStack.push(symTable.get(reg[pc] - 2)));			
 		} 
+		
+		int limit = 10000;
+		/*
+		if (ctx.hasParent()) {
+			limit = 1000;
+		}
+		*/
 
-		//for (int i = 0; i < 71000; ++i, ++stepCount) {
-		//for (int i = 0; i < 200000; ++i, ++stepCount) {
-		for (int i = 0; i < 550000; ++i, ++stepCount) { // as 140000
+		for (int i = 0; i < limit; ++i, ++stepCount) { // as 140000
 			//FSystem.check();
-			run();			
+			if (run() == -1) return;
 			//memory.dump(0x611, 1);
 		}
 		//memory.dump(0xffec8, 20);
@@ -905,7 +917,7 @@ public class Cpu implements Cloneable {
 	
 	}
 	
-	public void run() {
+	public int run() {
 		opinfo.clear();
 		if (debug) {
 			//log.printf("%x:", reg[pc]);
@@ -988,8 +1000,8 @@ public class Cpu implements Cloneable {
 				System.out.println(new String(logOut.toByteArray()));
 				logOut.reset();
 			}
-			os.syscall(src);			
-			break;
+			return os.syscall(src);			
+			//break;
 		}
 		case 0xdd: { // pushl
 			int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
@@ -2133,6 +2145,8 @@ public class Cpu implements Cloneable {
 			logOut.reset();
 		}
 		
+		return 0;
+		
 	}
 	
 	@Override
@@ -2147,6 +2161,7 @@ public class Cpu implements Cloneable {
 			cpu.memory = null;
 			cpu.opinfo = new OpInfo();
 			cpu.os = null;
+			cpu.ctx = null;
 			cpu.logOut = new ByteArrayOutputStream();
 			cpu.logOut.write(this.logOut.toByteArray());
 			cpu.log = new PrintStream(cpu.logOut);

@@ -29,10 +29,13 @@ public class Unix32V implements Cloneable {
 	private boolean debug;
 	private VFSystem vfs;
 	
+	private Context childCtx;
+	
 	public Unix32V() {
 		this.debug = false;
 		sigmap = new HashMap<Integer, Long>();
 		vfs = new VFSystem();
+		childCtx = null;
 	}
 	/*
 	public Unix32V(Cpu cpu, Memory memory, String vaxRoot) {
@@ -171,7 +174,7 @@ public class Unix32V implements Cloneable {
 		
 	}
 	
-	public void syscall(int sysnum) {
+	public int syscall(int sysnum) {
 		switch (sysnum) {
 		case 1: { // exit
 			int argnum = memory.readInt(reg[Cpu.ap]);
@@ -184,8 +187,33 @@ public class Unix32V implements Cloneable {
 			System.out.println("argnum = " + argnum);
 			System.out.println("ext = " + exnum);
 			*/
-			System.exit(exnum);
+			if (ctx.hasParent()) return -1;
 			
+			System.exit(exnum);			
+			break;
+		}
+		case 2: { // fork
+			int argnum = memory.readInt(reg[Cpu.ap]);
+			//System.out.printf("argnum = %d\n", argnum);
+			
+			// for child process
+			reg[Cpu.r0] = ctx.getPid();
+			reg[Cpu.r1] = 1;					
+			cpu.clearCarry();
+			
+			//System.out.printf("parent pid = %d\n", ctx.getPid());
+			
+			childCtx = ctx.clone();
+			int cpid = childCtx.getPid();
+			
+			if (debug) {
+				System.out.printf("<fork() => %d>\n", cpid);
+			}
+			// for parent process
+			reg[Cpu.r0] = cpid;
+			reg[Cpu.r1] = 0;
+			
+			//System.exit(1);
 			break;
 		}
 		case 3: { // read
@@ -298,8 +326,15 @@ public class Unix32V implements Cloneable {
 			//System.out.println("argnum = " + argnum);
 			//System.out.println("fd     = " + fd);
 			//int r = FSystem.close(fd);
-			int r = vfs.close(fd);
 			
+			int r = 0;
+			if (!ctx.hasParent()) {
+				r = vfs.close(fd);	
+				
+				//System.out.println("real close");
+				//System.exit(1);
+			}
+						
 			
 			if (debug) {
 				System.out.printf("<close(%d) => %d>\n", fd, r);				
@@ -308,6 +343,37 @@ public class Unix32V implements Cloneable {
 			reg[Cpu.r0] = 0;
 			cpu.clearCarry();		
 			
+			break;
+		}
+		case 7: { // wait
+			int argnum = memory.readInt(reg[Cpu.ap]);
+			int saddr = memory.readInt(reg[Cpu.ap] + 4); // status address
+			//System.out.printf("argnum = %d, saddr = %x\n", argnum, saddr);
+			
+			if (debug) {
+				System.out.println("<wait()>");
+			}
+			
+			if (childCtx != null) {
+				int cpid = childCtx.getPid();
+				//System.out.println("child pid = " + cpid);
+				childCtx.start();
+				//memory.dump(saddr, 4);
+				
+				if (saddr != 0) {
+					memory.writeInt(saddr, 0); // write status
+				}
+				
+				if (debug) {
+					System.out.printf("<wait() => %d, 0x%x>\n", cpid, 0);
+				}
+				reg[Cpu.r0] = cpid;
+				cpu.clearCarry();
+			}
+			
+			cpu.clearCarry();
+			
+			//System.exit(1);
 			break;
 		}
 		case 8: { // creat
@@ -611,6 +677,8 @@ public class Unix32V implements Cloneable {
 			System.exit(1);
 		}
 		}
+		
+		return 0;
 	}
 	
 
