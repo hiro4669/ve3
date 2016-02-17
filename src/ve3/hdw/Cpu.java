@@ -898,7 +898,8 @@ public class Cpu implements Cloneable {
 			log.println(callStack.push(symTable.get(reg[pc] - 2)));			
 		} 
 		
-		int limit = 10000;
+		int limit = 854;
+		//int limit = 50000000;
 		/*
 		if (ctx.hasParent()) {
 			limit = 1000;

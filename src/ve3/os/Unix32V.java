@@ -678,6 +678,41 @@ public class Unix32V implements Cloneable {
 			//System.exit(1);
 			break;
 		}
+		case 0x3b: { // exece
+			int argnum = memory.readInt(reg[Cpu.ap]);
+			int filep = memory.readInt(reg[Cpu.ap] + 4);
+			int argaddr = memory.readInt(reg[Cpu.ap] + 8);
+			int envaddr = memory.readInt(reg[Cpu.ap] + 12);
+			
+			System.out.printf("argnum = %x\n", argnum);
+			System.out.printf("argaddr = %x\n", argaddr);
+			System.out.printf("envaddr = %x\n", envaddr);
+			int pos = memory.seekZero(filep);
+			String fileName = new String(memory.rawRead(filep, (pos - filep)));
+			System.out.println("fileName = " + fileName);
+			
+			for (int i = argaddr;; i += 4) {
+				int argp = memory.readInt(i);
+				System.out.printf("argp = %x\n", argp);
+				if (argp == 0) break;				
+				pos = memory.seekZero(argp);
+				String argName = new String(memory.rawRead(argp, (pos - argp)));
+				System.out.println("argName = " + argName);				
+			}
+			
+			for (int i = envaddr;; i += 4) {
+				int envp = memory.readInt(i);
+				System.out.printf("envp = %x\n", envp);
+				if (envp == 0) break;
+				pos = memory.seekZero(envp);
+				String envName = new String(memory.rawRead(envp, (pos - envp)));
+				System.out.println("envName = " + envName);
+			}
+			
+			
+			System.exit(1);
+			break;
+		}
 		default: {
 			System.out.println("unsupported syscam call number :" + sysnum);
 			System.exit(1);
