@@ -1,8 +1,12 @@
 package ve3.os;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +41,11 @@ public class Unix32V implements Cloneable {
 		sigmap = new HashMap<Integer, Long>();
 		vfs = new VFSystem();
 		childCtx = null;
+		share_fs = false;
+	}
+	
+	public void newContext() {
+		vfs = new VFSystem();
 		share_fs = false;
 	}
 	/*
@@ -684,33 +693,97 @@ public class Unix32V implements Cloneable {
 			int argaddr = memory.readInt(reg[Cpu.ap] + 8);
 			int envaddr = memory.readInt(reg[Cpu.ap] + 12);
 			
-			System.out.printf("argnum = %x\n", argnum);
-			System.out.printf("argaddr = %x\n", argaddr);
-			System.out.printf("envaddr = %x\n", envaddr);
+			//System.out.printf("argnum = %x\n", argnum);
+			//System.out.printf("argaddr = %x\n", argaddr);
+			//System.out.printf("envaddr = %x\n", envaddr);
 			int pos = memory.seekZero(filep);
 			String fileName = new String(memory.rawRead(filep, (pos - filep)));
+			String newPath = convertPath(fileName);
 			System.out.println("fileName = " + fileName);
+			System.out.println("newName  = " + newPath);
 			
+			List<String> argList = new ArrayList<String>();			
 			for (int i = argaddr;; i += 4) {
 				int argp = memory.readInt(i);
-				System.out.printf("argp = %x\n", argp);
+				//System.out.printf("argp = %x\n", argp);
 				if (argp == 0) break;				
 				pos = memory.seekZero(argp);
 				String argName = new String(memory.rawRead(argp, (pos - argp)));
-				System.out.println("argName = " + argName);				
+				System.out.println("argName = " + argName);
+				argList.add(argName);
 			}
 			
+			List<String> envList = new ArrayList<String>();
 			for (int i = envaddr;; i += 4) {
 				int envp = memory.readInt(i);
-				System.out.printf("envp = %x\n", envp);
+				//System.out.printf("envp = %x\n", envp);
 				if (envp == 0) break;
 				pos = memory.seekZero(envp);
 				String envName = new String(memory.rawRead(envp, (pos - envp)));
 				System.out.println("envName = " + envName);
+				envList.add(envName);
 			}
 			
+			try {
+				BufferedInputStream bin = new BufferedInputStream(new FileInputStream(newPath));
+				ByteArrayOutputStream bout = new ByteArrayOutputStream();
+				
+				int count;
+				byte[] buffer = new byte[1024];
+				while ((count = bin.read(buffer, 0, buffer.length)) != -1) {
+	//				System.out.println("count = " + count);
+					bout.write(buffer, 0, count);
+				}		
+				byte[] rawdata = bout.toByteArray();
+				bout.close();
+				bin.close();
+				
+				
+				if (debug) {						
+					System.out.printf("<exece(%s, 0x%x, 0x%x)>\n", newPath, argaddr, envaddr);
+				}
+				
+				ctx.setRawData(rawdata);
+				ctx.setArgList(argList);
+				ctx.setEnvList(envList);
+				ctx.reinit();
+				
+				/*
+				if (ctx.hasParent()) {
+					boolean debug = ctx.getDebug();
+					boolean sysdbg = ctx.getSysDebug();
+					Context parent = ctx.getParent();
+					String vaxRoot = ctx.getVaxRoot();
+					int pid = ctx.getPid();
+					
+					Context nctx = new Context();
+					nctx.setRawData(rawdata);
+					nctx.setArgList(argList);
+					nctx.setEnvList(envList);
+					nctx.setVaxRoot(vaxRoot);
+					nctx.init();
+					nctx.setPid(pid);
+					nctx.setDebug(debug);
+					nctx.setSysDebug(sysdbg | debug);
+					
+					if (debug) {						
+						System.out.printf("<exece(%s, 0x%x, 0x%x)>\n", newPath, argaddr, envaddr);
+					}
+					
+					
+				} else {
+					System.err.println("does not suppor self exece");
+					System.exit(1);
+				}
+				*/			
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.err.println("cannot find target file : " + newPath);
+				throw new RuntimeException();
+			}
+						
 			
-			System.exit(1);
+			//System.exit(1);
 			break;
 		}
 		default: {

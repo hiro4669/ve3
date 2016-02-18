@@ -78,9 +78,13 @@ public class VE3 {
 				ctx.startIMode();
 			} else {
 				//Context ctx = new Context(rawdata, argList, vaxRoot);
+				List<String> envList = new ArrayList<String>();
+				envList.add("PATH=/usr/local/bin");
+				
 				Context ctx = new Context();
 				ctx.setRawData(rawdata);
 				ctx.setArgList(argList);
+				ctx.setEnvList(envList);
 				ctx.setVaxRoot(vaxRoot);
 				ctx.init();
 				

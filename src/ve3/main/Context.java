@@ -25,6 +25,7 @@ public class Context implements Cloneable {
 	private boolean imode;
 	private String vaxRoot;
 	private List<String> argList;
+	private List<String> envList;
 	private Context parent;
 	private int pid;
 	
@@ -72,8 +73,19 @@ public class Context implements Cloneable {
 		return argList;
 	}
 	
+	public void setEnvList(List<String> envList) {
+		this.envList = envList;
+	}	
+	public List<String> getEnvList() {
+		return envList;
+	}
+	
 	public boolean hasParent() {
 		return (parent != null);
+	}
+	
+	public Context getParent() {
+		return parent;
 	}
 	
 	private void initImode() {
@@ -109,6 +121,40 @@ public class Context implements Cloneable {
 			e.printStackTrace();
 			System.exit(1);
 		}		
+	}
+	
+	public void setPid(int pid) {
+		if (os == null) throw new RuntimeException();
+		os.setPid(this.pid = pid);
+	}
+	
+	public void reinit() {
+		tsize = readInt(rawdata, 4);
+		dsize = readInt(rawdata, 8);
+		bsize = readInt(rawdata, 12);
+				
+		System.out.printf("tsize = 0x%x\n", tsize);
+		System.out.printf("dsize = 0x%x\n", dsize);
+		System.out.printf("bsize = 0x%x\n", bsize);
+		
+		int offset = 0;
+		// load text
+		offset = memory.load(rawdata, 0x20, offset, tsize);
+		offset = (offset + 0x1ff) & ~0x1ff;
+		memory.setEOH((long)(offset + dsize + bsize));
+		System.out.printf("data offset = 0x%x\n", offset);
+		System.out.printf("end = begin of sbrk = 0x%x\n", memory.getEOH());
+		// load data
+		offset = memory.load(rawdata, 0x20+tsize, offset, dsize);
+		
+		cpu.init(); // initialize callstack/register/psl
+		cpu.setSp(0x100000);
+		
+		os.newContext(); // create isolated VFSystem
+		os.processArgs(argList, envList); // when call test, comment out
+		cpu.setPc(2);
+		cpu.setSymTable(os.createSymbolTable(tsize + dsize + 32, rawdata)); // create and set
+		
 	}
 		
 	public void init() {
@@ -159,8 +205,8 @@ public class Context implements Cloneable {
 		//System.out.println(offset);
 		//memory.dump();
 		
-		List<String> envList = new ArrayList<String>();
-		envList.add("PATH=/usr/local/bin");
+		//List<String> envList = new ArrayList<String>();
+		//envList.add("PATH=/usr/local/bin");
 		
 		os.processArgs(argList, envList); // when call test, comment out
 		cpu.setPc(2);
@@ -181,6 +227,10 @@ public class Context implements Cloneable {
 	}
 	public boolean getDebug() {
 		return debug;
+	}
+	
+	public void setParent(Context parent) {
+		this.parent = parent;
 	}
 	
 	public void start() {
@@ -223,6 +273,10 @@ public class Context implements Cloneable {
 			cctx.argList = new ArrayList<String>();
 			for (String s : this.argList) {
 				cctx.argList.add(s);
+			}
+			cctx.envList = new ArrayList<String>();
+			for (String s : this.envList) {
+				cctx.envList.add(s);
 			}
 			cctx.parent = this;
 			

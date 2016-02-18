@@ -82,6 +82,7 @@ public class Cpu implements Cloneable {
 	public Cpu() {
 		logOut = new ByteArrayOutputStream();
 		log = new PrintStream(logOut);
+		debug = false;
 		//symOut = new ByteArrayOutputStream();
 		//sym = new PrintStream(symOut);
 		init();
@@ -96,8 +97,7 @@ public class Cpu implements Cloneable {
 			reg[i] = 0;
 		}
 		opinfo = new OpInfo();	
-		psl = 0x41f0000;
-		debug = false;		
+		psl = 0x41f0000;		
 		callStack = new Stack<String>();
 	}
 	
@@ -898,13 +898,14 @@ public class Cpu implements Cloneable {
 			log.println(callStack.push(symTable.get(reg[pc] - 2)));			
 		} 
 		
-		int limit = 854;
+		//int limit = 855; // end of child process
+		int limit = 2000;
 		//int limit = 50000000;
-		/*
+		
 		if (ctx.hasParent()) {
-			limit = 1000;
+			limit = 1000	; // start to exece
 		}
-		*/
+		
 
 		for (int i = 0; i < limit; ++i, ++stepCount) { // as 140000
 			//FSystem.check();

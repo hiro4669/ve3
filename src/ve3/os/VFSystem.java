@@ -113,9 +113,12 @@ public class VFSystem {
 	}
 	
 	public int close(int fd) {
+		//System.out.println("call close");
 		VFile vf = nodeMap.remove(fd);
 		if (vf == null) {
 			System.err.println("Cannot find target file " + fd);
+			//System.exit(1);
+			return 0;
 		}
 		return vf.close();
 	}
