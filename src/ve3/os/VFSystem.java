@@ -12,6 +12,9 @@ public class VFSystem {
 	
 	private Map<Integer, VFile> nodeMap;
 	
+	static final int readmask  = 0x124;
+	static final int writemask = 0x92;
+	
 	public VFSystem() {
 		nodeMap = new HashMap<Integer, VFile>();
 		nodeMap.put(0, new VFile(System.in));
@@ -67,7 +70,10 @@ public class VFSystem {
 				vf.creat();
 				doChmod(vf.getPath(), mode);
 			}
-			fd = open(fname, 1);
+			int fmode = -1;
+			if ((mode & readmask) != 0) ++fmode;
+			if ((mode & writemask) != 0) ++fmode;				
+			fd = open(fname, fmode);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return -1;

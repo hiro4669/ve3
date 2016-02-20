@@ -419,9 +419,13 @@ public class Cpu implements Cloneable {
 			if (value == 0xf) return resolveDispPc(optype, type);
 			opinfo.opsub.type = Type.WordDispDefer;
 			opinfo.opsub.operand = (byte)(arg & 0xf);
-			opinfo.opsub.arg = fetch2().sval;
-			System.out.println(type + " not implemented yet in resolveDisp");
-			System.exit(1);
+			opinfo.opsub.arg = fetch2().sval;			
+			long tmp = (long)reg[opinfo.opsub.operand] + (long)opinfo.opsub.arg;
+			//System.out.printf("tmp = %x\n", tmp);
+			//System.out.println(type + " not implemented yet in resolveDisp");
+			opinfo.opsub.addr = memory.readInt((int)tmp);
+			//System.out.printf("addr = %x\n", opinfo.opsub.addr);
+			//System.exit(1);
 			return opinfo.opsub;
 		}
 		case 0x0e: { // Long Displacement
@@ -706,6 +710,10 @@ public class Cpu implements Cloneable {
 			memory.writeByte((int)addr, value);
 			break;
 		}
+		case WordDispDefer: {						
+			memory.writeByte((int)addr, value);
+			break;
+		}
 		default: {
 			System.out.printf("addr = 0x%x, value = 0x%x\n", addr, value);
 			System.out.println("unrecognized type in storeByte: " + type);
@@ -899,23 +907,21 @@ public class Cpu implements Cloneable {
 		} 
 		
 		//int limit = 855; // end of child process
-		int limit = 2000;
-		//int limit = 50000000;
+		//int limit = 2000;
+		int limit = 1000000;
+		
 		
 		if (ctx.hasParent()) {
-			limit = 1000	; // start to exece
+			limit = 50000000; // start to exece
 		}
 		
 
 		for (int i = 0; i < limit; ++i, ++stepCount) { // as 140000
 			//FSystem.check();
 			if (run() == -1) return;
-			//memory.dump(0x611, 1);
 		}
-		//memory.dump(0xffec8, 20);
 		System.out.println("end of loop");
 		
-		//memory.dump(reg[sp], 0x100000 - reg[sp]); // show memory		
 	
 	}
 	
@@ -1355,6 +1361,16 @@ public class Cpu implements Cloneable {
 		case 0x7c: { // clrd
 			storeLong(opinfo.getType1(), opinfo.getAddr1(), 0);
 			setNZVC(false, true, false, isC());
+			break;
+		}
+		case 0x96: { // incb
+			long laddr;
+			Type ltype;
+			byte src = getByte(ltype = opinfo.getType1(), opinfo.getArg1(), laddr = opinfo.getAddr1());
+			val32 = (int)src + 1;
+			val8 = (byte)val32;
+			storeByte(ltype, laddr, val8);
+			setNZVC(val8 < 0, val8 == 0, val32 != val8, (src & 0xff) + 1 >= 0x100);
 			break;
 		}
 		case 0xb6: { // incw

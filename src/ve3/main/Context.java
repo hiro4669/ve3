@@ -133,17 +133,19 @@ public class Context implements Cloneable {
 		dsize = readInt(rawdata, 8);
 		bsize = readInt(rawdata, 12);
 				
+		/*
 		System.out.printf("tsize = 0x%x\n", tsize);
 		System.out.printf("dsize = 0x%x\n", dsize);
 		System.out.printf("bsize = 0x%x\n", bsize);
+		*/
 		
 		int offset = 0;
 		// load text
 		offset = memory.load(rawdata, 0x20, offset, tsize);
 		offset = (offset + 0x1ff) & ~0x1ff;
 		memory.setEOH((long)(offset + dsize + bsize));
-		System.out.printf("data offset = 0x%x\n", offset);
-		System.out.printf("end = begin of sbrk = 0x%x\n", memory.getEOH());
+		//System.out.printf("data offset = 0x%x\n", offset);
+		//System.out.printf("end = begin of sbrk = 0x%x\n", memory.getEOH());
 		// load data
 		offset = memory.load(rawdata, 0x20+tsize, offset, dsize);
 		

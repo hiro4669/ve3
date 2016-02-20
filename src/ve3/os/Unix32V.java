@@ -328,6 +328,7 @@ public class Unix32V implements Cloneable {
 				System.out.printf("<open(0x%x, %d) => %d>\n", filep, mode, fd);
 				System.out.println("fileName = " + fileName);
 				System.out.println("convert path = " + newPath);
+				//System.exit(1);
 			}
 			
 						
@@ -381,6 +382,7 @@ public class Unix32V implements Cloneable {
 				
 				if (debug) {
 					System.out.printf("<wait() => %d, 0x%x>\n", cpid, 0);
+					//System.exit(1);
 				}
 				reg[Cpu.r0] = cpid;
 				cpu.clearCarry();
@@ -487,7 +489,7 @@ public class Unix32V implements Cloneable {
 			int r = vfs.chmod(newPath, mode);
 			
 			if (debug) {
-				System.out.printf("<creat(0x%x, %04o) => %d>\n", filep, mode, r);
+				System.out.printf("<chmod(0x%x, %04o) => %d>\n", filep, mode, r);
 				System.out.println("fileName = " + newPath);
 				System.out.println("mode = " + mode);				
 			}
@@ -699,18 +701,21 @@ public class Unix32V implements Cloneable {
 			int pos = memory.seekZero(filep);
 			String fileName = new String(memory.rawRead(filep, (pos - filep)));
 			String newPath = convertPath(fileName);
-			System.out.println("fileName = " + fileName);
-			System.out.println("newName  = " + newPath);
+			//System.out.println("fileName = " + fileName);
+			//System.out.println("newName  = " + newPath);
 			
-			List<String> argList = new ArrayList<String>();			
+			List<String> argList = new ArrayList<String>();
+			String argStr = "";
 			for (int i = argaddr;; i += 4) {
 				int argp = memory.readInt(i);
 				//System.out.printf("argp = %x\n", argp);
 				if (argp == 0) break;				
 				pos = memory.seekZero(argp);
 				String argName = new String(memory.rawRead(argp, (pos - argp)));
-				System.out.println("argName = " + argName);
+				//System.out.println("argName = " + argName);
 				argList.add(argName);
+				argStr += argName;
+				argStr += " ";
 			}
 			
 			List<String> envList = new ArrayList<String>();
@@ -720,7 +725,7 @@ public class Unix32V implements Cloneable {
 				if (envp == 0) break;
 				pos = memory.seekZero(envp);
 				String envName = new String(memory.rawRead(envp, (pos - envp)));
-				System.out.println("envName = " + envName);
+				//System.out.println("envName = " + envName);
 				envList.add(envName);
 			}
 			
@@ -740,8 +745,14 @@ public class Unix32V implements Cloneable {
 				
 				
 				if (debug) {						
-					System.out.printf("<exece(%s, 0x%x, 0x%x)>\n", newPath, argaddr, envaddr);
+					//System.out.printf("<exece(%s, 0x%x, 0x%x)>\n", newPath, argaddr, envaddr);
+					System.out.printf("<exece(%s, %s, 0x%x)>\n", newPath, argStr, envaddr);
 				}
+				/*
+				for (String s : argList) {
+					System.out.println("arg = " + s);
+				}
+				*/
 				
 				ctx.setRawData(rawdata);
 				ctx.setArgList(argList);
