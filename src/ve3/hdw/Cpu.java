@@ -908,7 +908,7 @@ public class Cpu implements Cloneable {
 		
 		//int limit = 855; // end of child process
 		//int limit = 2000;
-		int limit = 1000000;
+		int limit = 400000;
 		
 		
 		if (ctx.hasParent()) {
@@ -1397,6 +1397,17 @@ public class Cpu implements Cloneable {
 			//setNZVC(val32 < 0, val32 == 0, val64 != val32, val64 >= (long)0x100000000L);			
 			break;
 		}
+		case 0xb7: { // decw
+			long laddr;
+			Type ltype;
+			short src = getShort(ltype = opinfo.getType1(), opinfo.getArg1(), laddr = opinfo.getAddr1());
+			//System.out.printf("addr = %x, src = %x\n", laddr, src);
+			val32 = (int)src - 1;
+			val16 = (short)val32;			
+			storeShort(ltype, laddr, val16);
+			setNZVC(val16 < 0, val16 == 0, val32 != val16, (src & 0xffff) < (1 & 0xffff));						
+			break;
+		}
 		case 0xd7: { // decl
 			long laddr;
 			Type ltype;
@@ -1669,6 +1680,15 @@ public class Cpu implements Cloneable {
 			storeInt(opinfo.getType3(), opinfo.getAddr3(), val32);
 			//memory.dump((int)opinfo.getAddr3(), 4);
 			setNZVC(val32 < 0, val32 == 0, false, isC());						
+			break;
+		}
+		case 0x8e: { // mnegb
+			byte src = getByte(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			//System.out.printf("src = %x\n", src);
+			val32 = src * -1;
+			val8 = (byte)val32;			
+			storeByte(opinfo.getType2(), opinfo.getAddr2(), val8);						
+			setNZVC(val8 < 0, val16 == 0, val32 != val8, val8 != 0);
 			break;
 		}
 		case 0xae: { // mnegw
