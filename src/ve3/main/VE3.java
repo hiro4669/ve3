@@ -65,7 +65,7 @@ public class VE3 {
 			byte[] rawdata = bout.toByteArray();
 			bout.close();
 			bin.close();
-			System.out.println("totalsize = " + rawdata.length);
+			//System.out.println("totalsize = " + rawdata.length);
 			
 			if (disflg) {
 				V32Disassm disassm = new V32Disassm(rawdata);

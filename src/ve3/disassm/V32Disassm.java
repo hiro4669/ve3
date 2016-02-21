@@ -261,7 +261,7 @@ public class V32Disassm {
 	public V32Disassm(byte[] rawdata) {
 		this();
 		tsize = readInt(rawdata, 4);
-		System.out.printf("textsize = 0x%x\n", tsize);
+		//System.out.printf("textsize = 0x%x\n", tsize);
 		memory.load(rawdata, 0x20, tsize);
 		//memory.dump();
 	}

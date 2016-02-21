@@ -105,11 +105,11 @@ public class Unix32V implements Cloneable {
 	public Map<Integer, String> createSymbolTable(int offset, byte[] rawdata) {
 		Map<Integer, String> symTable = new HashMap<Integer, String>();
 		byte[] name = new byte[8];
-		for (int i = offset; i < rawdata.length; i += 16) {
-			System.arraycopy(rawdata, i, name, 0, 8);
+		for (int i = offset; i < rawdata.length; i += 16) {			
+			System.arraycopy(rawdata, i, name, 0, 8);			
+			if ((i + 8) >= rawdata.length) break;
 			int type = (rawdata[i + 8] & 0xff) | (rawdata[i + 9] & 0xff) << 8 |
-					(rawdata[i + 10] & 0xff) << 16 |  (rawdata[i + 11] & 0xff) << 24;
-			
+					(rawdata[i + 10] & 0xff) << 16 |  (rawdata[i + 11] & 0xff) << 24;			
 			int addr = (rawdata[i + 12] & 0xff) | (rawdata[i + 13] & 0xff) << 8 |
 					(rawdata[i + 14] & 0xff) << 16 |  (rawdata[i + 15] & 0xff) << 24;
 			if (type > 0xff) { // true?

@@ -154,7 +154,7 @@ public class Context implements Cloneable {
 		
 		os.newContext(); // create isolated VFSystem
 		os.processArgs(argList, envList); // when call test, comment out
-		cpu.setPc(2);
+		cpu.setPc(2);		
 		cpu.setSymTable(os.createSymbolTable(tsize + dsize + 32, rawdata)); // create and set
 		
 	}
@@ -163,10 +163,12 @@ public class Context implements Cloneable {
 		tsize = readInt(rawdata, 4);
 		dsize = readInt(rawdata, 8);
 		bsize = readInt(rawdata, 12);
-				
+			
+		/*
 		System.out.printf("tsize = 0x%x\n", tsize);
 		System.out.printf("dsize = 0x%x\n", dsize);
 		System.out.printf("bsize = 0x%x\n", bsize);
+		*/
 		
 		memory = new ConcrateMemory(0x100000);
 		int offset = 0;
@@ -174,8 +176,10 @@ public class Context implements Cloneable {
 		offset = memory.load(rawdata, 0x20, offset, tsize);
 		offset = (offset + 0x1ff) & ~0x1ff;
 		memory.setEOH((long)(offset + dsize + bsize));
-		System.out.printf("data offset = 0x%x\n", offset);
-		System.out.printf("end = begin of sbrk = 0x%x\n", memory.getEOH());
+		
+		//System.out.printf("data offset = 0x%x\n", offset);
+		//System.out.printf("end = begin of sbrk = 0x%x\n", memory.getEOH());
+		
 		// load data
 		offset = memory.load(rawdata, 0x20+tsize, offset, dsize);		
 		

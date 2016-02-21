@@ -1740,7 +1740,7 @@ public class Cpu implements Cloneable {
 			short src  = getShort(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
 			//System.out.printf("mask = %x, src= %x, src_addr = %x\n", mask, src, opinfo.getAddr2());
 			val16 = (short)(mask & src);
-			System.out.printf("val16 = %x\n", val16);
+			//System.out.printf("val16 = %x\n", val16);
 			setNZVC(val16 < 0, val16 == 0, false, isC());			
 			break;
 		}
