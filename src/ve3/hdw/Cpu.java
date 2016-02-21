@@ -714,6 +714,10 @@ public class Cpu implements Cloneable {
 			memory.writeByte((int)addr, value);
 			break;
 		}
+		case WordDisp: {
+			memory.writeByte((int)addr, value);
+			break;
+		}
 		default: {
 			System.out.printf("addr = 0x%x, value = 0x%x\n", addr, value);
 			System.out.println("unrecognized type in storeByte: " + type);
@@ -791,6 +795,10 @@ public class Cpu implements Cloneable {
 		}
 		case AutoInc: {
 			memory.writeInt((int)addr, value);
+			break;
+		}
+		case WordDispDefer: {			
+			memory.writeInt((int)addr, value);					
 			break;
 		}
 		default: {
@@ -907,8 +915,9 @@ public class Cpu implements Cloneable {
 		} 
 		
 		//int limit = 855; // end of child process
-		//int limit = 2000;
-		int limit = 400000;
+		//int limit = 506165;
+		int limit = 4000000;
+		
 		
 		
 		if (ctx.hasParent()) {
@@ -1726,6 +1735,15 @@ public class Cpu implements Cloneable {
 			setNZVC(val8 < 0, val8 == 0, false, isC());
 			break;
 		}
+		case 0xb3: { // bitw
+			short mask = getShort(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			short src  = getShort(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+			//System.out.printf("mask = %x, src= %x, src_addr = %x\n", mask, src, opinfo.getAddr2());
+			val16 = (short)(mask & src);
+			System.out.printf("val16 = %x\n", val16);
+			setNZVC(val16 < 0, val16 == 0, false, isC());			
+			break;
+		}
 		case 0xd3: { // bitl
 			int mask = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
 			int src = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());			
@@ -2169,6 +2187,18 @@ public class Cpu implements Cloneable {
 			}
 			val32 = (int)index;
 			setNZVC(val32 < 0, val32 == 0, index != val32, isC());	
+			break;
+		}
+		case 0xcd: { // xorl3
+			int mask = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int src = getInt(opinfo.getType2(), opinfo.getArg2(), opinfo.getAddr2());
+			val32 = src ^ mask;
+			//System.out.printf("mask = %x, src = %x, val32 = %x\n", mask, src, val32);
+			//System.out.printf("src addr = %x\n", opinfo.getAddr2());
+			//memory.dump((int)opinfo.getAddr2(), 4);
+			storeInt(opinfo.getType3(), opinfo.getAddr3(), val32);
+			setNZVC(val32 < 0, val32 == 0, false, isC());			
+			//System.exit(1);
 			break;
 		}
 		default: {
