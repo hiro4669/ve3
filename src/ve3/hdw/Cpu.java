@@ -915,7 +915,7 @@ public class Cpu implements Cloneable {
 		} 
 		
 		//int limit = 855; // end of child process
-		//int limit = 506165;
+		//int limit = 273243;
 		int limit = 4000000;
 		
 		
@@ -1788,6 +1788,20 @@ public class Cpu implements Cloneable {
 			//memory.dump(0xc18, 4);			
 			break;
 		}
+		case 0x80: { // addb2
+			long laddr;
+			Type ltype;
+			byte src = getByte(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			byte dst = getByte(ltype = opinfo.getType2(), opinfo.getArg2(), laddr = opinfo.getAddr2());
+			
+			//memory.dump((int)laddr, 4);
+			val32 = src + dst;
+			val8 = (byte)val32;
+			storeByte(ltype, laddr, val8);
+			setNZVC(val8 < 0, val8 == 0, val8 != val32, (src & 0xff) + (dst & 0xff) >= 0x100);
+			//memory.dump((int)laddr, 4);
+			break;
+		}
 		case 0xc0: { // addl2
 			long laddr;
 			int src = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
@@ -2187,6 +2201,18 @@ public class Cpu implements Cloneable {
 			}
 			val32 = (int)index;
 			setNZVC(val32 < 0, val32 == 0, index != val32, isC());	
+			break;
+		}
+		case 0xcc: { // xorl2
+			Type ltype;
+			long laddr;
+			int mask = getInt(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			int dst = getInt(ltype = opinfo.getType2(), opinfo.getArg2(), laddr = opinfo.getAddr2());
+			val32 = dst ^ mask;
+			storeInt(ltype, laddr, val32);
+			setNZVC(val32 < 0, val32 == 0, false, isC());
+			
+			//System.exit(1);
 			break;
 		}
 		case 0xcd: { // xorl3
