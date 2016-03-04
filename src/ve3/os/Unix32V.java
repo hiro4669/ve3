@@ -533,7 +533,8 @@ public class Unix32V implements Cloneable {
 			//System.out.println("fileName = " + fileName);			
 			Stat st = new Stat();
 			//FSystem.stat(fileName, st);
-			vfs.stat(fileName, st);
+			//vfs.stat(fileName, st); // connect to mac stat
+			vfs.dstat(fileName, st);
 			
 			/*
 			System.out.printf("dev    = %x\n", (short)(st.dev >> 16));

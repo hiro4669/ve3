@@ -2,9 +2,18 @@ package ve3.os;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 import ve3.util.RuntimeUtil;
 
@@ -14,6 +23,18 @@ public class VFSystem {
 	
 	static final int readmask  = 0x124;
 	static final int writemask = 0x92;
+	
+	private final static int REGULAR     = 0x8000;
+	private final static int DIRECTORY   = 0x4000;
+	private final static int OWNER_READ  = 0x100;
+	private final static int OWNER_WRITE = 0x80;
+	private final static int OWNER_EXEC  = 0x40;
+	private final static int GROUP_READ  = 0x20;
+	private final static int GROUP_WRITE = 0x10;
+	private final static int GROUP_EXEC  = 0x8;
+	private final static int OTHER_READ  = 0x4;
+	private final static int OTHER_WRITE = 0x2;
+	private final static int OTHER_EXEC  = 0x1;
 	
 	public VFSystem() {
 		nodeMap = new HashMap<Integer, VFile>();
@@ -146,6 +167,97 @@ public class VFSystem {
 			e.printStackTrace();
 			return -1;
 		}
+		return 0;
+	}
+	
+	private static int createPermission(Path path) throws IOException {
+		
+		Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(path);
+		Iterator<PosixFilePermission> ite = permissions.iterator();
+		int permission = 0;
+		while (ite.hasNext()) {
+			PosixFilePermission p = ite.next();
+			switch (p) {
+			case OWNER_READ: {
+				permission += OWNER_READ;
+				break;			
+			}
+			case OWNER_WRITE: {
+				permission += OWNER_WRITE;		
+				break;
+			}
+			case OWNER_EXECUTE : {
+				permission += OWNER_EXEC;
+				break;
+			}
+			case GROUP_READ: {
+				permission += GROUP_READ;
+				break;
+			}
+			case GROUP_WRITE: {
+				permission += GROUP_WRITE;
+				break;
+			}
+			case GROUP_EXECUTE: {
+				permission += GROUP_EXEC;
+				break;
+			}
+			case OTHERS_READ: {
+				permission += OTHER_READ;
+				break;
+			}
+			case OTHERS_WRITE: {
+				permission += OTHER_WRITE;
+				break;
+			}
+			case OTHERS_EXECUTE: {
+				permission += OTHER_EXEC;
+				break;
+			}
+			default: {
+				break;
+			}				
+			}
+		}
+		
+		
+		if (Files.isRegularFile(path)) {
+			permission += REGULAR;
+			
+		}
+		if (Files.isDirectory(path)) {
+			permission += DIRECTORY;
+		}
+		
+		return permission;
+	}
+	
+	public int dstat(String fileName, Stat st) {
+		FileSystem fs = FileSystems.getDefault();
+		Path path = fs.getPath(fileName);
+		
+		
+		try {
+			FileTime ftime = Files.getLastModifiedTime(path);
+			
+			st.dev = new Random().nextInt(30000000);
+			st.inode = new Random().nextInt(30000000);
+			st.permission = createPermission(path);
+			st.link = new Random().nextInt(5);
+			st.uid = 501;
+			st.gid = 20;
+			st.size = (int)Files.size(path);
+			st.rdev = 0;
+			st.atime = (int)(ftime.toMillis() / 1000);
+			st.mtime = st.atime;
+			st.ctime = st.atime;
+			
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException();
+		}
+		
 		return 0;
 	}
 	

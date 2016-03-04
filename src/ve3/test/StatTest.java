@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 
 import ve3.os.FSystem;
 import ve3.os.Stat;
+import ve3.os.VFSystem;
 
 
 
@@ -19,6 +20,8 @@ public class StatTest {
 		//Process p = Runtime.getRuntime().exec("stat -f dev=%d nm");
 		BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		System.out.println(reader.readLine());
+		
+		System.out.println("----------------------");
 		
 		p = Runtime.getRuntime().exec("stat -f i=%i nm");
 		reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -72,8 +75,9 @@ public class StatTest {
 		reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		System.out.println(reader.readLine());
 		
-		Stat st = new Stat();
-		FSystem.stat("nm", st);
+		Stat st = new Stat();		
+		//VFSystem.stat("nm", st);
+		new VFSystem().stat("nm", st);
 		System.out.println(st.size);
 		System.out.println(st.permission);
 		
