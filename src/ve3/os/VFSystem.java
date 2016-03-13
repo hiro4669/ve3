@@ -3,13 +3,16 @@ package ve3.os;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.FileStore;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
@@ -89,7 +92,8 @@ public class VFSystem {
 			VFile vf = new VFile(fname);		
 			if (!vf.exists()) {
 				vf.creat();
-				doChmod(vf.getPath(), mode);
+				//doChmod(vf.getPath(), mode);
+				ddochmod(vf.getPath(), mode);
 			}
 			int fmode = -1;
 			if ((mode & readmask) != 0) ++fmode;
@@ -105,11 +109,13 @@ public class VFSystem {
 	public int chmod(String fileName, int mode) {
 		File f = new File(fileName);
 		if (f.exists()) {
-			doChmod(f.getAbsolutePath(), mode);
+			//doChmod(f.getAbsolutePath(), mode);
+			ddochmod(f.getAbsolutePath(), mode);
 			return 0;
 		} 
 		return -1;		
 	}
+		
 	
 	public int write(byte[] src, int fd, int off, int len) {
 		VFile vf = nodeMap.get(fd);
@@ -137,6 +143,58 @@ public class VFSystem {
 			modes = c + modes;
 		}
 		RuntimeUtil.exec("chmod", modes, path);
+	}
+	
+	private void ddochmod(final String path, int mode) {
+		Set<PosixFilePermission> params = new HashSet<PosixFilePermission>();
+		
+		if ((mode & OWNER_READ) != 0) params.add(PosixFilePermission.OWNER_READ);
+		if ((mode & GROUP_READ) != 0) params.add(PosixFilePermission.GROUP_READ);
+		if ((mode & OTHER_READ) != 0) params.add(PosixFilePermission.OTHERS_READ);
+		
+		if ((mode & OWNER_WRITE) != 0) params.add(PosixFilePermission.OWNER_WRITE);
+		if ((mode & GROUP_WRITE) != 0) params.add(PosixFilePermission.GROUP_WRITE);
+		if ((mode & OTHER_WRITE) != 0) params.add(PosixFilePermission.OTHERS_WRITE);
+		
+		if ((mode & OWNER_EXEC) != 0) params.add(PosixFilePermission.OWNER_EXECUTE);
+		if ((mode & GROUP_EXEC) != 0) params.add(PosixFilePermission.GROUP_EXECUTE);
+		if ((mode & OTHER_EXEC) != 0) params.add(PosixFilePermission.OTHERS_EXECUTE);
+		
+		try {
+			Files.setPosixFilePermissions(Paths.get(path), params);
+		} catch (IOException e) {
+			
+			// old api
+			File f = new File(path);
+			boolean result;
+			if (((mode & OWNER_READ) | (mode & GROUP_READ) | (mode & OTHER_READ)) != 0) {
+				f.setReadable(true);
+			} else {
+				f.setReadable(false);
+			}
+			result = (((mode & OWNER_READ) | (mode & GROUP_READ) | (mode & OTHER_READ)) != 0) ? 
+					f.setReadable(true, false) : f.setReadable(false, false);
+			result = (((mode & OWNER_WRITE) | (mode & GROUP_WRITE) | (mode & OTHER_WRITE)) != 0) ?
+					f.setWritable(true, false) : f.setWritable(false, false);
+			result = (((mode & OWNER_EXEC) | (mode & GROUP_EXEC) | (mode & OTHER_EXEC)) != 0) ?
+					f.setExecutable(true, false) : f.setExecutable(false, false);	
+		}
+		
+		/*
+		File f = new File(path);
+		boolean result;
+		if (((mode & OWNER_READ) | (mode & GROUP_READ) | (mode & OTHER_READ)) != 0) {
+			f.setReadable(true);
+		} else {
+			f.setReadable(false);
+		}
+		result = (((mode & OWNER_READ) | (mode & GROUP_READ) | (mode & OTHER_READ)) != 0) ? 
+				f.setReadable(true, false) : f.setReadable(false, false);
+		result = (((mode & OWNER_WRITE) | (mode & GROUP_WRITE) | (mode & OTHER_WRITE)) != 0) ?
+				f.setWritable(true, false) : f.setWritable(false, false);
+		result = (((mode & OWNER_EXEC) | (mode & GROUP_EXEC) | (mode & OTHER_EXEC)) != 0) ?
+				f.setExecutable(true, false) : f.setExecutable(false, false);				
+		*/
 	}
 	
 	public int close(int fd) {
@@ -232,6 +290,20 @@ public class VFSystem {
 		return permission;
 	}
 	
+	
+	private int getDev(Path path) {
+		try {
+			FileStore fileStore = Files.getFileStore(path);
+			return fileStore.hashCode();
+		} catch (Exception e) {
+			return path.hashCode();
+		}		
+	}
+	
+	private int getInode(Path path) {
+		return path.hashCode();
+	}
+	
 	public int dstat(String fileName, Stat st) {
 		FileSystem fs = FileSystems.getDefault();
 		Path path = fs.getPath(fileName);
@@ -240,10 +312,12 @@ public class VFSystem {
 		try {
 			FileTime ftime = Files.getLastModifiedTime(path);
 			
-			st.dev = new Random().nextInt(30000000);
-			st.inode = new Random().nextInt(30000000);
+			//st.dev = new Random().nextInt(30000000);
+			//st.inode = new Random().nextInt(30000000);
+			st.dev = getDev(path);
+			st.inode = getInode(path);
 			st.permission = createPermission(path);
-			st.link = new Random().nextInt(5);
+			st.link = new Random().nextInt(1);
 			st.uid = 501;
 			st.gid = 20;
 			st.size = (int)Files.size(path);
