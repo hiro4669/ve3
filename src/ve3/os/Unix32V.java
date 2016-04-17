@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import com.sun.org.apache.bcel.internal.generic.DSTORE;
+
 import ve3.hdw.Cpu;
 import ve3.hdw.Memory;
 import ve3.main.Context;
@@ -534,7 +536,11 @@ public class Unix32V implements Cloneable {
 			Stat st = new Stat();
 			//FSystem.stat(fileName, st);
 			//vfs.stat(fileName, st); // connect to mac stat
-			vfs.dstat(fileName, st);
+			int r = vfs.dstat(fileName, st);
+			
+			if (debug) {
+				System.out.printf("<stat(%d, 0x%x) => %d\n", filep, addr, r);
+			}
 			
 			/*
 			System.out.printf("dev    = %x\n", (short)(st.dev >> 16));
@@ -550,32 +556,38 @@ public class Unix32V implements Cloneable {
 			System.out.printf("ctime  = %x\n", st.ctime);
 			*/
 			//memory.dump(addr, 4);
-			memory.writeShort(addr, (short)(st.dev >> 16));
-			addr += 2;
-			memory.writeShort(addr, (short)(st.inode >> 16));
-			addr += 2;
-			memory.writeShort(addr, (short)(st.permission));
-			addr += 2;
-			memory.writeShort(addr, (short)(st.link));
-			addr += 2;
-			memory.writeShort(addr, (short)(st.uid));
-			addr += 2;
-			memory.writeShort(addr, (short)(st.gid));
-			addr += 2;
-			memory.writeShort(addr, (short)(st.rdev));
-			addr += 2;
-			addr = (addr + 3) & ~3;
-			memory.writeInt(addr, st.size);
-			addr += 4;
-			memory.writeInt(addr, st.atime);
-			addr += 4;
-			memory.writeInt(addr, st.mtime);
-			addr += 4;
-			memory.writeInt(addr, st.ctime);			
-			//memory.dump(addr-26, 30);			
 			
-			reg[Cpu.r0] = 0;
-			cpu.clearCarry();			
+			reg[Cpu.r0] = r;
+			if (r == -1) {
+				cpu.setCarry();
+			} else {			
+				memory.writeShort(addr, (short)(st.dev >> 16));
+				addr += 2;
+				memory.writeShort(addr, (short)(st.inode >> 16));
+				addr += 2;
+				memory.writeShort(addr, (short)(st.permission));
+				addr += 2;
+				memory.writeShort(addr, (short)(st.link));
+				addr += 2;
+				memory.writeShort(addr, (short)(st.uid));
+				addr += 2;
+				memory.writeShort(addr, (short)(st.gid));
+				addr += 2;
+				memory.writeShort(addr, (short)(st.rdev));
+				addr += 2;
+				addr = (addr + 3) & ~3;
+				memory.writeInt(addr, st.size);
+				addr += 4;
+				memory.writeInt(addr, st.atime);
+				addr += 4;
+				memory.writeInt(addr, st.mtime);
+				addr += 4;
+				memory.writeInt(addr, st.ctime);			
+				//memory.dump(addr-26, 30);			
+				
+				//reg[Cpu.r0] = 0;
+				cpu.clearCarry();
+			}
 			break;
 		}
 		case 0x13: { // lseek
@@ -608,6 +620,52 @@ public class Unix32V implements Cloneable {
 			
 			reg[Cpu.r0] = pid;
 			cpu.clearCarry();			
+			break;
+		}
+		case 0x1c: { // fstat
+			int argnum = memory.readInt(reg[Cpu.ap]);
+			int fd = memory.readInt(reg[Cpu.ap] + 4);
+			int addr = memory.readInt(reg[Cpu.ap] + 8);
+			
+			//System.out.printf("fstat argnum = %x, filep = %d, addr = %x\n", argnum, fd, addr);
+			String fileName = vfs.getFileName(fd);
+			//System.out.println("fileName = " + fileName);
+			
+			Stat st = new Stat();
+			int r = vfs.dstat(fileName, st);
+			if (debug) {
+				System.out.printf("<fstat(%d, 0x%x) => %d\n", fd, addr, r);
+			}
+			reg[Cpu.r0] = r;
+			if (r == -1) {
+				cpu.setCarry();
+			} else {
+				memory.writeShort(addr, (short)(st.dev >> 16));
+				addr += 2;
+				memory.writeShort(addr, (short)(st.inode >> 16));
+				addr += 2;
+				memory.writeShort(addr, (short)(st.permission));
+				addr += 2;
+				memory.writeShort(addr, (short)(st.link));
+				addr += 2;
+				memory.writeShort(addr, (short)(st.uid));
+				addr += 2;
+				memory.writeShort(addr, (short)(st.gid));
+				addr += 2;
+				memory.writeShort(addr, (short)(st.rdev));
+				addr += 2;
+				addr = (addr + 3) & ~3;
+				memory.writeInt(addr, st.size);
+				addr += 4;
+				memory.writeInt(addr, st.atime);
+				addr += 4;
+				memory.writeInt(addr, st.mtime);
+				addr += 4;
+				memory.writeInt(addr, st.ctime);			
+
+				cpu.clearCarry();								
+			}
+									
 			break;
 		}
 		case 0x21: { // access

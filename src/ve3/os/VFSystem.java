@@ -53,6 +53,12 @@ public class VFSystem {
 		}
 	}
 	
+	public final String getFileName(int fd) {
+		VFile vfile = nodeMap.get(fd);
+		if (vfile == null) return null;
+		return vfile.getPath();
+	}
+	
 	public int open(String fname, int mode) {
 		String smode = "r";
 		switch (mode) {
@@ -305,6 +311,7 @@ public class VFSystem {
 	}
 	
 	public int dstat(String fileName, Stat st) {
+		if (fileName == null) return -1;
 		FileSystem fs = FileSystems.getDefault();
 		Path path = fs.getPath(fileName);
 		
@@ -329,7 +336,8 @@ public class VFSystem {
 			
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new RuntimeException();
+			//throw new RuntimeException();
+			return -1;
 		}
 		
 		return 0;

@@ -98,7 +98,8 @@ public class VFile {
 	}
 	
 	public String getPath() {
-		if (file == null) throw new RuntimeException();		
+		//if (file == null) throw new RuntimeException();		
+		if (file == null) return null;
 		return file.getAbsolutePath();
 	}
 	
