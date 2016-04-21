@@ -259,7 +259,7 @@ public class Unix32V implements Cloneable {
 				reg[Cpu.r0] = rlen;
 				cpu.clearCarry();
 			} else {
-				reg[Cpu.r0] = 1; // should be fix soon as ERROR
+				reg[Cpu.r0] = -1; // should be fix soon as ERROR
 				cpu.setCarry();
 			}
 						
@@ -290,11 +290,13 @@ public class Unix32V implements Cloneable {
 				System.out.printf(" => %d>\n", rlen);
 			}
 			
+			//System.out.printf("len = %d, rlen = %d\n", len, rlen);
+			
 			if (rlen != -1) {
-				reg[Cpu.r0] = len;
+				reg[Cpu.r0] = rlen;
 				cpu.clearCarry();
 			} else {
-				reg[Cpu.r0] = 1; // should be fix soon as ERROR
+				reg[Cpu.r0] = -1; // should be fix soon as ERROR
 				cpu.setCarry();
 			}
 			
@@ -441,7 +443,14 @@ public class Unix32V implements Cloneable {
 				System.out.printf("<link(0x%x, 0x%x) => %d>\n", fp1, fp2, r);
 				System.out.println("orgFile = " + orgFile);
 				System.out.println("newFile = " + newFile);
-			}						
+			}
+			
+			reg[Cpu.r0] = r;
+			if (r == 0) {
+				cpu.clearCarry();
+			} else {				
+				cpu.setCarry();
+			}
 			//System.exit(1);
 			break;
 		}
