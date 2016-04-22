@@ -94,9 +94,15 @@ public class ConcrateMemory implements Memory {
 		byte b5 = (byte)(memory[pc++]);
 		byte b6 = (byte)(memory[pc++]);
 		byte b7 = (byte)(memory[pc++]);
-		byte b8 = (byte)(memory[pc++]);		
-		mval.lval =  (long)((b8 & 0xff) << 56 | (b7 & 0xff) << 48 | (b6 & 0xff) << 40 | (b5 & 0xff) << 32 | 
-				(b4 & 0xff) << 24 | (b3 & 0xff) << 16 | (b2 & 0xff) << 8 | b1 & 0xff);
+		byte b8 = (byte)(memory[pc++]);
+		
+		int lv = (int)((b4 & 0xff) << 24 | (b3 & 0xff) << 16 | (b2 & 0xff) << 8 | b1 & 0xff);
+		int uv = (int)((b8 & 0xff) << 24 | (b7 & 0xff) << 16 | (b6 & 0xff) << 8 | b5 & 0xff);
+		mval.lval = ((uv & 0xffffffffL) << 32) & 0xffffffff00000000L | (lv & 0xffffffffL); 
+		
+		//System.out.printf("b1 = %x, b2 = %x, b3 = %x, b4 = %x, b5 = %x, b6 = %x, b7 = %x, b8 = %x\n", b1, b2, b3, b4, b5, b6, b7, b8);
+		//mval.lval =  (long)((b8 & 0xff) << 56 | (b7 & 0xff) << 48 | (b6 & 0xff) << 40 | (b5 & 0xff) << 32 | 
+		//		(b4 & 0xff) << 24 | (b3 & 0xff) << 16 | (b2 & 0xff) << 8 | b1 & 0xff);
 		mval.pc = pc;
 		return mval;		
 	}
@@ -116,6 +122,13 @@ public class ConcrateMemory implements Memory {
 		memory[offset++] = (byte)((data >> 8) & 0xff);
 		memory[offset++] = (byte)((data >> 16) & 0xff);
 		memory[offset++] = (byte)((data >> 24) & 0xff);
+	}
+	
+	public void writeLong(int offset, long data) {
+		for (int i = 0; i < 8; ++i) {
+			memory[offset++] = (byte)((data >> (8 * i)) & 0xff);
+		}
+		
 	}
 	
 	public byte readByte(int offset) {
@@ -153,7 +166,9 @@ public class ConcrateMemory implements Memory {
 		*/
 		int v1 = (b8 & 0xff) << 24 | (b7 & 0xff) << 16 | (b6 & 0xff) << 8 | b5 & 0xff;
 		int v2 = (b4 & 0xff) << 24 | (b3 & 0xff) << 16 | (b2 & 0xff) << 8 | b1 & 0xff;
-		return (long)(((long)v1 << 32) | v2);
+		
+		return ((v1 & 0xffffffffL) << 32) & 0xffffffff00000000L | (v2 & 0xffffffffL);  
+		//return (long)(((long)v1 << 32) | v2);
 		
 		
 		//return (long)((b8 & 0xff) << 56 | (b7 & 0xff) << 48 | (b6 & 0xff) << 40 | (b5 & 0xff) << 32 | 

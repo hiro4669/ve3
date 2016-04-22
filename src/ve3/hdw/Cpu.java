@@ -141,7 +141,7 @@ public class Cpu implements Cloneable {
 	}
 	public MVal fetch4() {
 		MVal mval = memory.fetch4();
-		reg[pc] = mval.pc;
+		reg[pc] = mval.pc;		
 		return mval;
 	}
 	public MVal fetch8() {
@@ -575,6 +575,30 @@ public class Cpu implements Cloneable {
 		return 0;
 	}
 	
+	private long getLong(Type type, long arg, long addr) {
+		switch (type) {
+		case Immed: {
+			return arg;			
+		}
+		case Register: {
+			int uv = reg[(int)addr];
+			int lv = reg[(int)(addr + 1)];
+			return ((lv & 0xffffffffL) << 32) & 0xffffffff00000000L | (uv & 0xffffffffL); 
+			
+		}
+		case RegDefer: {
+			return memory.readLong((int)addr);
+		}
+		default: {
+			System.out.println("unrecognized type in getLong: " + type);
+			System.out.printf("reg[pc] = %x, stepCount = %d\n", reg[pc], stepCount);
+			System.exit(1);
+		}
+		}
+		
+		return 0;
+	}
+	
 	private int getInt(Type type, long arg, long addr) {
 		switch (type) {
 		case Branch1: {
@@ -822,6 +846,11 @@ public class Cpu implements Cloneable {
 			reg[(int)addr + 1] = (int)(value >> 32);
 			break;
 		}
+		case RegDefer: {
+			memory.writeLong((int)addr, value);
+			break;
+		}
+		
 		default: {
 			System.out.printf("addr = 0x%x, value = 0x%x\n", addr, value);
 			System.out.println("unrecognized type in storeLong: " + type);
@@ -916,7 +945,7 @@ public class Cpu implements Cloneable {
 		
 		//int limit = 855; // end of child process
 		//int limit = 273243;
-		int limit = 4000000;
+		int limit = 40000000;
 		
 		
 		
@@ -989,6 +1018,18 @@ public class Cpu implements Cloneable {
 		
 		switch (ope.mne) {
 		case 0: { // Halt
+			break;
+		}
+		case 0x7d: { // movq
+			long src = getLong(opinfo.getType1(), opinfo.getArg1(), opinfo.getAddr1());
+			//System.out.printf("src = 0x%016x\n", src);
+			//System.out.printf("addr: 0x%x\n", opinfo.getAddr1());
+			//memory.dump((int)opinfo.getAddr1(), 8);			
+			//memory.dump((int)opinfo.getAddr2(), 8);
+			
+			storeLong(opinfo.getType2(), opinfo.getAddr2(), src);
+//			memory.dump((int)opinfo.getAddr2(), 8);
+			setNZVC(src < 0, src == 0, false, isC());	
 			break;
 		}
 		case 0xb0: { // movw

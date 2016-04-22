@@ -16,6 +16,7 @@ public interface Memory extends Cloneable {
 	public long getEOH();
 	
 	
+	public void writeLong(int offset, long data);
 	public void writeInt(int offset, int data);
 	public void writeByte(int offset, byte data);
 	public void writeShort(int offset, short data);
