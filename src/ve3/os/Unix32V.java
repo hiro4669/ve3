@@ -611,8 +611,13 @@ public class Unix32V implements Cloneable {
 			if (debug) {
 				System.out.printf("<lseek(%x, 0x%x, %d) = %x>\n", fd, off, mode, noff);
 			}
-			reg[Cpu.r0] = (int)noff;
-			cpu.clearCarry();			
+			if (noff == -1) {
+				reg[Cpu.r0] = -1;
+				cpu.setCarry();
+			} else {
+				reg[Cpu.r0] = (int)noff;
+				cpu.clearCarry();
+			}
 			break;
 			
 		}
