@@ -76,6 +76,7 @@ public class Unix32V implements Cloneable {
 	
 	public void setShareFs(boolean share_fs) {
 		this.share_fs = share_fs;
+		vfs.increfs();
 	}
 	
 	public void setCpu(Cpu cpu) {
@@ -348,12 +349,16 @@ public class Unix32V implements Cloneable {
 			//int r = FSystem.close(fd);
 			
 			int r = 0;
+			
+			/*
 			if (!share_fs) {
-				r = vfs.close(fd);	
-				
+				r = vfs.close(fd);					
 				//System.out.println("real close");
 				//System.exit(1);
 			}
+			*/
+			
+			r = vfs.close(fd);
 						
 			
 			if (debug) {

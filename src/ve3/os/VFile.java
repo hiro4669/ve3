@@ -17,12 +17,14 @@ public class VFile {
 		in = null;
 		file = null;
 		this.out = out;		
+		count++;
 	}
 	
 	public VFile(InputStream in) {
 		this.in = in;
 		out = null;
 		file = null;
+		count++;
 	}
 	
 	public VFile(String path) throws FileNotFoundException {
@@ -31,6 +33,10 @@ public class VFile {
 		
 		file = new File(path);
 		count++;
+	}
+	
+	public final void incCount() {		
+		++count;
 	}
 	
 	public boolean exists() {
@@ -134,21 +140,21 @@ public class VFile {
 	}
 	
 	public int close() {
-		if (out != null) return 0;
-		if (in  != null) return 0;
-		
-		
+		if ((out != null) || (in != null)) {
+			return --count;
+		}
+				
 		if (--count == 0) {
 			try {
-				//System.out.println("real close");
+//				System.out.println("real close");
 				rfile.close();
 				return 0;
 			} catch (Exception e) {
 				e.printStackTrace();
 				return -1;
 			}
-		}
-		return 0;
+		} 
+		return count;
 	}
 	
 

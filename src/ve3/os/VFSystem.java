@@ -59,6 +59,12 @@ public class VFSystem {
 		return vfile.getPath();
 	}
 	
+	public final void increfs() {
+		for (Iterator<VFile> iterator = nodeMap.values().iterator(); iterator.hasNext();) {
+			iterator.next().incCount();
+		}
+	}
+	
 	public int open(String fname, int mode) {
 		String smode = "r";
 		switch (mode) {
@@ -204,14 +210,23 @@ public class VFSystem {
 	}
 	
 	public int close(int fd) {
-		//System.out.println("call close");
+		/*
 		VFile vf = nodeMap.remove(fd);
 		if (vf == null) {
 			System.err.println("Cannot find target file " + fd);
-			//System.exit(1);
 			return 0;
 		}
-		return vf.close();
+		*/
+		
+		VFile vf = nodeMap.get(fd);
+		if (vf == null) {
+			System.err.println("Cannot find target file " + fd);
+			return 0;
+		}
+		if (vf.close() == 0) nodeMap.remove(fd);
+		
+		
+		return 0;
 	}
 	
 	public long lseek(int fd, int offset, int mode) {
